@@ -3,7 +3,7 @@ use std::{fmt::Debug, io::stdin, str::FromStr};
 
 fn main() -> Result<(), std::io::Error> {
     loop {
-        println!("{}", parse_line()?.solve());
+        println!("{}", parse_line()?.solve_stupider());
     }
 }
 
@@ -44,32 +44,76 @@ fn parse_line() -> Result<Instance, std::io::Error> {
 }
 
 impl Instance {
-    fn solve(&self) -> bool {
-        fn alloc(y: usize, x: usize) -> Vec<Vec<u32>> {
-            let mut dp = Vec::with_capacity(y);
-            dp.resize_with(y, || Vec::with_capacity(x));
-            for v in &mut dp {
-                v.resize(x, 0);
-            }
-            dp
-        }
-
+    fn solve(&self) -> u32 {
         let (m, b, items) = (self.m, self.b, &self.items);
-        let mut dp = alloc(items.len() + 1, m as usize + 1);
+        let mut next = Vec::with_capacity(m as usize + 1);
+        next.resize(m as usize + 1, 0);
+        let mut last = Vec::new();
 
         for i in 1..=items.len() {
             let (weight, cost) = items[i - 1];
+            last.clone_from(&next);
+
             for j in 0..=m as usize {
-                dp[i][j] = if (j as u32) < items[i as usize - 1].0 {
-                    dp[i - 1][j]
+                next[j] = if (j as u32) < items[i as usize - 1].0 {
+                    last[j]
                 } else {
                     use std::cmp::max;
                     let rem_weight = max(0, j as isize - weight as isize) as usize;
-                    max(dp[i - 1][j], dp[i - 1][rem_weight] + cost)
+                    max(last[j], last[rem_weight] + cost)
                 };
             }
         }
 
-        *dp.last().unwrap().last().unwrap() >= b
+        *next.last().unwrap() //>= b
+    }
+
+    // branch & bound
+    fn solve_stupid(&self) -> u32 {
+        let (m, b, items) = (self.m, self.b, &self.items);
+        let prices: Vec<u32> = items.iter().rev()
+            .scan(0, |sum, (_w, c)| {
+                *sum = *sum + c;
+                Some(*sum)
+            })
+            .collect();
+        fn go(items: &Vec<(u32, u32)>, best: u32, cap: u32, i: usize) -> u32 {
+            use std::cmp::max;
+            if i >= items.len() { return 0; }
+
+            let (w, c) = items[i];
+            let next = |best, cap| go(items, best, cap, i + 1);
+            let include = || next(best, cap - w);
+            let exclude = || next(best, cap);
+            let current = if w <= cap {
+                max(c + include(), exclude())
+            } else {
+                exclude()
+            };
+            max(current, best)
+        }
+
+        go(items, 0, m, 0)
+    }
+
+    fn solve_stupider(&self) -> u32 {
+        let (m, b, items) = (self.m, self.b, &self.items);
+        fn go(items: &Vec<(u32, u32)>, cap: u32, i: usize) -> u32 {
+            use std::cmp::max;
+            if i >= items.len() { return 0; }
+
+            let (w, c) = items[i];
+            let next = |cap| go(items, cap, i + 1);
+            let include = || next(cap - w);
+            let exclude = || next(cap);
+            let current = if w <= cap {
+                max(c + include(), exclude())
+            } else {
+                exclude()
+            };
+            current
+        }
+
+        go(items, m, 0)
     }
 }
