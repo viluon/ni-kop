@@ -22,11 +22,12 @@ impl Boilerplate for std::str::SplitWhitespace<'_> {
     }
 }
 // ~\~ end
-// ~\~ begin <<lit/main.md|parser>>[0]
+// ~\~ begin <<lit/main.md|instance-definition>>[0]
 struct Instance {
     id: i32, m: u32, b: u32, items: Vec<(u32, u32)>
 }
-
+// ~\~ end
+// ~\~ begin <<lit/main.md|parser>>[0]
 fn parse_line() -> Result<Instance, std::io::Error> {
     let mut input = String::new();
     stdin().read_line(&mut input)?;

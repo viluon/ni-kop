@@ -1,5 +1,13 @@
-# Test
+---
+title: 'NI-KOP -- úkol 1'
+---
+
+# Kombinatorická optimalizace: problém batohu
 Hello world! This is a test of [Entangled](https://entangled.github.io/).
+
+``` {.bash .eval #benchmark}
+echo hello world
+```
 
 ``` {.rust #boilerplate .bootstrap-fold}
 trait Boilerplate {
@@ -16,11 +24,13 @@ impl Boilerplate for std::str::SplitWhitespace<'_> {
 ```
 foo?
 
-``` {.rust #parser}
+``` {.rust #instance-definition}
 struct Instance {
     id: i32, m: u32, b: u32, items: Vec<(u32, u32)>
 }
+```
 
+``` {.rust #parser .bootstrap-fold}
 fn parse_line() -> Result<Instance, std::io::Error> {
     let mut input = String::new();
     stdin().read_line(&mut input)?;
@@ -53,6 +63,7 @@ fn main() -> Result<(), std::io::Error> {
 }
 
 <<boilerplate>>
+<<instance-definition>>
 <<parser>>
 
 impl Instance {

@@ -59,8 +59,9 @@ let entangled = https://raw.githubusercontent.com/entangled/entangled/v1.2.2/dat
 let intercalComment = entangled.Comment.Line "PLEASE NOTE: "
 
 let languages = entangled.languages #
-    [ { name = "Unlambda", identifiers = ["unlambda"], comment = entangled.comments.hash }
-    , { name = "Intercal", identifiers = ["intercal"], comment = intercalComment }
+    [ { name = "Unlambda", identifiers = ["unlambda"]  , comment = entangled.comments.hash }
+    , { name = "Intercal", identifiers = ["intercal"]  , comment = intercalComment }
+    , { name = "Bash"    , identifiers = ["bash", "sh"], comment = entangled.comments.hash }
     ]
 
 {- Syntax
@@ -115,6 +116,8 @@ in { entangled = entangled.Config :: { database  = database
    you may want to include some extra configuration here. These settings are
    ignored by the entangled executable.
   -}
-   , jupyter = { name = "Python", kernel = "python3" }
+   , jupyter = [ { language = "Python", kernel = "python3" }
+               , { language = "Bash"  , kernel = "bash"    }
+               ]
    }
 

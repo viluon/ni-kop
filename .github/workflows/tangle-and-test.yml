@@ -7,7 +7,11 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: ghcr.io/viluon/ni-kop:latest
+    container:
+      image: ghcr.io/viluon/special-hs-rs-dev:latest
+      credentials:
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.ghcr_token }}
     steps:
       - name: checkout
         uses: actions/checkout@v2
