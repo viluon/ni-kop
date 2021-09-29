@@ -22,6 +22,7 @@ jobs:
           dir=$(pwd)/1-exact-knapsack
           cd /; patch -p0 < $dir/doctest.patch
           cd $dir
+          cargo install hyperfine
           make site
       - name: upload artifact
         uses: actions/upload-artifact@v2

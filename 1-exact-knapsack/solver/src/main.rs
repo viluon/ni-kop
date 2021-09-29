@@ -61,13 +61,13 @@ impl Instance {
             let (weight, cost) = items[i - 1];
             last.clone_from(&next);
 
-            for j in 0..=m as usize {
-                next[j] = if (j as u32) < items[i as usize - 1].0 {
-                    last[j]
+            for cap in 0..=m as usize {
+                next[cap] = if (cap as u32) < weight {
+                    last[cap]
                 } else {
                     use std::cmp::max;
-                    let rem_weight = max(0, j as isize - weight as isize) as usize;
-                    max(last[j], last[rem_weight] + cost)
+                    let rem_weight = max(0, cap as isize - weight as isize) as usize;
+                    max(last[cap], last[rem_weight] + cost)
                 };
             }
         }

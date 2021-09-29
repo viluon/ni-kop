@@ -21,8 +21,8 @@ pandoc_args += --template bootstrap/template.html
 pandoc_args += --css css/mods.css
 pandoc_args += -t html5 -s --mathjax --toc
 pandoc_args += --toc-depth 1
-pandoc_args += --filter pandoc-doctest
 pandoc_args += --filter pandoc-bootstrap
+pandoc_args += --filter pandoc-doctest
 pandoc_args += -f markdown+multiline_tables+simple_tables
 
 # Load syntax definitions for languages that are not supported
@@ -68,7 +68,7 @@ watch-browser-sync:
 
 $(docs_dir)/index.html: $(input_files) Makefile
 	@mkdir -p $(docs_dir)
-	pandoc $(pandoc_args) $(input_files) -o $@
+	JUPYTER=1 pandoc $(pandoc_args) $(input_files) -o $@
 
 $(docs_dir)/css/mods.css: bootstrap/mods.css
 	@mkdir -p $(docs_dir)/css
