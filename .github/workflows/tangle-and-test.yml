@@ -19,7 +19,9 @@ jobs:
           submodules: recursive
       - name: tangle
         run: |
-          cd 1-exact-knapsack/
+          dir=$(pwd)/1-exact-knapsack
+          cd /; patch -p0 < $dir/doctest.patch
+          cd $dir
           make site
       - name: upload artifact
         uses: actions/upload-artifact@v2

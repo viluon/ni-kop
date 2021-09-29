@@ -27,8 +27,12 @@ pandoc_args += -f markdown+multiline_tables+simple_tables
 
 # Load syntax definitions for languages that are not supported
 # by default. These XML files are in the format of the Kate editor.
-pandoc_args += --syntax-definition bootstrap/elm.xml
-pandoc_args += --syntax-definition bootstrap/pure.xml
+# FIXME: unfortunately doesn't work in the Docker container,
+#        missing 'language.dtd' schema(?) file (from DOCTYPE)
+#        which is mysteriously picked up automagically in
+#        the local environment.
+# pandoc_args += --syntax-definition bootstrap/elm.xml
+# pandoc_args += --syntax-definition bootstrap/pure.xml
 pandoc_args += --highlight-style tango
 
 # Any file in the `$(lit_dir)` directory that is not a Markdown source
