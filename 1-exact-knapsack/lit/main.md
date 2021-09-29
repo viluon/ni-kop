@@ -14,6 +14,12 @@ cargo build --release
 
 ## Benchmarking
 
+We'll be using the Hyperfine benchmarking tool to obtain stable measurements of the solver's performance.
+
+``` {.zsh .eval .bootstrap-fold #hyperfine-cli}
+hyperfine --help
+```
+
 ``` {.zsh .eval #benchmark}
 cd solver
 hyperfine --export-csv bench.csv --ignore-failure 'cargo run --release < ../data/decision/NR4_inst.dat'
@@ -21,7 +27,7 @@ hyperfine --export-csv bench.csv --ignore-failure 'cargo run --release < ../data
 
 Let's have a look at the logged data:
 ``` {.zsh .eval #analysis}
-cat solver/bench.csv
+pandoc --from csv --to markdown solver/bench.csv
 ```
 
 ## Code
