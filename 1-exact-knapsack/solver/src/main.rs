@@ -1,3 +1,5 @@
+// ~\~ language=Rust filename=solver/src/main.rs
+// ~\~ begin <<lit/main.md|solver/src/main.rs>>[0]
 
 use std::{fmt::Debug, io::stdin, str::FromStr};
 
@@ -7,6 +9,7 @@ fn main() -> Result<(), std::io::Error> {
     }
 }
 
+// ~\~ begin <<lit/main.md|boilerplate>>[0]
 trait Boilerplate {
     fn parse_next<T: FromStr>(&mut self) -> T
     where <T as FromStr>::Err: Debug;
@@ -18,7 +21,8 @@ impl Boilerplate for std::str::SplitWhitespace<'_> {
         self.next().unwrap().parse().unwrap()
     }
 }
-
+// ~\~ end
+// ~\~ begin <<lit/main.md|parser>>[0]
 struct Instance {
     id: i32, m: u32, b: u32, items: Vec<(u32, u32)>
 }
@@ -42,8 +46,10 @@ fn parse_line() -> Result<Instance, std::io::Error> {
 
     Ok(Instance {id, m, b, items})
 }
+// ~\~ end
 
 impl Instance {
+    // ~\~ begin <<lit/main.md|solver-dp>>[0]
     fn solve(&self) -> u32 {
         let (m, b, items) = (self.m, self.b, &self.items);
         let mut next = Vec::with_capacity(m as usize + 1);
@@ -67,7 +73,9 @@ impl Instance {
 
         *next.last().unwrap() //>= b
     }
+    // ~\~ end
 
+    // ~\~ begin <<lit/main.md|solver-bb>>[0]
     // branch & bound
     fn solve_stupid(&self) -> u32 {
         let (m, b, items) = (self.m, self.b, &self.items);
@@ -95,7 +103,9 @@ impl Instance {
 
         go(items, 0, m, 0)
     }
+    // ~\~ end
 
+    // ~\~ begin <<lit/main.md|solver-bf>>[0]
     fn solve_stupider(&self) -> u32 {
         let (m, b, items) = (self.m, self.b, &self.items);
         fn go(items: &Vec<(u32, u32)>, cap: u32, i: usize) -> u32 {
@@ -116,4 +126,6 @@ impl Instance {
 
         go(items, m, 0)
     }
+    // ~\~ end
 }
+// ~\~ end

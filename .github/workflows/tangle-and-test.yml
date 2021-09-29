@@ -1,0 +1,24 @@
+name: Entangled literate CI
+on:
+  push:
+    branches: [main, setup/*]
+  pull_request:
+    branches: [main]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    container: ghcr.io/viluon/ni-kop:latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: recursive
+      - name: tangle
+        run: |
+          cd 1-exact-knapsack/
+          make site
+      - name: upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: docs
+          path: 1-exact-knapsack/docs/

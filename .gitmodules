@@ -1,0 +1,3 @@
+[submodule "1-exact-knapsack/bootstrap"]
+	path = 1-exact-knapsack/bootstrap
+	url = git@github.com:entangled/bootstrap-submodule
