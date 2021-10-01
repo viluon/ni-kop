@@ -22,6 +22,7 @@ jobs:
           submodules: recursive
       - name: tangle
         run: |
+          cd 1-exact-knapsack/
           python3 -m venv entangled-filters
           source entangled-filters/bin/activate
           pip3 install -r requirements.txt
