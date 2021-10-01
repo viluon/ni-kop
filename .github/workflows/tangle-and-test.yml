@@ -26,9 +26,7 @@ jobs:
           python3 -m venv entangled-filters
           source entangled-filters/bin/activate
           pip3 install -r requirements.txt
-          ls -lhFA *
-          ls -lhFA entangled-filters/lib/
-          patch -p1 < doctest.patch
+          patch -p0 < doctest.patch
           make site
       - name: upload artifact
         uses: actions/upload-artifact@v2
