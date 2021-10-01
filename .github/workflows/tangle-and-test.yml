@@ -7,8 +7,11 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
     container:
-      image: ghcr.io/viluon/special-hs-rs-dev:latest
+      image: ghcr.io/viluon/special-entangled:latest
       credentials:
         username: ${{ github.repository_owner }}
         password: ${{ secrets.ghcr_token }}
@@ -19,9 +22,10 @@ jobs:
           submodules: recursive
       - name: tangle
         run: |
-          dir=$(pwd)/1-exact-knapsack
-          cd /; patch -p0 < $dir/doctest.patch
-          cd $dir
+          python3 -m venv entangled-filters
+          source entangled-filters/bin/activate
+          pip3 install -r requirements.txt
+          patch < doctest.patch
           make site
       - name: upload artifact
         uses: actions/upload-artifact@v2

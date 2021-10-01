@@ -1,11 +1,17 @@
 ansi2html==1.6.0
 click==7.1.2
+cycler==0.10.0
 entangled-filters==0.8.3
 future==0.18.2
 jupyter-client==6.1.12
 jupyter-core==4.8.1
+kiwisolver==1.3.2
+matplotlib==3.4.3
+numpy==1.21.2
 pampy==0.3.0
 panflute==2.1.0
+Pillow==8.3.2
+pyparsing==2.4.7
 python-dateutil==2.8.2
 PyYAML==5.4.1
 pyzmq==22.3.0
