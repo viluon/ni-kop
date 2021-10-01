@@ -1,51 +1,81 @@
 // ~\~ language=Rust filename=solver/src/main.rs
 // ~\~ begin <<lit/main.md|solver/src/main.rs>>[0]
+use std::{io::stdin, str::FromStr};
+use anyhow::{Context, Result, anyhow};
 
-use std::{fmt::Debug, io::stdin, str::FromStr};
-
-fn main() -> Result<(), std::io::Error> {
-    loop {
-        println!("{}", parse_line()?.solve_stupider());
-    }
-}
-
-// ~\~ begin <<lit/main.md|boilerplate>>[0]
-trait Boilerplate {
-    fn parse_next<T: FromStr>(&mut self) -> T
-    where <T as FromStr>::Err: Debug;
-}
-
-impl Boilerplate for std::str::SplitWhitespace<'_> {
-    fn parse_next<T: FromStr>(&mut self) -> T
-    where <T as FromStr>::Err: Debug {
-        self.next().unwrap().parse().unwrap()
-    }
-}
-// ~\~ end
-// ~\~ begin <<lit/main.md|instance-definition>>[0]
+// ~\~ begin <<lit/main.md|problem-instance-definition>>[0]
 struct Instance {
     id: i32, m: u32, b: u32, items: Vec<(u32, u32)>
 }
 // ~\~ end
+
+fn main() -> Result<()> {
+    let alg = {
+        // ~\~ begin <<lit/main.md|select-algorithm>>[0]
+        use std::env;
+        let args: Vec<String> = env::args().collect();
+        if args.len() != 2 {
+            println!(
+                "Usage: {} <algorithm>, where <algorithm> is one of bf, bb, dp",
+                args[0]
+            );
+            return Ok(())
+        }
+        match &args[1][..] {
+            "bf" => Instance::solve_stupider,
+            "bb" => Instance::solve_stupid,
+            "dp" => Instance::solve,
+            _    => panic!("\"{}\" is not a known algorithm", args[1]),
+        }
+        // ~\~ end
+    };
+
+    loop {
+        match parse_line()? {
+            Some(inst) => println!("{}", alg(&inst)),
+            None => return Ok(())
+        }
+    }
+}
+
 // ~\~ begin <<lit/main.md|parser>>[0]
-fn parse_line() -> Result<Instance, std::io::Error> {
+// ~\~ begin <<lit/main.md|boilerplate>>[0]
+trait Boilerplate {
+    fn parse_next<T: FromStr>(&mut self) -> Result<T>
+      where <T as FromStr>::Err: std::error::Error + Send + Sync + 'static;
+}
+
+impl Boilerplate for std::str::SplitWhitespace<'_> {
+    fn parse_next<T: FromStr>(&mut self) -> Result<T>
+      where <T as FromStr>::Err: std::error::Error + Send + Sync + 'static {
+        let str = self.next().ok_or(anyhow!("unexpected end of input"))?;
+        str.parse::<T>()
+           .with_context(|| format!("cannot parse {}", str))
+    }
+}
+// ~\~ end
+
+fn parse_line() -> Result<Option<Instance>> {
     let mut input = String::new();
-    stdin().read_line(&mut input)?;
+    match stdin().read_line(&mut input)? {
+        0 => return Ok(None),
+        _ => ()
+    };
 
     let mut numbers = input.split_whitespace();
-    let id: i32   = numbers.parse_next();
-    let  n: usize = numbers.parse_next();
-    let  m: u32   = numbers.parse_next();
-    let  b: u32   = numbers.parse_next();
+    let id: i32   = numbers.parse_next()?;
+    let  n: usize = numbers.parse_next()?;
+    let  m: u32   = numbers.parse_next()?;
+    let  b: u32   = numbers.parse_next()?;
 
     let mut items: Vec<(u32, u32)> = Vec::with_capacity(n);
     for _ in 0..n {
-        let w = numbers.parse_next();
-        let c = numbers.parse_next();
+        let w = numbers.parse_next()?;
+        let c = numbers.parse_next()?;
         items.push((w, c));
     }
 
-    Ok(Instance {id, m, b, items})
+    Ok(Some(Instance {id, m, b, items}))
 }
 // ~\~ end
 

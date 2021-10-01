@@ -3,9 +3,15 @@ title: 'NI-KOP -- úkol 1'
 ---
 
 # Kombinatorická optimalizace: problém batohu
-Hello world! This is a test of [Entangled](https://entangled.github.io/).
 
-## Build instructions
+První úkol předmětu NI-KOP jsem se rozhodl implementovat v jazyce Rust za pomoci
+nástrojů na *literate programming* -- přístup k psaní zdrojového kódu, který
+upřednostňuje lidsky čitelný popis před seznamem příkazů pro počítač. Tento
+soubor obsahuje veškerý zdrojový kód nutný k reprodukci mojí práce.
+
+## Instrukce k sestavení programu
+Program využívá standardních nástrojů jazyka Rust. O sestavení stačí požádat
+`cargo`.
 
 ``` {.zsh .eval .bootstrap-fold #build-instructions}
 cd solver
@@ -14,79 +20,69 @@ cargo build --release
 
 ## Benchmarking
 
-We'll be using the Hyperfine benchmarking tool to obtain stable measurements of the solver's performance.
+Pro provedení měření výkonu programu jsem využil nástroje Hyperfine.
 
-``` {.zsh .eval .bootstrap-fold #hyperfine-cli}
-hyperfine --help
-```
-
-``` {.zsh .eval #benchmark}
+``` {.zsh .eval #benchmark .bootstrap-fold}
+uname -a
 cd solver
-hyperfine --export-csv bench.csv --ignore-failure 'cargo run --release < ../data/decision/NR4_inst.dat'
+hyperfine --export-json ../docs/bench.json \
+          --parameter-list n 4,10,15,20 \
+          --parameter-list alg bf,bb,dp \
+          --runs 2 \
+          --style color \
+          'cargo run --release -- {alg} < ds/NR{n}_inst.dat' 2>&1 \
+    | fold -w 120 -s
 ```
 
-Let's have a look at the logged data:
-``` {.zsh .eval #analysis}
-pandoc --from csv --to markdown solver/bench.csv
+Měření ze spuštění Hyperfine jsou uložena v souboru `docs/bench.json`, který
+následně zpracujeme do tabulky níže.
+
+``` {.zsh .eval #json-to-csv .bootstrap-fold}
+echo "algoritmus, \$n\$, průměr, \$\pm \sigma\$, minimum, medián, maximum" > docs/bench.csv
+jq -r \
+   '.[] | .[] | [.parameters.alg, .parameters.n
+                , ([.mean, .stddev, .min, .median, .max]
+                   | map("**" + (100000 * . | round | . / 100 | tostring | sub("\\."; "**.")) + " ms")
+                  )
+                ] | flatten | @csv' \
+   docs/bench.json \
+>> docs/bench.csv
+echo ""
 ```
 
-## Code
+![Měření výkonu pro různé kombinace velikosti instancí problému ($n$) a
+zvoleného algoritmu. y](docs/bench.csv)
 
-``` {.rust #boilerplate .bootstrap-fold}
-trait Boilerplate {
-    fn parse_next<T: FromStr>(&mut self) -> T
-    where <T as FromStr>::Err: Debug;
-}
+## Implementace
 
-impl Boilerplate for std::str::SplitWhitespace<'_> {
-    fn parse_next<T: FromStr>(&mut self) -> T
-    where <T as FromStr>::Err: Debug {
-        self.next().unwrap().parse().unwrap()
-    }
-}
-```
-foo?
+Program začíná definicí datové struktury reprezentující instanci problému
+batohu.
 
-``` {.rust #instance-definition}
+``` {.rust #problem-instance-definition}
 struct Instance {
     id: i32, m: u32, b: u32, items: Vec<(u32, u32)>
 }
 ```
 
-``` {.rust #parser .bootstrap-fold}
-fn parse_line() -> Result<Instance, std::io::Error> {
-    let mut input = String::new();
-    stdin().read_line(&mut input)?;
-
-    let mut numbers = input.split_whitespace();
-    let id: i32   = numbers.parse_next();
-    let  n: usize = numbers.parse_next();
-    let  m: u32   = numbers.parse_next();
-    let  b: u32   = numbers.parse_next();
-
-    let mut items: Vec<(u32, u32)> = Vec::with_capacity(n);
-    for _ in 0..n {
-        let w = numbers.parse_next();
-        let c = numbers.parse_next();
-        items.push((w, c));
-    }
-
-    Ok(Instance {id, m, b, items})
-}
-```
-
 ``` {.rust file=solver/src/main.rs}
+use std::{io::stdin, str::FromStr};
+use anyhow::{Context, Result, anyhow};
 
-use std::{fmt::Debug, io::stdin, str::FromStr};
+<<problem-instance-definition>>
 
-fn main() -> Result<(), std::io::Error> {
+fn main() -> Result<()> {
+    let alg = {
+        <<select-algorithm>>
+    };
+
     loop {
-        println!("{}", parse_line()?.solve_stupider());
+        match parse_line()? {
+            Some(inst) => println!("{}", alg(&inst)),
+            None => return Ok(())
+        }
     }
 }
 
-<<boilerplate>>
-<<instance-definition>>
 <<parser>>
 
 impl Instance {
@@ -100,31 +96,28 @@ impl Instance {
 
 ## Solvers
 
-### Dynamic programming
+### Brute force
 
-``` {.rust #solver-dp}
-fn solve(&self) -> u32 {
+``` {.rust #solver-bf}
+fn solve_stupider(&self) -> u32 {
     let (m, b, items) = (self.m, self.b, &self.items);
-    let mut next = Vec::with_capacity(m as usize + 1);
-    next.resize(m as usize + 1, 0);
-    let mut last = Vec::new();
+    fn go(items: &Vec<(u32, u32)>, cap: u32, i: usize) -> u32 {
+        use std::cmp::max;
+        if i >= items.len() { return 0; }
 
-    for i in 1..=items.len() {
-        let (weight, cost) = items[i - 1];
-        last.clone_from(&next);
-
-        for cap in 0..=m as usize {
-            next[cap] = if (cap as u32) < weight {
-                last[cap]
-            } else {
-                use std::cmp::max;
-                let rem_weight = max(0, cap as isize - weight as isize) as usize;
-                max(last[cap], last[rem_weight] + cost)
-            };
-        }
+        let (w, c) = items[i];
+        let next = |cap| go(items, cap, i + 1);
+        let include = || next(cap - w);
+        let exclude = || next(cap);
+        let current = if w <= cap {
+            max(c + include(), exclude())
+        } else {
+            exclude()
+        };
+        current
     }
 
-    *next.last().unwrap() //>= b
+    go(items, m, 0)
 }
 ```
 
@@ -159,26 +152,101 @@ fn solve_stupid(&self) -> u32 {
 }
 ```
 
-### Brute force
-``` {.rust #solver-bf}
-fn solve_stupider(&self) -> u32 {
-    let (m, b, items) = (self.m, self.b, &self.items);
-    fn go(items: &Vec<(u32, u32)>, cap: u32, i: usize) -> u32 {
-        use std::cmp::max;
-        if i >= items.len() { return 0; }
+### Dynamic programming
 
-        let (w, c) = items[i];
-        let next = |cap| go(items, cap, i + 1);
-        let include = || next(cap - w);
-        let exclude = || next(cap);
-        let current = if w <= cap {
-            max(c + include(), exclude())
-        } else {
-            exclude()
-        };
-        current
+``` {.rust #solver-dp}
+fn solve(&self) -> u32 {
+    let (m, b, items) = (self.m, self.b, &self.items);
+    let mut next = Vec::with_capacity(m as usize + 1);
+    next.resize(m as usize + 1, 0);
+    let mut last = Vec::new();
+
+    for i in 1..=items.len() {
+        let (weight, cost) = items[i - 1];
+        last.clone_from(&next);
+
+        for cap in 0..=m as usize {
+            next[cap] = if (cap as u32) < weight {
+                last[cap]
+            } else {
+                use std::cmp::max;
+                let rem_weight = max(0, cap as isize - weight as isize) as usize;
+                max(last[cap], last[rem_weight] + cost)
+            };
+        }
     }
 
-    go(items, m, 0)
+    *next.last().unwrap() //>= b
+}
+```
+
+## Appendix
+
+Zpracování vstupu neošetřuje chyby ve vstupním formátu,
+
+``` {.rust #parser .bootstrap-fold}
+<<boilerplate>>
+
+fn parse_line() -> Result<Option<Instance>> {
+    let mut input = String::new();
+    match stdin().read_line(&mut input)? {
+        0 => return Ok(None),
+        _ => ()
+    };
+
+    let mut numbers = input.split_whitespace();
+    let id: i32   = numbers.parse_next()?;
+    let  n: usize = numbers.parse_next()?;
+    let  m: u32   = numbers.parse_next()?;
+    let  b: u32   = numbers.parse_next()?;
+
+    let mut items: Vec<(u32, u32)> = Vec::with_capacity(n);
+    for _ in 0..n {
+        let w = numbers.parse_next()?;
+        let c = numbers.parse_next()?;
+        items.push((w, c));
+    }
+
+    Ok(Some(Instance {id, m, b, items}))
+}
+```
+
+Výběr algoritmu je řízen argumentem předaným na příkazové řádce. Příslušnou
+funkci vrátíme jako hodnotu tohoto bloku:
+
+``` {.rust #select-algorithm .bootstrap-fold}
+use std::env;
+let args: Vec<String> = env::args().collect();
+if args.len() != 2 {
+    println!(
+        "Usage: {} <algorithm>, where <algorithm> is one of bf, bb, dp",
+        args[0]
+    );
+    return Ok(())
+}
+match &args[1][..] {
+    "bf" => Instance::solve_stupider,
+    "bb" => Instance::solve_stupid,
+    "dp" => Instance::solve,
+    _    => panic!("\"{}\" is not a known algorithm", args[1]),
+}
+```
+
+Trait `Boilerplate` definuje funkci `parse_next` pro zkrácení zápisu zpracování
+vstupu.
+
+``` {.rust #boilerplate .bootstrap-fold}
+trait Boilerplate {
+    fn parse_next<T: FromStr>(&mut self) -> Result<T>
+      where <T as FromStr>::Err: std::error::Error + Send + Sync + 'static;
+}
+
+impl Boilerplate for std::str::SplitWhitespace<'_> {
+    fn parse_next<T: FromStr>(&mut self) -> Result<T>
+      where <T as FromStr>::Err: std::error::Error + Send + Sync + 'static {
+        let str = self.next().ok_or(anyhow!("unexpected end of input"))?;
+        str.parse::<T>()
+           .with_context(|| format!("cannot parse {}", str))
+    }
 }
 ```
