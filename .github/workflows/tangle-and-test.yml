@@ -27,6 +27,7 @@ jobs:
           source entangled-filters/bin/activate
           pip3 install -r requirements.txt
           patch -p0 < doctest.patch
+          cat entangled-filters/bin/pandoc-bootstrap
           make site
       - name: upload artifact
         uses: actions/upload-artifact@v2
