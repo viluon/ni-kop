@@ -23,14 +23,7 @@ jobs:
       - name: tangle
         run: |
           cd 1-exact-knapsack/
-          python3 -m venv entangled-filters
-          source entangled-filters/bin/activate
-          pip3 install wheel
-          pip3 install -f wheels/*
-          pip3 install -r requirements.txt
-          patch entangled-filters/lib/python*/site-packages/entangled/doctest.py < doctest.patch
-          cat entangled-filters/bin/pandoc-bootstrap
-          make site
+          ./ci.sh
       - name: upload artifact
         uses: actions/upload-artifact@v2
         with:
