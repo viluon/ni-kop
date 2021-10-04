@@ -22,10 +22,14 @@ jobs:
           submodules: recursive
       - name: tangle
         run: |
+          git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.8.1
+          source $HOME/.asdf/asdf.sh
+          asdf plugin-add python
           cd 1-exact-knapsack/
-          python3 -m venv entangled-filters
+          asdf install
+          python3.9 -m venv entangled-filters
           source entangled-filters/bin/activate
-          pip3 install -r requirements.txt
+          pip3.9 install --use-deprecated=legacy-resolver -r requirements.txt
           patch -p0 < doctest.patch
           cat entangled-filters/bin/pandoc-bootstrap
           make site
