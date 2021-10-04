@@ -22,6 +22,12 @@ jobs:
           submodules: recursive
       - name: tangle
         run: |
+          bash --version
+          cabal --version
+          cargo --version
+          pandoc --version
+          pip --version
+          zsh --version
           cd 1-exact-knapsack/
           ./ci.sh
       - name: upload artifact
