@@ -15,7 +15,7 @@ Program využívá standardních nástrojů jazyka Rust. O sestavení stačí po
 
 ``` {.zsh .eval .bootstrap-fold #build-instructions}
 cd solver
-cargo build --release
+cargo build --release --color always
 ```
 
 ## Benchmarking
@@ -42,7 +42,13 @@ echo "algoritmus, \$n\$, průměr, \$\pm \sigma\$, minimum, medián, maximum" > 
 jq -r \
    '.[] | .[] | [.parameters.alg, .parameters.n
                 , ([.mean, .stddev, .min, .median, .max]
-                   | map("**" + (100000 * . | round | . / 100 | tostring | sub("\\."; "**.")) + " ms")
+                   | map("**" + (100000 * . + 0.5
+                         | floor
+                         | . / 100
+                         | tostring
+                         | if test("\\.") then sub("\\."; "**.") else . + "**" end
+                         ) + " ms"
+                        )
                   )
                 ] | flatten | @csv' \
    docs/bench.json \
