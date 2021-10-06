@@ -38,7 +38,7 @@ Měření ze spuštění Hyperfine jsou uložena v souboru `docs/bench.json`, kt
 následně zpracujeme do tabulky níže.
 
 ``` {.zsh .eval #json-to-csv .bootstrap-fold}
-echo "algoritmus, \$n\$, průměr, \$\pm \sigma\$, minimum, medián, maximum" > docs/bench.csv
+echo "algoritmus,\$n\$,průměr,\$\pm \sigma\$,minimum,medián,maximum" > docs/bench.csv
 jq -r \
    '.[] | .[] | [.parameters.alg, .parameters.n
                 , ([.mean, .stddev, .min, .median, .max]
@@ -58,6 +58,58 @@ echo ""
 
 ![Měření výkonu pro různé kombinace velikosti instancí problému ($n$) a
 zvoleného algoritmu. y](docs/bench.csv)
+
+### Srovnání algoritmů
+
+```{.python .eval file=analysis/chart.py}
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from pandas.core.tools.numeric import to_numeric
+
+bench = pd.read_csv("docs/bench.csv", dtype = "string")
+bench.rename({
+        "algoritmus": "alg",
+        "$n$": "n",
+        "průměr": "avg",
+        "$\pm \sigma$": "sigma",
+        "medián": "median",
+        "minimum": "min",
+        "maximum": "max",
+    },
+    inplace = True,
+    errors  = "raise",
+    axis    = 1,
+)
+
+numeric_columns = ["n", "avg", "sigma", "min", "median", "max"]
+bench[numeric_columns] = bench[numeric_columns].apply(lambda c: c.apply(lambda x: to_numeric(x.replace("**", "").replace(" ms", ""))))
+# plt.figure()
+# bench.groupby("alg").plot("n", "avg", kind = "line", ax = plt.gca())
+
+df = bench
+
+# Create a figure and a set of subplots.
+fig, ax = plt.subplots()
+
+# Group the dataframe by alg and create a line for each group.
+for name, group in df.groupby("alg"):
+    ax.errorbar(group["n"], group["avg"], yerr = group["sigma"], label = name)
+
+# Set the axis labels.
+
+ax.set_xlabel("n")
+ax.set_ylabel("time (ms)")
+ax.set_yscale("log")
+
+# Add a legend.
+ax.legend(loc="upper left")
+
+
+plt.savefig("docs/graph.svg")
+```
+
+![box plot](graph.svg)
 
 ## Implementace
 
@@ -228,13 +280,13 @@ if args.len() != 2 {
         "Usage: {} <algorithm>, where <algorithm> is one of bf, bb, dp",
         args[0]
     );
-    return Ok(())
+    return Err(anyhow!("Expected 1 argument, got {}", args.len() - 1));
 }
 match &args[1][..] {
-    "bf" => Instance::solve_stupider,
-    "bb" => Instance::solve_stupid,
-    "dp" => Instance::solve,
-    _    => panic!("\"{}\" is not a known algorithm", args[1]),
+    "bf"    => Instance::solve_stupider,
+    "bb"    => Instance::solve_stupid,
+    "dp"    => Instance::solve,
+    invalid => panic!("\"{}\" is not a known algorithm", invalid),
 }
 ```
 

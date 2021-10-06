@@ -19,13 +19,13 @@ fn main() -> Result<()> {
                 "Usage: {} <algorithm>, where <algorithm> is one of bf, bb, dp",
                 args[0]
             );
-            return Ok(())
+            return Err(anyhow!("Expected 1 argument, got {}", args.len() - 1));
         }
         match &args[1][..] {
-            "bf" => Instance::solve_stupider,
-            "bb" => Instance::solve_stupid,
-            "dp" => Instance::solve,
-            _    => panic!("\"{}\" is not a known algorithm", args[1]),
+            "bf"    => Instance::solve_stupider,
+            "bb"    => Instance::solve_stupid,
+            "dp"    => Instance::solve,
+            invalid => panic!("\"{}\" is not a known algorithm", invalid),
         }
         // ~\~ end
     };
