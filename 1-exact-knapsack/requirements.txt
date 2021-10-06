@@ -10,7 +10,7 @@ kiwisolver==1.3.2
 matplotlib==3.4.3
 numpy==1.21.2
 pampy==0.3.0
-pandas==1.3.3
+pandas @ https://files.pythonhosted.org/packages/a5/2c/c82570a1b4ae3f0e0359010719c02c8cf5534e51739fad2e5283f07efb32/pandas-1.3.3-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl
 panflute==2.1.0
 Pillow==8.3.2
 pyparsing==2.4.7
