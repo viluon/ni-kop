@@ -63,12 +63,11 @@ zvoleného algoritmu. y](docs/bench.csv)
 
 ```{.python .eval file=analysis/chart.py}
 import matplotlib.pyplot as plt
-import numpy as np
 import pandas as pd
 from pandas.core.tools.numeric import to_numeric
 
-bench = pd.read_csv("docs/bench.csv", dtype = "string")
-bench.rename({
+df = pd.read_csv("docs/bench.csv", dtype = "string")
+df.rename({
         "algoritmus": "alg",
         "$n$": "n",
         "průměr": "avg",
@@ -83,33 +82,37 @@ bench.rename({
 )
 
 numeric_columns = ["n", "avg", "sigma", "min", "median", "max"]
-bench[numeric_columns] = bench[numeric_columns].apply(lambda c: c.apply(lambda x: to_numeric(x.replace("**", "").replace(" ms", ""))))
-# plt.figure()
-# bench.groupby("alg").plot("n", "avg", kind = "line", ax = plt.gca())
-
-df = bench
+df[numeric_columns] = df[numeric_columns].apply(lambda c:
+    c.apply(lambda x:
+        to_numeric(x.replace("**", "").replace(" ms", ""))
+    )
+)
 
 # Create a figure and a set of subplots.
-fig, ax = plt.subplots()
+fig, ax = plt.subplots(figsize = (11, 6))
+labels = { "bf": "Hrubá síla"
+         , "bb": "Branch & bound"
+         , "dp": "Dynamické programování"
+         }
 
 # Group the dataframe by alg and create a line for each group.
 for name, group in df.groupby("alg"):
-    ax.errorbar(group["n"], group["avg"], yerr = group["sigma"], label = name)
+    (x, y, sigma) = (group["n"], group["avg"], group["sigma"])
+    ax.plot(x, y, label = labels[name])
+    ax.fill_between(x, y + sigma, y - sigma, alpha = 0.3)
 
-# Set the axis labels.
-
-ax.set_xlabel("n")
-ax.set_ylabel("time (ms)")
-ax.set_yscale("log", base = 2)
-
-# Add a legend.
+# Axis metadata: ticks, scaling, margins, and the legend
+plt.xticks(df["n"])
+ax.set_yscale("log", base = 10)
+ax.set_yticks(list(plt.yticks()[0]) + list(df["avg"]), minor = True)
+ax.margins(0.05, 0.1)
 ax.legend(loc="upper left")
-
 
 plt.savefig("docs/graph.svg")
 ```
 
-![box plot](graph.svg)
+![Závislost doby běhu na počtu předmětů. Částečně průhledná oblast značí
+směrodatnou odchylku ($\sigma$).](graph.svg)
 
 ## Implementace
 
