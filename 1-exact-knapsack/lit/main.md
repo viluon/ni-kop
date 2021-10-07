@@ -100,7 +100,7 @@ for name, group in df.groupby("alg"):
 
 ax.set_xlabel("n")
 ax.set_ylabel("time (ms)")
-ax.set_yscale("log")
+ax.set_yscale("log", base = 2)
 
 # Add a legend.
 ax.legend(loc="upper left")
