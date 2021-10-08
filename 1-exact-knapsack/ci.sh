@@ -10,4 +10,4 @@ patch entangled-filters/lib/python*/site-packages/entangled/doctest.py < doctest
 cat entangled-filters/bin/pandoc-bootstrap
 mkdir -p docs
 touch docs/bench.csv
-make site
+make all

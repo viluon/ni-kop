@@ -1,9 +1,5 @@
 name: Entangled literate CI
-on:
-  push:
-    branches: [main, setup/*]
-  pull_request:
-    branches: [main]
+on: [push, pull_request]
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -30,6 +26,8 @@ jobs:
           zsh --version
           locale
 
+          apt-get install -y --no-install-recommends rsync librsvg2-bin lmodern
+
           cd 1-exact-knapsack/
           ./ci.sh
       - name: upload artifact
@@ -37,3 +35,8 @@ jobs:
         with:
           name: docs
           path: 1-exact-knapsack/docs/
+      - name: deploy
+        uses: JamesIves/github-pages-deploy-action@4.1.4
+        with:
+          branch: gh-pages
+          folder: 1-exact-knapsack/docs/

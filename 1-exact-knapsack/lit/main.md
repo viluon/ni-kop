@@ -1,5 +1,6 @@
 ---
 title: 'NI-KOP -- úkol 1'
+author: 'Ondřej Kvapil'
 ---
 
 # Kombinatorická optimalizace: problém batohu
