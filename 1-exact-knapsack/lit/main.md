@@ -5,6 +5,45 @@ author: 'Ondřej Kvapil'
 
 # Kombinatorická optimalizace: problém batohu
 
+## Zadání
+
+- Experimentálně vyhodnoťte závislost výpočetní složitosti na velikosti instance
+  u následujících algoritmů rozhodovací verze 0/1 problému batohu:
+  - hrubá síla
+  - metoda větví a hranic (B&B)
+- Otázky, které má experiment zodpovědět:
+  - Vyhovují nejhorší případy očekávané závislosti?
+  - Závisí střední hodnota výpočetní závislosti na sadě instancí? Jestliže ano,
+    proč?
+
+### Pokyny
+
+Oba algoritmy naprogramujte. Výpočetní složitost (čas) je nejspolehlivější a
+nejjednodušší měřit počtem navštívených konfigurací, to jest vyhodnocených
+sestav věcí v batohu. Na obou sadách pozorujte závislost výpočetního času na
+$n$, pro $n$ v rozsahu, jaký je Vaše výpočetní platforma schopna zvládnout, a to
+jak maximální, tak průměrný čas. Pro alespoň jednu hodnotu $n$ (volte instance
+velikosti alespoň 10) zjistěte četnosti jednotlivých hodnot (histogram) a
+pokuste se jej vysvětlit. Ohledně metody větví a hranic -- uvědomte si, že se
+jedná o rozhodovací problém a podle toho ořezávejte. Nápověda: i když je to
+rozhodovací problém, lze použít ořezávání podle ceny. Jak? Implementované
+způsoby ořezávání popište ve zprávě.
+
+Sady NR a ZR vyhodnocujte zvlášť a proveďte jejich srovnání (stačí diskuze).
+
+### Bonusový bod
+
+Na bonusový bod musí práce obsahovat přínos navíc. Takové přínosy jsou
+například:
+
+- Zjištění, jak čas CPU souvisí s počtem vyhodnocených konfigurací na Vaší
+  platformě a jak je tato závislost stabilní při opakovaném měření téže
+  instance.
+- Nový (a experimentálně porovnaný) způsob prořezávání v metodě větví a hranic.
+- atd.
+
+## Řešení
+
 První úkol předmětu NI-KOP jsem se rozhodl implementovat v jazyce Rust za pomoci
 nástrojů na *literate programming* -- přístup k psaní zdrojového kódu, který
 upřednostňuje lidsky čitelný popis před seznamem příkazů pro počítač. Tento
@@ -121,6 +160,7 @@ Program začíná definicí datové struktury reprezentující instanci problém
 batohu.
 
 ``` {.rust #problem-instance-definition}
+#[derive(Debug, PartialEq, Eq)]
 struct Instance {
     id: i32, m: u32, b: u32, items: Vec<(u32, u32)>
 }
@@ -135,7 +175,7 @@ use anyhow::{Context, Result, anyhow};
 fn main() -> Result<()> {
     let alg = {
         <<select-algorithm>>
-    };
+    }?;
 
     loop {
         match parse_line()? {
@@ -156,12 +196,12 @@ impl Instance {
 }
 ```
 
-## Solvers
+## Algoritmy
 
-### Brute force
+### Hrubá síla
 
 ``` {.rust #solver-bf}
-fn solve_stupider(&self) -> u32 {
+fn brute_force(&self) -> u32 {
     let (m, b, items) = (self.m, self.b, &self.items);
     fn go(items: &Vec<(u32, u32)>, cap: u32, i: usize) -> u32 {
         use std::cmp::max;
@@ -185,39 +225,41 @@ fn solve_stupider(&self) -> u32 {
 
 ### Branch & bound
 ``` {.rust #solver-bb}
-// branch & bound
-fn solve_stupid(&self) -> u32 {
-    let (m, b, items) = (self.m, self.b, &self.items);
+fn branch_and_bound(&self) -> u32 {
+    let Instance { m, b, items, .. } = self;
     let prices: Vec<u32> = items.iter().rev()
         .scan(0, |sum, (_w, c)| {
             *sum = *sum + c;
             Some(*sum)
         })
-        .collect();
-    fn go(items: &Vec<(u32, u32)>, best: u32, cap: u32, i: usize) -> u32 {
-        use std::cmp::max;
-        if i >= items.len() { return 0; }
+        .collect::<Vec<_>>().into_iter().rev().collect();
+
+    struct State<'a>(&'a Vec<(u32, u32)>, Vec<u32>);
+    fn go(state: &State, best: u32, cap: u32, i: usize) -> u32 {
+        let State(items, prices) = state;
+        if i >= items.len() || best > prices[i] { return 0; }
 
         let (w, c) = items[i];
-        let next = |best, cap| go(items, best, cap, i + 1);
+        let next = |best, cap| go(state, best, cap, i + 1);
         let include = || next(best, cap - w);
-        let exclude = || next(best, cap);
-        let current = if w <= cap {
-            max(c + include(), exclude())
+        let exclude = |best| next(best, cap);
+        if w <= cap {
+            use std::cmp::max;
+            let new_best = max(c + include(), best);
+            max(new_best, exclude(new_best))
         } else {
-            exclude()
-        };
-        max(current, best)
+            exclude(best)
+        }
     }
 
-    go(items, 0, m, 0)
+    go(&State(items, prices), 0, *m, 0)
 }
 ```
 
-### Dynamic programming
+### Dynamické programování
 
 ``` {.rust #solver-dp}
-fn solve(&self) -> u32 {
+fn dynamic_programming(&self) -> u32 {
     let (m, b, items) = (self.m, self.b, &self.items);
     let mut next = Vec::with_capacity(m as usize + 1);
     next.resize(m as usize + 1, 0);
@@ -244,7 +286,7 @@ fn solve(&self) -> u32 {
 
 ## Appendix
 
-Zpracování vstupu neošetřuje chyby ve vstupním formátu,
+Zpracování vstupu zajišťuje jednoduchý parser pracující řádek po řádku.
 
 ``` {.rust #parser .bootstrap-fold}
 <<boilerplate>>
@@ -256,11 +298,11 @@ fn parse_line() -> Result<Option<Instance>> {
         _ => ()
     };
 
-    let mut numbers = input.split_whitespace();
-    let id: i32   = numbers.parse_next()?;
-    let  n: usize = numbers.parse_next()?;
-    let  m: u32   = numbers.parse_next()?;
-    let  b: u32   = numbers.parse_next()?;
+    let mut  numbers = input.split_whitespace();
+    let id = numbers.parse_next()?;
+    let  n = numbers.parse_next()?;
+    let  m = numbers.parse_next()?;
+    let  b = numbers.parse_next()?;
 
     let mut items: Vec<(u32, u32)> = Vec::with_capacity(n);
     for _ in 0..n {
@@ -277,20 +319,21 @@ Výběr algoritmu je řízen argumentem předaným na příkazové řádce. Př�
 funkci vrátíme jako hodnotu tohoto bloku:
 
 ``` {.rust #select-algorithm .bootstrap-fold}
-use std::env;
-let args: Vec<String> = env::args().collect();
-if args.len() != 2 {
+let args: Vec<String> = std::env::args().collect();
+if args.len() == 2 {
+    let ok = |x: fn(&Instance) -> u32| Ok(x);
+    match &args[1][..] {
+        "bf"    => ok(Instance::brute_force),
+        "bb"    => ok(Instance::branch_and_bound),
+        "dp"    => ok(Instance::dynamic_programming),
+        invalid => Err(anyhow!("\"{}\" is not a known algorithm", invalid)),
+    }
+} else {
     println!(
         "Usage: {} <algorithm>, where <algorithm> is one of bf, bb, dp",
         args[0]
     );
-    return Err(anyhow!("Expected 1 argument, got {}", args.len() - 1));
-}
-match &args[1][..] {
-    "bf"    => Instance::solve_stupider,
-    "bb"    => Instance::solve_stupid,
-    "dp"    => Instance::solve,
-    invalid => panic!("\"{}\" is not a known algorithm", invalid),
+    Err(anyhow!("Expected 1 argument, got {}", args.len() - 1))
 }
 ```
 

@@ -4,6 +4,7 @@ use std::{io::stdin, str::FromStr};
 use anyhow::{Context, Result, anyhow};
 
 // ~\~ begin <<lit/main.md|problem-instance-definition>>[0]
+#[derive(Debug, PartialEq, Eq)]
 struct Instance {
     id: i32, m: u32, b: u32, items: Vec<(u32, u32)>
 }
@@ -12,23 +13,24 @@ struct Instance {
 fn main() -> Result<()> {
     let alg = {
         // ~\~ begin <<lit/main.md|select-algorithm>>[0]
-        use std::env;
-        let args: Vec<String> = env::args().collect();
-        if args.len() != 2 {
+        let args: Vec<String> = std::env::args().collect();
+        if args.len() == 2 {
+            let ok = |x: fn(&Instance) -> u32| Ok(x);
+            match &args[1][..] {
+                "bf"    => ok(Instance::brute_force),
+                "bb"    => ok(Instance::branch_and_bound),
+                "dp"    => ok(Instance::dynamic_programming),
+                invalid => Err(anyhow!("\"{}\" is not a known algorithm", invalid)),
+            }
+        } else {
             println!(
                 "Usage: {} <algorithm>, where <algorithm> is one of bf, bb, dp",
                 args[0]
             );
-            return Err(anyhow!("Expected 1 argument, got {}", args.len() - 1));
-        }
-        match &args[1][..] {
-            "bf"    => Instance::solve_stupider,
-            "bb"    => Instance::solve_stupid,
-            "dp"    => Instance::solve,
-            invalid => panic!("\"{}\" is not a known algorithm", invalid),
+            Err(anyhow!("Expected 1 argument, got {}", args.len() - 1))
         }
         // ~\~ end
-    };
+    }?;
 
     loop {
         match parse_line()? {
@@ -62,11 +64,11 @@ fn parse_line() -> Result<Option<Instance>> {
         _ => ()
     };
 
-    let mut numbers = input.split_whitespace();
-    let id: i32   = numbers.parse_next()?;
-    let  n: usize = numbers.parse_next()?;
-    let  m: u32   = numbers.parse_next()?;
-    let  b: u32   = numbers.parse_next()?;
+    let mut  numbers = input.split_whitespace();
+    let id = numbers.parse_next()?;
+    let  n = numbers.parse_next()?;
+    let  m = numbers.parse_next()?;
+    let  b = numbers.parse_next()?;
 
     let mut items: Vec<(u32, u32)> = Vec::with_capacity(n);
     for _ in 0..n {
@@ -81,7 +83,7 @@ fn parse_line() -> Result<Option<Instance>> {
 
 impl Instance {
     // ~\~ begin <<lit/main.md|solver-dp>>[0]
-    fn solve(&self) -> u32 {
+    fn dynamic_programming(&self) -> u32 {
         let (m, b, items) = (self.m, self.b, &self.items);
         let mut next = Vec::with_capacity(m as usize + 1);
         next.resize(m as usize + 1, 0);
@@ -107,37 +109,39 @@ impl Instance {
     // ~\~ end
 
     // ~\~ begin <<lit/main.md|solver-bb>>[0]
-    // branch & bound
-    fn solve_stupid(&self) -> u32 {
-        let (m, b, items) = (self.m, self.b, &self.items);
+    fn branch_and_bound(&self) -> u32 {
+        let Instance { m, b, items, .. } = self;
         let prices: Vec<u32> = items.iter().rev()
             .scan(0, |sum, (_w, c)| {
                 *sum = *sum + c;
                 Some(*sum)
             })
-            .collect();
-        fn go(items: &Vec<(u32, u32)>, best: u32, cap: u32, i: usize) -> u32 {
-            use std::cmp::max;
-            if i >= items.len() { return 0; }
+            .collect::<Vec<_>>().into_iter().rev().collect();
+
+        struct State<'a>(&'a Vec<(u32, u32)>, Vec<u32>);
+        fn go(state: &State, best: u32, cap: u32, i: usize) -> u32 {
+            let State(items, prices) = state;
+            if i >= items.len() || best > prices[i] { return 0; }
 
             let (w, c) = items[i];
-            let next = |best, cap| go(items, best, cap, i + 1);
+            let next = |best, cap| go(state, best, cap, i + 1);
             let include = || next(best, cap - w);
-            let exclude = || next(best, cap);
-            let current = if w <= cap {
-                max(c + include(), exclude())
+            let exclude = |best| next(best, cap);
+            if w <= cap {
+                use std::cmp::max;
+                let new_best = max(c + include(), best);
+                max(new_best, exclude(new_best))
             } else {
-                exclude()
-            };
-            max(current, best)
+                exclude(best)
+            }
         }
 
-        go(items, 0, m, 0)
+        go(&State(items, prices), 0, *m, 0)
     }
     // ~\~ end
 
     // ~\~ begin <<lit/main.md|solver-bf>>[0]
-    fn solve_stupider(&self) -> u32 {
+    fn brute_force(&self) -> u32 {
         let (m, b, items) = (self.m, self.b, &self.items);
         fn go(items: &Vec<(u32, u32)>, cap: u32, i: usize) -> u32 {
             use std::cmp::max;

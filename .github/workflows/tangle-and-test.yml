@@ -35,6 +35,10 @@ jobs:
         with:
           name: docs
           path: 1-exact-knapsack/docs/
+      - name: test
+        run: |
+          cd 1-exact-knapsack/solver/
+          cargo test -- --show-output
       - name: deploy
         uses: JamesIves/github-pages-deploy-action@4.1.4
         with:

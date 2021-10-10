@@ -39,20 +39,20 @@ pandoc_args += --highlight-style tango
 pandoc_args_html += --to html5
 pandoc_args_html += --mathjax
 pandoc_args_html += --toc
-pandoc_args_html += --toc-depth 1
+pandoc_args_html += --toc-depth 2
 pandoc_args_html += --template $(bootstrap_dir)/template.html
 pandoc_args_html += --css css/mods.css
-# FIXME: bootstrap before doctest leads to cell output outside of foldable
-#        blocks
+# FIXME: bootstrap after doctest leads to cell output outside of foldable blocks
 pandoc_args_html += --filter pandoc-bootstrap
 
 # Arguments to Pandoc specific to PDF output
 pandoc_args_pdf += --to pdf
+pandoc_args_pdf += --pdf-engine xelatex
 pandoc_args_pdf += --template $(assets_dir)/template.tex
 pandoc_args_pdf += --variable documentclass=article
 pandoc_args_pdf += --variable geometry="margin=3cm"
-pandoc_args_pdf += --variable mainfont=libertinus
-pandoc_args_pdf += --variable sansfont=libertinus
+# pandoc_args_pdf += --variable mainfont=libertine
+# pandoc_args_pdf += --variable sansfont=libertine
 
 # Any file in the `$(lit_dir)` directory that is not a Markdown source
 # is to be copied to the `$(docs_dir)` directory
