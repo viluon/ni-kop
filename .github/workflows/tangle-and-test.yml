@@ -26,7 +26,8 @@ jobs:
           zsh --version
           locale
 
-          apt-get install -y --no-install-recommends rsync librsvg2-bin lmodern
+          apt-get install -y --no-install-recommends \
+            librsvg2-bin lmodern rsync texlive-xetex
 
           cd 1-exact-knapsack/
           ./ci.sh
