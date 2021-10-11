@@ -2,6 +2,7 @@
 // ~\~ begin <<lit/main.md|solver/src/main.rs>>[0]
 use std::{io::stdin, str::FromStr};
 use anyhow::{Context, Result, anyhow};
+use bitvec::prelude::BitArr;
 
 // ~\~ begin <<lit/main.md|problem-instance-definition>>[0]
 #[derive(Debug, PartialEq, Eq)]
@@ -33,7 +34,7 @@ fn main() -> Result<()> {
     }?;
 
     loop {
-        match parse_line()? {
+        match parse_line(stdin().lock())? {
             Some(inst) => println!("{}", alg(&inst)),
             None => return Ok(())
         }
@@ -57,9 +58,9 @@ impl Boilerplate for std::str::SplitWhitespace<'_> {
 }
 // ~\~ end
 
-fn parse_line() -> Result<Option<Instance>> {
+fn parse_line<T>(mut stream: T) -> Result<Option<Instance>> where T: std::io::BufRead {
     let mut input = String::new();
-    match stdin().read_line(&mut input)? {
+    match stream.read_line(&mut input)? {
         0 => return Ok(None),
         _ => ()
     };
@@ -80,6 +81,10 @@ fn parse_line() -> Result<Option<Instance>> {
     Ok(Some(Instance {id, m, b, items}))
 }
 // ~\~ end
+
+type Config = BitArr!(for 64);
+#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Default)]
+struct Solution(u32, Config);
 
 impl Instance {
     // ~\~ begin <<lit/main.md|solver-dp>>[0]
@@ -110,33 +115,41 @@ impl Instance {
 
     // ~\~ begin <<lit/main.md|solver-bb>>[0]
     fn branch_and_bound(&self) -> u32 {
+        self.branch_and_bound2().0
+    }
+
+    fn branch_and_bound2(&self) -> Solution {
         let Instance { m, b, items, .. } = self;
         let prices: Vec<u32> = items.iter().rev()
-            .scan(0, |sum, (_w, c)| {
-                *sum = *sum + c;
-                Some(*sum)
-            })
-            .collect::<Vec<_>>().into_iter().rev().collect();
+        .scan(0, |sum, (_w, c)| {
+            *sum = *sum + c;
+            Some(*sum)
+        })
+        .collect::<Vec<_>>().into_iter().rev().collect();
 
         struct State<'a>(&'a Vec<(u32, u32)>, Vec<u32>);
-        fn go(state: &State, best: u32, cap: u32, i: usize) -> u32 {
+        fn go(state: &State, best: Solution, cap: u32, i: usize) -> Solution {
             let State(items, prices) = state;
-            if i >= items.len() || best > prices[i] { return 0; }
+            if i >= items.len() || best.0 > prices[i] { return best; }
 
             let (w, c) = items[i];
             let next = |best, cap| go(state, best, cap, i + 1);
-            let include = || next(best, cap - w);
+            let include = || {
+                let Solution(sub_c, mut cfg) = next(best, cap - w);
+                cfg.set(i, true);
+                Solution(c + sub_c, cfg)
+            };
             let exclude = |best| next(best, cap);
             if w <= cap {
                 use std::cmp::max;
-                let new_best = max(c + include(), best);
+                let new_best = max(include(), best);
                 max(new_best, exclude(new_best))
             } else {
                 exclude(best)
             }
         }
 
-        go(&State(items, prices), 0, *m, 0)
+        go(&State(items, prices), Default::default(), *m, 0)
     }
     // ~\~ end
 
@@ -163,4 +176,53 @@ impl Instance {
     }
     // ~\~ end
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    impl Solution {
+        fn assert_valid(&self, i: &Instance) {
+            let Instance { m, b, items, .. } = i;
+            let Solution(c, cfg) = self;
+
+            println!("{} > {}", c, b);
+            assert!(c > b);
+
+            let weight: u32 = items.into_iter().zip(cfg).map(|((w, _c), b)| {
+                if *b { *w } else { 0 }
+            }).sum();
+            println!("{} <= {}", weight, *m);
+            assert!(weight <= *m);
+        }
+    }
+
+    #[test]
+    fn small_bb_is_correct() {
+        let a = Instance {
+            id: -10,
+            m: 165,
+            b: 384,
+            items: vec![ (86,  744)
+                       , (214, 1373)
+                       , (236, 1571)
+                       , (239, 2388)
+                       ],
+        };
+        a.branch_and_bound2().assert_valid(&a);
+    }
+
+    #[test]
+    fn bb_is_correct() -> Result<()> {
+        use std::fs::File;
+        use std::io::BufReader;
+        let inst = parse_line(
+            BufReader::new(File::open("../data/decision/NR15_inst.dat")?)
+        )?.unwrap();
+        println!("testing {:?}", inst);
+        inst.branch_and_bound2().assert_valid(&inst);
+        Ok(())
+    }
+}
+
 // ~\~ end
