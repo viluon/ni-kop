@@ -66,9 +66,9 @@ Pro provedení měření výkonu programu jsem využil nástroje Hyperfine.
 uname -a
 cd solver
 hyperfine --export-json ../docs/bench.json \
-          --parameter-list n 4,10,15,20,22,25,27,30,32,35,37,40 \
+          --parameter-list n 4,10,15,20,22,25,27,30,32 \
           --parameter-list alg bf,bb,dp \
-          --runs 2 \
+          --min-runs 4 \
           --style color \
           'cargo run --release -- {alg} < ds/NR{n}_inst.dat' 2>&1 \
     | fold -w 120 -s

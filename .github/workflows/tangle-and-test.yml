@@ -27,7 +27,7 @@ jobs:
           locale
 
           apt-get install -y --no-install-recommends \
-            librsvg2-bin lmodern rsync texlive-xetex
+            librsvg2-bin lmodern rsync texlive-fonts-recommended texlive-xetex
 
           cd 1-exact-knapsack/
           ./ci.sh

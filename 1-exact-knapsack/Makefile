@@ -47,7 +47,7 @@ pandoc_args_html += --filter pandoc-bootstrap
 
 # Arguments to Pandoc specific to PDF output
 pandoc_args_pdf += --to pdf
-pandoc_args_pdf += --pdf-engine xelatex
+# pandoc_args_pdf += --pdf-engine xelatex
 pandoc_args_pdf += --template $(assets_dir)/template.tex
 pandoc_args_pdf += --variable documentclass=article
 pandoc_args_pdf += --variable geometry="margin=3cm"
