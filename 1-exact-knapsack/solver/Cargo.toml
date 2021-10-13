@@ -8,3 +8,5 @@ edition = "2018"
 [dependencies]
 anyhow = "1.0.44"
 bitvec = "0.22.3"
+quickcheck = "1"
+quickcheck_macros = "1"

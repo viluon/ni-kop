@@ -1,11 +1,14 @@
 // ~\~ language=Rust filename=solver/src/main.rs
 // ~\~ begin <<lit/main.md|solver/src/main.rs>>[0]
-use std::{io::stdin, str::FromStr};
+use std::{io::stdin, str::FromStr, cmp, cmp::max};
 use anyhow::{Context, Result, anyhow};
 use bitvec::prelude::BitArr;
 
+#[macro_use(quickcheck)]
+extern crate quickcheck_macros;
+
 // ~\~ begin <<lit/main.md|problem-instance-definition>>[0]
-#[derive(Debug, PartialEq, Eq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 struct Instance {
     id: i32, m: u32, b: u32, items: Vec<(u32, u32)>
 }
@@ -83,8 +86,26 @@ fn parse_line<T>(mut stream: T) -> Result<Option<Instance>> where T: std::io::Bu
 // ~\~ end
 
 type Config = BitArr!(for 64);
-#[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Copy, Debug, Default)]
-struct Solution(u32, Config);
+#[derive(PartialEq, Eq, Clone, Copy, Debug, Default)]
+struct Solution(u32, u32, Config);
+
+impl PartialOrd for Solution {
+    fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
+        use cmp::Ordering;
+        let Solution(w, c, _) = self;
+        let Solution(other_w, other_c, _) = other;
+        Some(match c.cmp(&other_c) {
+            Ordering::Equal => w.cmp(other_w).reverse(),
+            other => other,
+        })
+    }
+}
+
+impl Ord for Solution {
+    fn cmp(&self, other: &Self) -> cmp::Ordering {
+        self.partial_cmp(&other).unwrap()
+    }
+}
 
 impl Instance {
     // ~\~ begin <<lit/main.md|solver-dp>>[0]
@@ -102,7 +123,6 @@ impl Instance {
                 next[cap] = if (cap as u32) < weight {
                     last[cap]
                 } else {
-                    use std::cmp::max;
                     let rem_weight = max(0, cap as isize - weight as isize) as usize;
                     max(last[cap], last[rem_weight] + cost)
                 };
@@ -115,35 +135,47 @@ impl Instance {
 
     // ~\~ begin <<lit/main.md|solver-bb>>[0]
     fn branch_and_bound(&self) -> u32 {
-        self.branch_and_bound2().0
+        self.branch_and_bound2().1
     }
 
     fn branch_and_bound2(&self) -> Solution {
         let Instance { m, b, items, .. } = self;
         let prices: Vec<u32> = items.iter().rev()
-        .scan(0, |sum, (_w, c)| {
-            *sum = *sum + c;
-            Some(*sum)
-        })
-        .collect::<Vec<_>>().into_iter().rev().collect();
+            .scan(0, |sum, (_w, c)| {
+                *sum = *sum + c;
+                Some(*sum)
+            })
+            .collect::<Vec<_>>().into_iter().rev().collect();
 
         struct State<'a>(&'a Vec<(u32, u32)>, Vec<u32>);
+        // invariant: the recursion depth corresponds precisely to the index of
+        // the item being considered for inclusion in the solution.
         fn go(state: &State, best: Solution, cap: u32, i: usize) -> Solution {
             let State(items, prices) = state;
-            if i >= items.len() || best.0 > prices[i] { return best; }
+            if i >= items.len() || best.0 > prices[i] { return Default::default() }
 
             let (w, c) = items[i];
             let next = |best, cap| go(state, best, cap, i + 1);
             let include = || {
-                let Solution(sub_c, mut cfg) = next(best, cap - w);
-                cfg.set(i, true);
-                Solution(c + sub_c, cfg)
+                let s = next(best, cap - w);
+                let Solution(sub_w, sub_c, mut cfg) = s;
+                if cfg[i] || sub_w > cap - w { s }
+                else {
+                    cfg.set(i, true);
+                    Solution(sub_w + w, c + sub_c, cfg)
+                }
             };
-            let exclude = |best| next(best, cap);
+            let exclude = |best| {
+                let s = next(best, cap);
+                let Solution(sub_w, sub_c, mut cfg) = s;
+                if cfg[i] {
+                    cfg.set(i, false);
+                    Solution(sub_w - w, sub_c - c, cfg)
+                } else { s }
+            };
             if w <= cap {
-                use std::cmp::max;
                 let new_best = max(include(), best);
-                max(new_best, exclude(new_best))
+                max(exclude(new_best), new_best)
             } else {
                 exclude(best)
             }
@@ -157,7 +189,6 @@ impl Instance {
     fn brute_force(&self) -> u32 {
         let (m, b, items) = (self.m, self.b, &self.items);
         fn go(items: &Vec<(u32, u32)>, cap: u32, i: usize) -> u32 {
-            use std::cmp::max;
             if i >= items.len() { return 0; }
 
             let (w, c) = items[i];
@@ -180,21 +211,65 @@ impl Instance {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use quickcheck::{Arbitrary, Gen};
+
+    impl Arbitrary for Instance {
+        fn arbitrary(g: &mut Gen) -> Instance {
+            Instance {
+                id:    i32::arbitrary(g),
+                m:     u32::arbitrary(g),
+                b:     u32::arbitrary(g),
+                items: Vec::arbitrary(g)
+                           .into_iter()
+                           .take(10)
+                           .map(|(w, c): (u32, u32)| (w.min(10_000), c.min(10_000)))
+                           .collect(),
+            }
+        }
+
+        fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+            let data = self.clone();
+            let chain: Vec<Instance> = quickcheck::empty_shrinker().chain(
+                self.items.shrink().map(move |items| {
+                    Instance { items, ..data }
+                })
+            ).collect();
+            Box::new(chain.into_iter())
+        }
+    }
 
     impl Solution {
         fn assert_valid(&self, i: &Instance) {
             let Instance { m, b, items, .. } = i;
-            let Solution(c, cfg) = self;
+            let Solution(w, c, cfg) = self;
 
-            println!("{} > {}", c, b);
-            assert!(c > b);
+            println!("{} >= {}", c, b);
+            // assert!(c >= b);
 
-            let weight: u32 = items.into_iter().zip(cfg).map(|((w, _c), b)| {
-                if *b { *w } else { 0 }
-            }).sum();
+            let (weight, cost) = items
+                .into_iter()
+                .zip(cfg)
+                .map(|((w, c), b)| {
+                    if *b { (*w, *c) } else { (0, 0) }
+                })
+                .reduce(|(a0, b0), (a1, b1)| (a0 + a1, b0 + b1))
+                .unwrap_or_default();
+
             println!("{} <= {}", weight, *m);
             assert!(weight <= *m);
+
+            println!("{} == {}", cost, *c);
+            assert_eq!(cost, *c);
+
+            println!("{} == {}", weight, *w);
+            assert_eq!(weight, *w);
         }
+    }
+
+    #[test]
+    fn stupid() {
+        let i = Instance { id: 0, m: 1, b: 0, items: vec![(1, 0), (1, 0)] };
+        i.branch_and_bound2().assert_valid(&i)
     }
 
     #[test]
@@ -217,11 +292,16 @@ mod tests {
         use std::fs::File;
         use std::io::BufReader;
         let inst = parse_line(
-            BufReader::new(File::open("../data/decision/NR15_inst.dat")?)
+            BufReader::new(File::open("ds/NR15_inst.dat")?)
         )?.unwrap();
         println!("testing {:?}", inst);
         inst.branch_and_bound2().assert_valid(&inst);
         Ok(())
+    }
+
+    #[quickcheck]
+    fn bb_is_really_correct(inst: Instance) {
+        inst.branch_and_bound2().assert_valid(&inst);
     }
 }
 
