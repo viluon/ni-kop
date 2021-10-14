@@ -47,7 +47,9 @@ například:
 První úkol předmětu NI-KOP jsem se rozhodl implementovat v jazyce Rust za pomoci
 nástrojů na *literate programming* -- přístup k psaní zdrojového kódu, který
 upřednostňuje lidsky čitelný popis před seznamem příkazů pro počítač. Tento
-soubor obsahuje veškerý zdrojový kód nutný k reprodukci mojí práce.
+soubor obsahuje veškerý zdrojový kód nutný k reprodukci mojí práce. Výsledek je
+dostupný online jako statická [webová stránka](http://viluon.me/ni-kop/) a [ke
+stažení v PDF](http://viluon.me/ni-kop/report.pdf).
 
 ## Instrukce k sestavení programu
 Program využívá standardních nástrojů jazyka Rust. O sestavení stačí požádat
@@ -69,12 +71,13 @@ mkdir -p docs/measurements/
 cd solver
 hyperfine --export-json ../docs/bench.json \
           --parameter-list n 4,10,15 \
+          --parameter-list set N,Z \
           --parameter-list alg bf,bb \
           --runs 2 \
           --style color \
           'cargo run --release -- {alg} \
-           < ds/NR{n}_inst.dat \
-           > ../docs/measurements/{alg}-{n}.txt' 2>&1 \
+           < ds/{set}R{n}_inst.dat \
+           > ../docs/measurements/{alg}-{set}{n}.txt' 2>&1 \
     | fold -w 120 -s
 ```
 
@@ -82,9 +85,9 @@ Měření ze spuštění Hyperfine jsou uložena v souboru `docs/bench.json`, kt
 následně zpracujeme do tabulky níže.
 
 ``` {.zsh .eval #json-to-csv .bootstrap-fold}
-echo "algoritmus,\$n\$,průměr,\$\pm \sigma\$,minimum,medián,maximum" > docs/bench.csv
+echo "alg.,sada,\$n\$,průměr,\$\pm \sigma\$,minimum,medián,maximum" > docs/bench.csv
 jq -r \
-   '.[] | .[] | [.parameters.alg, .parameters.n
+   '.[] | .[] | [.parameters.alg, .parameters.set, .parameters.n
                 , ([.mean, .stddev, .min, .median, .max]
                    | map("**" + (100000 * . + 0.5
                          | floor
@@ -106,14 +109,23 @@ zvoleného algoritmu. y](docs/bench.csv)
 ### Srovnání algoritmů
 
 ```{.python .eval file=analysis/charts.py}
+<<preprocessing>>
+
+<<performance-chart>>
+
+<<histogram>>
+```
+
+```{.python #preprocessing .bootstrap-fold}
 import matplotlib.pyplot as plt
 import pandas as pd
 from pandas.core.tools.numeric import to_numeric
 
-df = pd.read_csv("docs/bench.csv", dtype = "string")
-df.rename({
-        "algoritmus": "alg",
+bench = pd.read_csv("docs/bench.csv", dtype = "string")
+bench.rename({
+        "alg.": "alg",
         "$n$": "n",
+        "sada": "set",
         "průměr": "avg",
         "$\pm \sigma$": "sigma",
         "medián": "median",
@@ -126,12 +138,14 @@ df.rename({
 )
 
 numeric_columns = ["n", "avg", "sigma", "min", "median", "max"]
-df[numeric_columns] = df[numeric_columns].apply(lambda c:
+bench[numeric_columns] = bench[numeric_columns].apply(lambda c:
     c.apply(lambda x:
         to_numeric(x.replace("**", "").replace(" ms", ""))
     )
 )
+```
 
+```{.python #performance-chart .bootstrap-fold}
 # Create a figure and a set of subplots.
 fig, ax = plt.subplots(figsize = (11, 6))
 labels = { "bf": "Hrubá síla"
@@ -140,23 +154,67 @@ labels = { "bf": "Hrubá síla"
          }
 
 # Group the dataframe by alg and create a line for each group.
-for name, group in df.groupby("alg"):
+for name, group in bench.groupby(["alg", "set"]):
     (x, y, sigma) = (group["n"], group["avg"], group["sigma"])
-    ax.plot(x, y, label = labels[name])
+    ax.plot(x, y, label = labels[name[0]] + " na sadě " + name[1])
     ax.fill_between(x, y + sigma, y - sigma, alpha = 0.3)
 
 # Axis metadata: ticks, scaling, margins, and the legend
-plt.xticks(df["n"])
+plt.xticks(bench["n"])
 ax.set_yscale("log", base = 10)
-ax.set_yticks(list(plt.yticks()[0]) + list(df["avg"]), minor = True)
+ax.set_yticks(list(plt.yticks()[0]) + list(bench["avg"]), minor = True)
 ax.margins(0.05, 0.1)
 ax.legend(loc="upper left")
 
-plt.savefig("docs/graph.svg")
+# Reverse the legend
+handles, labels = plt.gca().get_legend_handles_labels()
+order = range(len(labels) - 1, -1, -1)
+plt.legend([handles[idx] for idx in order],[labels[idx] for idx in order])
+
+plt.savefig("docs/assets/graph.svg")
 ```
 
 ![Závislost doby běhu na počtu předmětů. Částečně průhledná oblast značí
-směrodatnou odchylku ($\sigma$).](graph.svg)
+směrodatnou odchylku ($\sigma$).](assets/graph.svg)
+
+```{.python #histogram .bootstrap-fold}
+import numpy as np
+import os
+
+# Load the data
+data = []
+
+for filename in os.listdir('docs/measurements'):
+    if filename.endswith(".txt"):
+        alg = filename[:-4]
+        with open('docs/measurements/' + filename) as f:
+            for line in f:
+                data.append({'alg': alg, 'n': int(line)})
+
+df = pd.DataFrame(data)
+
+# Plot the histograms
+
+for alg in df.alg.unique():
+    plt.figure()
+    plt.xlabel('Počet konfigurací')
+    plt.ylabel('Četnost výskytu')
+    plt.hist(df[df.alg == alg].n, color = 'tab:blue' if alg[-3] == 'N' else 'orange', bins = 20)#bins = np.logspace(1, 6, 20))
+    plt.xlim(xmin = 0)
+    # plt.gca().set_xscale('log')
+    plt.savefig('docs/assets/histogram-' + alg + '.svg')
+    plt.close()
+```
+
+![**TODO**: histogram](assets/histogram.svg)
+
+![NR bf 15](assets/histogram-bf-N15.svg)
+
+![NR bb 15](assets/histogram-bb-N15.svg)
+
+![ZR bf 15](assets/histogram-bf-Z15.svg)
+
+![ZR bb 15](assets/histogram-bb-Z15.svg)
 
 ## Implementace
 

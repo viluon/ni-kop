@@ -14,7 +14,6 @@
 # appear.
 lit_dir             := lit
 docs_dir            := docs
-assets_dir          := assets
 bootstrap_dir       := bootstrap
 input_files         := $(lit_dir)/*.md
 pandoc_intermediary := $(docs_dir)/pandoc.json
@@ -48,7 +47,7 @@ pandoc_args_html += --filter pandoc-bootstrap
 # Arguments to Pandoc specific to PDF output
 pandoc_args_pdf += --to pdf
 # pandoc_args_pdf += --pdf-engine xelatex
-pandoc_args_pdf += --template $(assets_dir)/template.tex
+pandoc_args_pdf += --template templates/template.tex
 pandoc_args_pdf += --variable documentclass=article
 pandoc_args_pdf += --variable geometry="margin=3cm"
 # pandoc_args_pdf += --variable mainfont=libertine
@@ -69,6 +68,7 @@ site: $(docs_dir)/index.html $(docs_dir)/css/mods.css $(static_targets)
 
 clean:
 	rm -rf $(docs_dir)
+	rm assets
 
 # Starts a tmux with Entangled, Browser-sync and an Inotify loop for running
 # Pandoc.
@@ -89,6 +89,7 @@ watch-browser-sync:
 
 $(docs_dir):
 	mkdir -p $(docs_dir)
+	mkdir -p $(docs_dir)/assets/
 
 $(pandoc_intermediary): $(input_files) $(docs_dir)
 	JUPYTER=1 pandoc $(pandoc_args) $(input_files) -o $@
@@ -96,9 +97,9 @@ $(pandoc_intermediary): $(input_files) $(docs_dir)
 $(docs_dir)/index.html: Makefile $(pandoc_intermediary) $(bootstrap_dir)/template.html
 	pandoc $(pandoc_args_html) $(pandoc_intermediary) -o $@
 
-$(docs_dir)/report.pdf: Makefile $(pandoc_intermediary) $(assets_dir)/template.tex
-#	Hack to allow ![](graph.svg) both in the PDF and the website
-	ln -sf $(docs_dir)/graph.svg graph.svg
+$(docs_dir)/report.pdf: Makefile $(pandoc_intermediary) templates/template.tex
+#	Hack to allow ![](assets/foo) both in the PDF and the website
+	ln -sf $(docs_dir)/assets assets
 	pandoc $(pandoc_args_pdf) $(pandoc_intermediary) -o $@
 
 $(docs_dir)/css/mods.css: $(bootstrap_dir)/mods.css
