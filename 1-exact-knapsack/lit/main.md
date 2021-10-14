@@ -64,13 +64,17 @@ Pro provedení měření výkonu programu jsem využil nástroje Hyperfine.
 
 ``` {.zsh .eval #benchmark .bootstrap-fold}
 uname -a
+./cpufetch --logo-short --color ibm
+mkdir -p docs/measurements/
 cd solver
 hyperfine --export-json ../docs/bench.json \
-          --parameter-list n 4,10,15,20 \
-          --parameter-list alg bf,bb,dp \
-          --min-runs 4 \
+          --parameter-list n 4,10,15 \
+          --parameter-list alg bf,bb \
+          --runs 2 \
           --style color \
-          'cargo run --release -- {alg} < ds/NR{n}_inst.dat' 2>&1 \
+          'cargo run --release -- {alg} \
+           < ds/NR{n}_inst.dat \
+           > ../docs/measurements/{alg}-{n}.txt' 2>&1 \
     | fold -w 120 -s
 ```
 
@@ -101,7 +105,7 @@ zvoleného algoritmu. y](docs/bench.csv)
 
 ### Srovnání algoritmů
 
-```{.python .eval file=analysis/chart.py}
+```{.python .eval file=analysis/charts.py}
 import matplotlib.pyplot as plt
 import pandas as pd
 from pandas.core.tools.numeric import to_numeric
@@ -184,7 +188,9 @@ fn main() -> Result<()> {
 
     loop {
         match parse_line(stdin().lock())? {
-            Some(inst) => println!("{}", alg(&inst)),
+            Some(inst) => match alg(&inst) {
+                Solution { visited, .. } => println!("{}", visited),
+            },
             None => return Ok(())
         }
     }
@@ -193,7 +199,7 @@ fn main() -> Result<()> {
 <<parser>>
 
 #[inline(always)]
-fn smart_max<A, F, G>(f: F, g: G) -> A
+fn smart_max_<A, F, G>(f: F, g: G) -> A
 where F: Fn()  -> A
     , G: Fn(A) -> A
     , A: cmp::Ord + Copy {
@@ -201,9 +207,18 @@ where F: Fn()  -> A
     max(x, g(x))
 }
 
+#[inline]
+fn smart_max<'a, F, G>(f: F, g: G) -> Solution<'a>
+  where F: Fn()         -> Solution<'a>
+      , G: Fn(Solution) -> Solution {
+    let x = f();
+    let y = g(x);
+    Solution { visited: x.visited + y.visited, ..max(x, y) }
+}
+
 type Config = BitArr!(for 64);
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
-struct Solution<'a> { weight: u32, cost: u32, cfg: Config, inst: &'a Instance }
+struct Solution<'a> { weight: u32, cost: u32, cfg: Config, visited: u64, inst: &'a Instance }
 
 impl <'a> PartialOrd for Solution<'a> {
     fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
@@ -232,6 +247,14 @@ impl <'a> Solution<'a> {
         }
         self
     }
+
+    fn set_visited(self, v: u64) -> Solution<'a> {
+        Solution { visited: v, ..self }
+    }
+
+    fn incr_visited(self) -> Solution<'a> {
+        self.set_visited(self.visited + 1)
+    }
 }
 
 impl Instance {
@@ -242,6 +265,210 @@ impl Instance {
     <<solver-bf>>
 }
 
+<<tests>>
+```
+
+## Algoritmy
+
+### Hrubá síla
+
+``` {.rust #solver-bf}
+fn brute_force(&self) -> u32 {
+    self.brute_force2().cost
+}
+
+fn brute_force_old(&self) -> u32 {
+    let (m, b, items) = (self.m, self.b, &self.items);
+    fn go(items: &Vec<(u32, u32)>, cap: u32, i: usize) -> u32 {
+        if i >= items.len() { return 0; }
+
+        let (w, c) = items[i];
+        let next = |cap| go(items, cap, i + 1);
+        let include = || next(cap - w);
+        let exclude = || next(cap);
+        if w <= cap {
+            max(c + include(), exclude())
+        } else {
+            exclude()
+        }
+    }
+
+    go(items, m, 0)
+}
+
+fn brute_force2(&self) -> Solution {
+    fn go<'a>(items: &'a [(u32, u32)], current: Solution<'a>, i: usize, m: u32) -> Solution<'a> {
+        if i >= items.len() { return current }
+
+        let (w, _c) = items[i];
+        let next = |current, m| go(items, current, i + 1, m);
+        let include = || {
+            let current = current.clone().with(i).incr_visited();
+            next(current, m - w)
+        };
+        let exclude = || next(current.incr_visited(), m);
+
+        if w <= m {
+            let x = include();
+            let y = exclude();
+            max(x, y).set_visited(x.visited + y.visited)
+        }
+        else { exclude() }
+    }
+
+    let empty = Solution { weight: 0, cost: 0, visited: 0, cfg: Default::default(), inst: self };
+    go(&self.items, empty, 0, self.m)
+}
+```
+
+### Branch & bound
+``` {.rust #solver-bb}
+fn branch_and_bound(&self) -> u32 {
+    self.branch_and_bound2().cost
+}
+
+fn branch_and_bound2(&self) -> Solution {
+    struct State<'a>(&'a Vec<(u32, u32)>, Vec<u32>);
+    let prices: Vec<u32> = {
+        self.items.iter().rev()
+        .scan(0, |sum, (_w, c)| {
+            *sum = *sum + c;
+            Some(*sum)
+        })
+        .collect::<Vec<_>>().into_iter().rev().collect()
+    };
+
+    fn go<'a>(state: &'a State, current: Solution<'a>, best: Solution<'a>, i: usize, m: u32) -> Solution<'a> {
+        let State(items, prices) = state;
+        if i >= items.len() || current.cost + prices[i] <= best.cost { return current }
+
+        let (w, _c) = items[i];
+        let next = |current, best, m| go(state, current, best, i + 1, m);
+        let include = || {
+            let current = current.clone().with(i);
+            let count = max(current.visited, best.visited);
+            next(current.incr_visited(), max(current, best).set_visited(count + 1), m - w)
+        };
+        let exclude = |best: Solution<'a>| next(current.incr_visited(), best.incr_visited(), m);
+
+        if w <= m {
+            let x = include();
+            let y = exclude(x);
+            Solution { visited: x.visited + y.visited, ..max(x, y) }
+        }
+        else { exclude(best) }
+    }
+
+    // FIXME borrowck issues
+    let state = State(&self.items, prices);
+    let empty = Solution { weight: 0, cost: 0, visited: 0, cfg: Default::default(), inst: self };
+    Solution { inst: self, ..go(&state, empty, empty, 0, self.m) }
+}
+```
+
+### Dynamické programování
+
+``` {.rust #solver-dp}
+fn dynamic_programming(&self) -> u32 {
+    let (m, b, items) = (self.m, self.b, &self.items);
+    let mut next = Vec::with_capacity(m as usize + 1);
+    next.resize(m as usize + 1, 0);
+    let mut last = Vec::new();
+
+    for i in 1..=items.len() {
+        let (weight, cost) = items[i - 1];
+        last.clone_from(&next);
+
+        for cap in 0..=m as usize {
+            next[cap] = if (cap as u32) < weight {
+                    last[cap]
+                } else {
+                    let rem_weight = max(0, cap as isize - weight as isize) as usize;
+                    max(last[cap], last[rem_weight] + cost)
+                };
+        }
+    }
+
+    *next.last().unwrap() //>= b
+}
+```
+
+## Appendix
+
+Zpracování vstupu zajišťuje jednoduchý parser pracující řádek po řádku.
+
+``` {.rust #parser .bootstrap-fold}
+<<boilerplate>>
+
+fn parse_line<T>(mut stream: T) -> Result<Option<Instance>> where T: std::io::BufRead {
+    let mut input = String::new();
+    match stream.read_line(&mut input)? {
+        0 => return Ok(None),
+        _ => ()
+    };
+
+    let mut  numbers = input.split_whitespace();
+    let id = numbers.parse_next()?;
+    let  n = numbers.parse_next()?;
+    let  m = numbers.parse_next()?;
+    let  b = numbers.parse_next()?;
+
+    let mut items: Vec<(u32, u32)> = Vec::with_capacity(n);
+    for _ in 0..n {
+        let w = numbers.parse_next()?;
+        let c = numbers.parse_next()?;
+        items.push((w, c));
+    }
+
+    Ok(Some(Instance {id, m, b, items}))
+}
+```
+
+Výběr algoritmu je řízen argumentem předaným na příkazové řádce. Příslušnou
+funkci vrátíme jako hodnotu tohoto bloku:
+
+``` {.rust #select-algorithm .bootstrap-fold}
+let args: Vec<String> = std::env::args().collect();
+if args.len() == 2 {
+    let ok = |x: fn(&Instance) -> Solution| Ok(x);
+    match &args[1][..] {
+        "bf"    => ok(Instance::brute_force2),
+        "bb"    => ok(Instance::branch_and_bound2),
+        // "dp"    => ok(Instance::dynamic_programming),
+        invalid => Err(anyhow!("\"{}\" is not a known algorithm", invalid)),
+    }
+} else {
+    println!(
+        "Usage: {} <algorithm>, where <algorithm> is one of bf, bb, dp",
+        args[0]
+    );
+    Err(anyhow!("Expected 1 argument, got {}", args.len() - 1))
+}
+```
+
+Trait `Boilerplate` definuje funkci `parse_next` pro zkrácení zápisu zpracování
+vstupu.
+
+``` {.rust #boilerplate .bootstrap-fold}
+trait Boilerplate {
+    fn parse_next<T: FromStr>(&mut self) -> Result<T>
+      where <T as FromStr>::Err: std::error::Error + Send + Sync + 'static;
+}
+
+impl Boilerplate for std::str::SplitWhitespace<'_> {
+    fn parse_next<T: FromStr>(&mut self) -> Result<T>
+      where <T as FromStr>::Err: std::error::Error + Send + Sync + 'static {
+        let str = self.next().ok_or(anyhow!("unexpected end of input"))?;
+        str.parse::<T>()
+           .with_context(|| format!("cannot parse {}", str))
+    }
+}
+```
+
+### Automatické testy
+Implementaci doplňují automatické testy k ověření správnosti.
+
+``` {.rust #tests .bootstrap-fold}
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -276,7 +503,7 @@ mod tests {
     impl <'a> Solution<'a> {
         fn assert_valid(&self, i: &Instance) {
             let Instance { m, b, items, .. } = i;
-            let Solution { weight: w, cost: c, cfg, inst: _ } = self;
+            let Solution { weight: w, cost: c, cfg, .. } = self;
 
             println!("{} >= {}", c, b);
             // assert!(c >= b);
@@ -342,169 +569,4 @@ mod tests {
     }
 }
 
-```
-
-## Algoritmy
-
-### Hrubá síla
-
-``` {.rust #solver-bf}
-fn brute_force(&self) -> u32 {
-    let (m, b, items) = (self.m, self.b, &self.items);
-    fn go(items: &Vec<(u32, u32)>, cap: u32, i: usize) -> u32 {
-        if i >= items.len() { return 0; }
-
-        let (w, c) = items[i];
-        let next = |cap| go(items, cap, i + 1);
-        let include = || next(cap - w);
-        let exclude = || next(cap);
-        if w <= cap {
-            max(c + include(), exclude())
-        } else {
-            exclude()
-        }
-    }
-
-    go(items, m, 0)
-}
-```
-
-### Branch & bound
-``` {.rust #solver-bb}
-fn branch_and_bound(&self) -> u32 {
-    self.branch_and_bound2().cost
-}
-
-fn branch_and_bound2(&self) -> Solution {
-    struct State<'a>(&'a Vec<(u32, u32)>, Vec<u32>);
-    let prices: Vec<u32> = {
-        self.items.iter().rev()
-        .scan(0, |sum, (_w, c)| {
-            *sum = *sum + c;
-            Some(*sum)
-        })
-        .collect::<Vec<_>>().into_iter().rev().collect()
-    };
-
-    fn go<'a>(state: &'a State, current: Solution<'a>, best: Solution<'a>, i: usize, m: u32) -> Solution<'a> {
-        let State(items, prices) = state;
-        if i >= items.len() || current.cost + prices[i] <= best.cost { return current }
-
-        let (w, _c) = items[i];
-        let next = |current, best, m| go(state, current, best, i + 1, m);
-        let include = || {
-            let current = current.clone().with(i);
-            next(current, max(current, best), m - w)
-        };
-        let exclude = { |best| next(current, best, m) };
-
-        if w <= m { smart_max(include, exclude) }
-        else { exclude(best) }
-    }
-
-    // FIXME borrowck issues
-    let state = State(&self.items, prices);
-    let empty = Solution { weight: 0, cost: 0, cfg: Default::default(), inst: self };
-    let best = go(&state, empty, empty, 0, self.m);
-    Solution {inst: self, ..best}
-}
-```
-
-### Dynamické programování
-
-``` {.rust #solver-dp}
-fn dynamic_programming(&self) -> u32 {
-    let (m, b, items) = (self.m, self.b, &self.items);
-    let mut next = Vec::with_capacity(m as usize + 1);
-    next.resize(m as usize + 1, 0);
-    let mut last = Vec::new();
-
-    for i in 1..=items.len() {
-        let (weight, cost) = items[i - 1];
-        last.clone_from(&next);
-
-        for cap in 0..=m as usize {
-            next[cap] = if (cap as u32) < weight {
-                last[cap]
-            } else {
-                let rem_weight = max(0, cap as isize - weight as isize) as usize;
-                max(last[cap], last[rem_weight] + cost)
-            };
-        }
-    }
-
-    *next.last().unwrap() //>= b
-}
-```
-
-## Appendix
-
-Zpracování vstupu zajišťuje jednoduchý parser pracující řádek po řádku.
-
-``` {.rust #parser .bootstrap-fold}
-<<boilerplate>>
-
-fn parse_line<T>(mut stream: T) -> Result<Option<Instance>> where T: std::io::BufRead {
-    let mut input = String::new();
-    match stream.read_line(&mut input)? {
-        0 => return Ok(None),
-        _ => ()
-    };
-
-    let mut  numbers = input.split_whitespace();
-    let id = numbers.parse_next()?;
-    let  n = numbers.parse_next()?;
-    let  m = numbers.parse_next()?;
-    let  b = numbers.parse_next()?;
-
-    let mut items: Vec<(u32, u32)> = Vec::with_capacity(n);
-    for _ in 0..n {
-        let w = numbers.parse_next()?;
-        let c = numbers.parse_next()?;
-        items.push((w, c));
-    }
-
-    Ok(Some(Instance {id, m, b, items}))
-}
-```
-
-Výběr algoritmu je řízen argumentem předaným na příkazové řádce. Příslušnou
-funkci vrátíme jako hodnotu tohoto bloku:
-
-``` {.rust #select-algorithm .bootstrap-fold}
-let args: Vec<String> = std::env::args().collect();
-if args.len() == 2 {
-    let ok = |x: fn(&Instance) -> u32| Ok(x);
-    match &args[1][..] {
-        "bf"    => ok(Instance::brute_force),
-        "bb"    => ok(Instance::branch_and_bound),
-        "dp"    => ok(Instance::dynamic_programming),
-        invalid => Err(anyhow!("\"{}\" is not a known algorithm", invalid)),
-    }
-} else {
-    println!(
-        "Usage: {} <algorithm>, where <algorithm> is one of bf, bb, dp",
-        args[0]
-    );
-    Err(anyhow!("Expected 1 argument, got {}", args.len() - 1))
-}
-```
-
-Trait `Boilerplate` definuje funkci `parse_next` pro zkrácení zápisu zpracování
-vstupu.
-
-``` {.rust #boilerplate .bootstrap-fold}
-trait Boilerplate {
-    fn parse_next<T: FromStr>(&mut self) -> Result<T>
-      where <T as FromStr>::Err: std::error::Error + Send + Sync + 'static;
-}
-
-impl Boilerplate for std::str::SplitWhitespace<'_> {
-    fn parse_next<T: FromStr>(&mut self) -> Result<T>
-      where <T as FromStr>::Err: std::error::Error + Send + Sync + 'static {
-        let str = self.next().ok_or(anyhow!("unexpected end of input"))?;
-        str.parse::<T>()
-           .with_context(|| format!("cannot parse {}", str))
-    }
-}
 ```

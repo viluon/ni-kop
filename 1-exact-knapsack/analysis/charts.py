@@ -1,5 +1,5 @@
-# ~\~ language=Python filename=analysis/chart.py
-# ~\~ begin <<lit/main.md|analysis/chart.py>>[0]
+# ~\~ language=Python filename=analysis/charts.py
+# ~\~ begin <<lit/main.md|analysis/charts.py>>[0]
 import matplotlib.pyplot as plt
 import pandas as pd
 from pandas.core.tools.numeric import to_numeric

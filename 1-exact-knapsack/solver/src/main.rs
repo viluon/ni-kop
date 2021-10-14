@@ -20,11 +20,11 @@ fn main() -> Result<()> {
         // ~\~ begin <<lit/main.md|select-algorithm>>[0]
         let args: Vec<String> = std::env::args().collect();
         if args.len() == 2 {
-            let ok = |x: fn(&Instance) -> u32| Ok(x);
+            let ok = |x: fn(&Instance) -> Solution| Ok(x);
             match &args[1][..] {
-                "bf"    => ok(Instance::brute_force),
-                "bb"    => ok(Instance::branch_and_bound),
-                "dp"    => ok(Instance::dynamic_programming),
+                "bf"    => ok(Instance::brute_force2),
+                "bb"    => ok(Instance::branch_and_bound2),
+                // "dp"    => ok(Instance::dynamic_programming),
                 invalid => Err(anyhow!("\"{}\" is not a known algorithm", invalid)),
             }
         } else {
@@ -39,7 +39,9 @@ fn main() -> Result<()> {
 
     loop {
         match parse_line(stdin().lock())? {
-            Some(inst) => println!("{}", alg(&inst)),
+            Some(inst) => match alg(&inst) {
+                Solution { visited, .. } => println!("{}", visited),
+            },
             None => return Ok(())
         }
     }
@@ -87,7 +89,7 @@ fn parse_line<T>(mut stream: T) -> Result<Option<Instance>> where T: std::io::Bu
 // ~\~ end
 
 #[inline(always)]
-fn smart_max<A, F, G>(f: F, g: G) -> A
+fn smart_max_<A, F, G>(f: F, g: G) -> A
 where F: Fn()  -> A
     , G: Fn(A) -> A
     , A: cmp::Ord + Copy {
@@ -95,9 +97,18 @@ where F: Fn()  -> A
     max(x, g(x))
 }
 
+#[inline]
+fn smart_max<'a, F, G>(f: F, g: G) -> Solution<'a>
+  where F: Fn()         -> Solution<'a>
+      , G: Fn(Solution) -> Solution {
+    let x = f();
+    let y = g(x);
+    Solution { visited: x.visited + y.visited, ..max(x, y) }
+}
+
 type Config = BitArr!(for 64);
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
-struct Solution<'a> { weight: u32, cost: u32, cfg: Config, inst: &'a Instance }
+struct Solution<'a> { weight: u32, cost: u32, cfg: Config, visited: u64, inst: &'a Instance }
 
 impl <'a> PartialOrd for Solution<'a> {
     fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
@@ -126,6 +137,14 @@ impl <'a> Solution<'a> {
         }
         self
     }
+
+    fn set_visited(self, v: u64) -> Solution<'a> {
+        Solution { visited: v, ..self }
+    }
+
+    fn incr_visited(self) -> Solution<'a> {
+        self.set_visited(self.visited + 1)
+    }
 }
 
 impl Instance {
@@ -142,11 +161,11 @@ impl Instance {
 
             for cap in 0..=m as usize {
                 next[cap] = if (cap as u32) < weight {
-                    last[cap]
-                } else {
-                    let rem_weight = max(0, cap as isize - weight as isize) as usize;
-                    max(last[cap], last[rem_weight] + cost)
-                };
+                        last[cap]
+                    } else {
+                        let rem_weight = max(0, cap as isize - weight as isize) as usize;
+                        max(last[cap], last[rem_weight] + cost)
+                    };
             }
         }
 
@@ -178,24 +197,32 @@ impl Instance {
             let next = |current, best, m| go(state, current, best, i + 1, m);
             let include = || {
                 let current = current.clone().with(i);
-                next(current, max(current, best), m - w)
+                let count = max(current.visited, best.visited);
+                next(current.incr_visited(), max(current, best).set_visited(count + 1), m - w)
             };
-            let exclude = { |best| next(current, best, m) };
+            let exclude = |best: Solution<'a>| next(current.incr_visited(), best.incr_visited(), m);
 
-            if w <= m { smart_max(include, exclude) }
+            if w <= m {
+                let x = include();
+                let y = exclude(x);
+                Solution { visited: x.visited + y.visited, ..max(x, y) }
+            }
             else { exclude(best) }
         }
 
         // FIXME borrowck issues
         let state = State(&self.items, prices);
-        let empty = Solution { weight: 0, cost: 0, cfg: Default::default(), inst: self };
-        let best = go(&state, empty, empty, 0, self.m);
-        Solution {inst: self, ..best}
+        let empty = Solution { weight: 0, cost: 0, visited: 0, cfg: Default::default(), inst: self };
+        Solution { inst: self, ..go(&state, empty, empty, 0, self.m) }
     }
     // ~\~ end
 
     // ~\~ begin <<lit/main.md|solver-bf>>[0]
     fn brute_force(&self) -> u32 {
+        self.brute_force2().cost
+    }
+
+    fn brute_force_old(&self) -> u32 {
         let (m, b, items) = (self.m, self.b, &self.items);
         fn go(items: &Vec<(u32, u32)>, cap: u32, i: usize) -> u32 {
             if i >= items.len() { return 0; }
@@ -213,9 +240,34 @@ impl Instance {
 
         go(items, m, 0)
     }
+
+    fn brute_force2(&self) -> Solution {
+        fn go<'a>(items: &'a [(u32, u32)], current: Solution<'a>, i: usize, m: u32) -> Solution<'a> {
+            if i >= items.len() { return current }
+
+            let (w, _c) = items[i];
+            let next = |current, m| go(items, current, i + 1, m);
+            let include = || {
+                let current = current.clone().with(i).incr_visited();
+                next(current, m - w)
+            };
+            let exclude = || next(current.incr_visited(), m);
+
+            if w <= m {
+                let x = include();
+                let y = exclude();
+                max(x, y).set_visited(x.visited + y.visited)
+            }
+            else { exclude() }
+        }
+
+        let empty = Solution { weight: 0, cost: 0, visited: 0, cfg: Default::default(), inst: self };
+        go(&self.items, empty, 0, self.m)
+    }
     // ~\~ end
 }
 
+// ~\~ begin <<lit/main.md|tests>>[0]
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -250,7 +302,7 @@ mod tests {
     impl <'a> Solution<'a> {
         fn assert_valid(&self, i: &Instance) {
             let Instance { m, b, items, .. } = i;
-            let Solution { weight: w, cost: c, cfg, inst: _ } = self;
+            let Solution { weight: w, cost: c, cfg, .. } = self;
 
             println!("{} >= {}", c, b);
             // assert!(c >= b);
@@ -316,4 +368,5 @@ mod tests {
     }
 }
 
+// ~\~ end
 // ~\~ end

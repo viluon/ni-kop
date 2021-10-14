@@ -27,9 +27,11 @@ jobs:
           locale
 
           apt-get install -y --no-install-recommends \
-            librsvg2-bin lmodern rsync texlive-fonts-recommended texlive-xetex
+            librsvg2-bin lmodern rsync texlive-fonts-recommended texlive-xetex wget
 
           cd 1-exact-knapsack/
+          wget -O cpufetch https://github.com/Dr-Noob/cpufetch/releases/download/v1.00/cpufetch_x86-64_linux
+          chmod +x cpufetch
           ./ci.sh
       - name: upload artifact
         uses: actions/upload-artifact@v2
@@ -39,7 +41,7 @@ jobs:
       - name: test
         run: |
           cd 1-exact-knapsack/solver/
-          cargo test -- --show-output
+          QUICKCHECK_TESTS=10000 cargo test -- --show-output
       - name: deploy
         uses: JamesIves/github-pages-deploy-action@4.1.4
         with:
