@@ -86,6 +86,15 @@ fn parse_line<T>(mut stream: T) -> Result<Option<Instance>> where T: std::io::Bu
 }
 // ~\~ end
 
+#[inline(always)]
+fn smart_max<A, F, G>(f: F, g: G) -> A
+where F: Fn()  -> A
+    , G: Fn(A) -> A
+    , A: cmp::Ord + Copy {
+    let x = f();
+    max(x, g(x))
+}
+
 type Config = BitArr!(for 64);
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 struct Solution<'a> { weight: u32, cost: u32, cfg: Config, inst: &'a Instance }
@@ -104,6 +113,18 @@ impl <'a> PartialOrd for Solution<'a> {
 impl <'a> Ord for Solution<'a> {
     fn cmp(&self, other: &Self) -> cmp::Ordering {
         self.partial_cmp(&other).unwrap()
+    }
+}
+
+impl <'a> Solution<'a> {
+    fn with(mut self, i: usize) -> Solution<'a> {
+        let (w, c) = self.inst.items[i];
+        if !self.cfg[i] {
+            self.cfg.set(i, true);
+            self.weight += w;
+            self.cost += c;
+        }
+        self
     }
 }
 
@@ -135,111 +156,19 @@ impl Instance {
 
     // ~\~ begin <<lit/main.md|solver-bb>>[0]
     fn branch_and_bound(&self) -> u32 {
-        self.ill_fuckin_do_it_again().cost
+        self.branch_and_bound2().cost
     }
 
     fn branch_and_bound2(&self) -> Solution {
-        // TODO: shouldn't we update the best solution before we enter the recursive case? I mean, we've just added sth!
-        let Instance { m, b, items, .. } = self;
-        let prices: Vec<u32> = items.iter().rev()
-            .scan(0, |sum, (_w, c)| {
-                *sum = *sum + c;
-                Some(*sum)
-            })
-            .collect::<Vec<_>>().into_iter().rev().collect();
-
-        struct State<'a>(&'a Vec<(u32, u32)>, Vec<u32>, &'a Instance);
-        // invariant: the recursion depth corresponds precisely to the index of
-        // the item being considered for inclusion in the solution.
-        fn go<'a>(state: &'a State, best: Solution<'a>, cap: u32, i: usize) -> Solution<'a> {
-            let State(items, prices, inst) = state;
-            let indent = " ".repeat(i * 2);
-            let bitvec: Vec<bool> = best.cfg.to_bitvec().into_iter().take(3).collect();
-            let default: Solution = Solution { weight: 0, cost: 0, cfg: Default::default(), inst };
-            println!("{}at i = {} with best = Sol({}, {}, {:?}) cap = {}", indent, i, best.weight, best.cost, bitvec, cap);
-            if i >= items.len() || best.cost > prices[i] { return default }
-
-            let (w, c) = items[i];
-            let next = |best, cap| {
-                let x = go(state, best, cap, i + 1);
-                println!("{}out of i = {}", indent, i + 1);
-                x
-            };
-            let include = || {
-                println!("{}include?", indent);
-                let s = next(best, cap - w);
-                let Solution { weight: sub_w, cost: sub_c, mut cfg, inst } = s;
-                if cfg[i] || sub_w > cap - w { s }
-                else {
-                    cfg.set(i, true);
-                    Solution { weight: sub_w + w, cost: c + sub_c, cfg, inst }
-                }
-            };
-            let exclude = |best| {
-                println!("{}exclude?", indent);
-                let s = next(best, cap);
-                let Solution { weight: sub_w, cost: sub_c, mut cfg, inst } = s;
-                if cfg[i] {
-                    cfg.set(i, false);
-                    Solution { weight: sub_w - w, cost: sub_c - c, cfg, inst }
-                } else { s }
-            };
-            if w <= cap {
-                println!("{}fits", indent);
-                let new_best = max(include(), best);
-                max(exclude(new_best), new_best)
-            } else {
-                println!("{}doesn't fit", indent);
-                exclude(best)
-            }
-        }
-
-        let state = State(items, prices, self);
-        let solution = go( &state
-          , Solution { weight: 0, cost: 0, cfg: Default::default(), inst: self }
-          , *m
-          , 0
-        );
-        Solution { inst: self, ..solution }
-    }
-
-    fn ill_fuckin_do_it_again(&self) -> Solution {
         struct State<'a>(&'a Vec<(u32, u32)>, Vec<u32>);
-        let Instance { m, items, .. } = self;
         let prices: Vec<u32> = {
-            items.iter().rev()
+            self.items.iter().rev()
             .scan(0, |sum, (_w, c)| {
                 *sum = *sum + c;
                 Some(*sum)
             })
             .collect::<Vec<_>>().into_iter().rev().collect()
         };
-
-        fn default<'a>(inst: &'a Instance) -> Solution<'a> {
-            Solution { weight: 0, cost: 0, cfg: Default::default(), inst }
-        }
-
-        impl <'a> Solution<'a> {
-            // TODO what about capacity checking?
-            fn with(mut self, i: usize) -> Solution<'a> {
-                let (w, c) = self.inst.items[i];
-                if !self.cfg[i] {
-                    self.cfg.set(i, true);
-                    self.weight += w;
-                    self.cost += c;
-                }
-                self
-            }
-        }
-
-        #[inline]
-        fn smart_max<A, F, G>(f: F, g: G) -> A
-        where F: Fn()  -> A
-            , G: Fn(A) -> A
-            , A: cmp::Ord + Copy {
-            let x = f();
-            max(x, g(x))
-        }
 
         fn go<'a>(state: &'a State, current: Solution<'a>, best: Solution<'a>, i: usize, m: u32) -> Solution<'a> {
             let State(items, prices) = state;
@@ -251,18 +180,17 @@ impl Instance {
                 let current = current.clone().with(i);
                 next(current, max(current, best), m - w)
             };
-            let exclude = |best| {
-                next(current, best, m)
-            };
+            let exclude = { |best| next(current, best, m) };
 
             if w <= m { smart_max(include, exclude) }
             else { exclude(best) }
         }
 
-        // FIXME what the hell is this? ಠ_ಠ
-        let state = State(items, prices);
-        let x = go(&state, default(self), default(self), 0, *m);
-        Solution {inst: self, ..x}
+        // FIXME borrowck issues
+        let state = State(&self.items, prices);
+        let empty = Solution { weight: 0, cost: 0, cfg: Default::default(), inst: self };
+        let best = go(&state, empty, empty, 0, self.m);
+        Solution {inst: self, ..best}
     }
     // ~\~ end
 
@@ -384,7 +312,7 @@ mod tests {
 
     #[quickcheck]
     fn qc_bb_is_really_correct(inst: Instance) {
-        assert_eq!(inst.ill_fuckin_do_it_again().cost, inst.brute_force());
+        assert_eq!(inst.branch_and_bound2().cost, inst.brute_force());
     }
 }
 
