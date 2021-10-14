@@ -1,111 +1,231 @@
 {
   "results": [
     {
-      "command": "cargo run --release -- bf \\\n           < ds/NR4_inst.dat \\\n           > ../docs/measurements/bf-4.txt",
-      "mean": 0.1065614616,
-      "stddev": 0.006391214340239427,
-      "median": 0.1065614616,
-      "user": 0.087720975,
-      "system": 0.01789161,
-      "min": 0.1020421906,
-      "max": 0.11108073260000001,
+      "command": "cargo run --release -- bf \\\n           < ds/NR4_inst.dat \\\n           > ../docs/measurements/bf-N4.txt",
+      "mean": 0.11589757589,
+      "stddev": 0.00408208431427629,
+      "median": 0.11589757589,
+      "user": 0.102368595,
+      "system": 0.012558775,
+      "min": 0.11301110639,
+      "max": 0.11878404539000001,
       "times": [
-        0.11108073260000001,
-        0.1020421906
+        0.11878404539000001,
+        0.11301110639
       ],
       "parameters": {
         "alg": "bf",
-        "n": "4"
+        "n": "4",
+        "set": "N"
       }
     },
     {
-      "command": "cargo run --release -- bf \\\n           < ds/NR10_inst.dat \\\n           > ../docs/measurements/bf-10.txt",
-      "mean": 0.1129505626,
-      "stddev": 0.004508866390236016,
-      "median": 0.1129505626,
-      "user": 0.094240975,
-      "system": 0.018503609999999997,
-      "min": 0.10976231260000001,
-      "max": 0.1161388126,
+      "command": "cargo run --release -- bf \\\n           < ds/NR10_inst.dat \\\n           > ../docs/measurements/bf-N10.txt",
+      "mean": 0.11600317389,
+      "stddev": 0.0002013818899615875,
+      "median": 0.11600317389,
+      "user": 0.092043595,
+      "system": 0.023843274999999997,
+      "min": 0.11586077539,
+      "max": 0.11614557239000001,
       "times": [
-        0.10976231260000001,
-        0.1161388126
+        0.11614557239000001,
+        0.11586077539
       ],
       "parameters": {
         "alg": "bf",
-        "n": "10"
+        "n": "10",
+        "set": "N"
       }
     },
     {
-      "command": "cargo run --release -- bf \\\n           < ds/NR15_inst.dat \\\n           > ../docs/measurements/bf-15.txt",
-      "mean": 0.3232738906,
-      "stddev": 0.00021822588059621772,
-      "median": 0.3232738906,
-      "user": 0.305205475,
-      "system": 0.01785311,
-      "min": 0.32311958160000004,
-      "max": 0.3234281996,
+      "command": "cargo run --release -- bf \\\n           < ds/NR15_inst.dat \\\n           > ../docs/measurements/bf-N15.txt",
+      "mean": 0.34087752439,
+      "stddev": 0.005508373139151672,
+      "median": 0.34087752439,
+      "user": 0.32021359499999996,
+      "system": 0.020536775,
+      "min": 0.33698251639000004,
+      "max": 0.34477253239,
       "times": [
-        0.32311958160000004,
-        0.3234281996
+        0.33698251639000004,
+        0.34477253239
       ],
       "parameters": {
         "alg": "bf",
-        "n": "15"
+        "n": "15",
+        "set": "N"
       }
     },
     {
-      "command": "cargo run --release -- bb \\\n           < ds/NR4_inst.dat \\\n           > ../docs/measurements/bb-4.txt",
-      "mean": 0.10422846760000001,
-      "stddev": 0.0030008678412605893,
-      "median": 0.10422846760000001,
-      "user": 0.075353475,
-      "system": 0.02895461,
-      "min": 0.10210653360000001,
-      "max": 0.1063504016,
+      "command": "cargo run --release -- bf \\\n           < ds/ZR4_inst.dat \\\n           > ../docs/measurements/bf-Z4.txt",
+      "mean": 0.11959983589,
+      "stddev": 0.012171441045379322,
+      "median": 0.11959983589,
+      "user": 0.084774095,
+      "system": 0.034693774999999996,
+      "min": 0.11099332739000001,
+      "max": 0.12820634439,
       "times": [
-        0.1063504016,
-        0.10210653360000001
+        0.12820634439,
+        0.11099332739000001
       ],
       "parameters": {
-        "alg": "bb",
-        "n": "4"
+        "alg": "bf",
+        "n": "4",
+        "set": "Z"
       }
     },
     {
-      "command": "cargo run --release -- bb \\\n           < ds/NR10_inst.dat \\\n           > ../docs/measurements/bb-10.txt",
-      "mean": 0.10445057160000001,
-      "stddev": 0.0006846320992533198,
-      "median": 0.10445057160000001,
-      "user": 0.089872975,
-      "system": 0.01449261,
-      "min": 0.1039664636,
-      "max": 0.10493467960000001,
+      "command": "cargo run --release -- bf \\\n           < ds/ZR10_inst.dat \\\n           > ../docs/measurements/bf-Z10.txt",
+      "mean": 0.11627382089,
+      "stddev": 0.005914956002800067,
+      "median": 0.11627382089,
+      "user": 0.094241095,
+      "system": 0.021893274999999997,
+      "min": 0.11209131539,
+      "max": 0.12045632639000001,
       "times": [
-        0.1039664636,
-        0.10493467960000001
+        0.12045632639000001,
+        0.11209131539
       ],
       "parameters": {
-        "alg": "bb",
-        "n": "10"
+        "alg": "bf",
+        "n": "10",
+        "set": "Z"
       }
     },
     {
-      "command": "cargo run --release -- bb \\\n           < ds/NR15_inst.dat \\\n           > ../docs/measurements/bb-15.txt",
-      "mean": 0.13904072960000002,
-      "stddev": 0.003671357804890184,
-      "median": 0.13904072960000002,
-      "user": 0.130760975,
-      "system": 0.00789161,
-      "min": 0.1364446876,
-      "max": 0.14163677160000002,
+      "command": "cargo run --release -- bf \\\n           < ds/ZR15_inst.dat \\\n           > ../docs/measurements/bf-Z15.txt",
+      "mean": 0.46940135339,
+      "stddev": 0.0189409964044265,
+      "median": 0.46940135339,
+      "user": 0.446656595,
+      "system": 0.022630275,
+      "min": 0.45600804639000003,
+      "max": 0.48279466039,
       "times": [
-        0.1364446876,
-        0.14163677160000002
+        0.45600804639000003,
+        0.48279466039
+      ],
+      "parameters": {
+        "alg": "bf",
+        "n": "15",
+        "set": "Z"
+      }
+    },
+    {
+      "command": "cargo run --release -- bb \\\n           < ds/NR4_inst.dat \\\n           > ../docs/measurements/bb-N4.txt",
+      "mean": 0.10533478789,
+      "stddev": 0.000600185871910112,
+      "median": 0.10533478789,
+      "user": 0.097538595,
+      "system": 0.007866775,
+      "min": 0.10491039239000001,
+      "max": 0.10575918339000001,
+      "times": [
+        0.10575918339000001,
+        0.10491039239000001
       ],
       "parameters": {
         "alg": "bb",
-        "n": "15"
+        "n": "4",
+        "set": "N"
+      }
+    },
+    {
+      "command": "cargo run --release -- bb \\\n           < ds/NR10_inst.dat \\\n           > ../docs/measurements/bb-N10.txt",
+      "mean": 0.10690867089,
+      "stddev": 0.001250575618177689,
+      "median": 0.10690867089,
+      "user": 0.092479595,
+      "system": 0.014611774999999999,
+      "min": 0.10602438039,
+      "max": 0.10779296139000001,
+      "times": [
+        0.10779296139000001,
+        0.10602438039
+      ],
+      "parameters": {
+        "alg": "bb",
+        "n": "10",
+        "set": "N"
+      }
+    },
+    {
+      "command": "cargo run --release -- bb \\\n           < ds/NR15_inst.dat \\\n           > ../docs/measurements/bb-N15.txt",
+      "mean": 0.13638495089000002,
+      "stddev": 0.006632034403814919,
+      "median": 0.13638495089000002,
+      "user": 0.12466059500000001,
+      "system": 0.011817774999999999,
+      "min": 0.13169539439,
+      "max": 0.14107450739000002,
+      "times": [
+        0.14107450739000002,
+        0.13169539439
+      ],
+      "parameters": {
+        "alg": "bb",
+        "n": "15",
+        "set": "N"
+      }
+    },
+    {
+      "command": "cargo run --release -- bb \\\n           < ds/ZR4_inst.dat \\\n           > ../docs/measurements/bb-Z4.txt",
+      "mean": 0.10430484589,
+      "stddev": 0.00407620684271107,
+      "median": 0.10430484589,
+      "user": 0.091484095,
+      "system": 0.012931274999999999,
+      "min": 0.10142253239,
+      "max": 0.10718715939000001,
+      "times": [
+        0.10142253239,
+        0.10718715939000001
+      ],
+      "parameters": {
+        "alg": "bb",
+        "n": "4",
+        "set": "Z"
+      }
+    },
+    {
+      "command": "cargo run --release -- bb \\\n           < ds/ZR10_inst.dat \\\n           > ../docs/measurements/bb-Z10.txt",
+      "mean": 0.11475956439000001,
+      "stddev": 0.0016097780848458526,
+      "median": 0.11475956439000001,
+      "user": 0.094659595,
+      "system": 0.020173774999999998,
+      "min": 0.11362127939000001,
+      "max": 0.11589784939,
+      "times": [
+        0.11362127939000001,
+        0.11589784939
+      ],
+      "parameters": {
+        "alg": "bb",
+        "n": "10",
+        "set": "Z"
+      }
+    },
+    {
+      "command": "cargo run --release -- bb \\\n           < ds/ZR15_inst.dat \\\n           > ../docs/measurements/bb-Z15.txt",
+      "mean": 0.24097127439000002,
+      "stddev": 0.0026763652256655912,
+      "median": 0.24097127439000002,
+      "user": 0.227177095,
+      "system": 0.013848275,
+      "min": 0.23907879839,
+      "max": 0.24286375039000002,
+      "times": [
+        0.23907879839,
+        0.24286375039000002
+      ],
+      "parameters": {
+        "alg": "bb",
+        "n": "15",
+        "set": "Z"
       }
     }
   ]

@@ -146,7 +146,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <li>atd.</li>
 </ul>
 <h2 id="řešení">Řešení</h2>
-<p>První úkol předmětu NI-KOP jsem se rozhodl implementovat v jazyce Rust za pomoci nástrojů na <em>literate programming</em> – přístup k psaní zdrojového kódu, který upřednostňuje lidsky čitelný popis před seznamem příkazů pro počítač. Tento soubor obsahuje veškerý zdrojový kód nutný k reprodukci mojí práce.</p>
+<p>První úkol předmětu NI-KOP jsem se rozhodl implementovat v jazyce Rust za pomoci nástrojů na <em>literate programming</em> – přístup k psaní zdrojového kódu, který upřednostňuje lidsky čitelný popis před seznamem příkazů pro počítač. Tento soubor obsahuje veškerý zdrojový kód nutný k reprodukci mojí práce. Výsledek je dostupný online jako statická <a href="http://viluon.me/ni-kop/">webová stránka</a> a <a href="http://viluon.me/ni-kop/report.pdf">ke stažení v PDF</a>.</p>
 <h2 id="instrukce-k-sestavení-programu">Instrukce k sestavení programu</h2>
 <p>Program využívá standardních nástrojů jazyka Rust. O sestavení stačí požádat <code>cargo</code>.</p>
 <div class="doctest" data-status="SUCCESS">
@@ -162,37 +162,37 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="doctestResult">
 <div class="programOutput">
 <pre class="ansi2html-content"><span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00"> Downloading</span> crates ...
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> log v0.4.14
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> quickcheck_macros v1.0.0
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> getrandom v0.2.3
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> funty v1.2.0
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> log v0.4.14
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> radium v0.6.2
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> aho-corasick v0.7.18
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> env_logger v0.8.4
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> tap v1.0.1
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> rand_core v0.6.3
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> rand v0.8.4
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> wyz v0.4.0
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> quickcheck v1.0.3
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> anyhow v1.0.44
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> rand v0.8.4
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> bitvec v0.22.3
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> env_logger v0.8.4
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> funty v1.2.0
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> anyhow v1.0.44
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> aho-corasick v0.7.18
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> libc v0.2.103
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> memchr v2.4.1
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> cfg-if v1.0.0
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> memchr v2.4.1
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> proc-macro2 v1.0.29
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> log v0.4.14
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> unicode-xid v0.2.2
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> log v0.4.14
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> syn v1.0.80
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> regex-syntax v0.6.25
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> radium v0.6.2
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> syn v1.0.80
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> anyhow v1.0.44
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> tap v1.0.1
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> funty v1.2.0
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> wyz v0.4.0
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> aho-corasick v0.7.18
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> getrandom v0.2.3
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> bitvec v0.22.3
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> quote v1.0.10
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> bitvec v0.22.3
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> rand_core v0.6.3
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> regex v1.5.4
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> rand v0.8.4
@@ -259,7 +259,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
     <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">| </span>           <span style="font-weight: bold"></span><span style="font-weight: bold; color: #aa5500">^^</span>
 
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #aa5500">warning</span><span style="font-weight: bold">:</span> `solver` (bin "solver") generated 9 warnings
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">    Finished</span> release [optimized + debuginfo] target(s) in 30.07s
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">    Finished</span> release [optimized + debuginfo] target(s) in 35.30s
 </pre>
 </div>
 </div>
@@ -277,96 +277,157 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="benchmark-4"><a href="#benchmark-4" aria-hidden="true" tabindex="-1"></a><span class="kw">cd</span> solver</span>
 <span id="benchmark-5"><a href="#benchmark-5" aria-hidden="true" tabindex="-1"></a>hyperfine --export-json ../docs/bench.json <span class="kw">\</span></span>
 <span id="benchmark-6"><a href="#benchmark-6" aria-hidden="true" tabindex="-1"></a>          --parameter-list n 4,10,15 <span class="kw">\</span></span>
-<span id="benchmark-7"><a href="#benchmark-7" aria-hidden="true" tabindex="-1"></a>          --parameter-list alg bf,bb <span class="kw">\</span></span>
-<span id="benchmark-8"><a href="#benchmark-8" aria-hidden="true" tabindex="-1"></a>          --runs 2 <span class="kw">\</span></span>
-<span id="benchmark-9"><a href="#benchmark-9" aria-hidden="true" tabindex="-1"></a>          --style color <span class="kw">\</span></span>
-<span id="benchmark-10"><a href="#benchmark-10" aria-hidden="true" tabindex="-1"></a>          <span class="st">&#39;cargo run --release -- {alg} \</span></span>
-<span id="benchmark-11"><a href="#benchmark-11" aria-hidden="true" tabindex="-1"></a><span class="st">           &lt; ds/NR{n}_inst.dat \</span></span>
-<span id="benchmark-12"><a href="#benchmark-12" aria-hidden="true" tabindex="-1"></a><span class="st">           &gt; ../docs/measurements/{alg}-{n}.txt&#39;</span> <span class="kw">2&gt;&amp;1</span> <span class="kw">\</span></span>
-<span id="benchmark-13"><a href="#benchmark-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">|</span> fold -w 120 -s</span></code></pre></div>
+<span id="benchmark-7"><a href="#benchmark-7" aria-hidden="true" tabindex="-1"></a>          --parameter-list <span class="kw">set</span> N,Z <span class="kw">\</span></span>
+<span id="benchmark-8"><a href="#benchmark-8" aria-hidden="true" tabindex="-1"></a>          --parameter-list alg bf,bb <span class="kw">\</span></span>
+<span id="benchmark-9"><a href="#benchmark-9" aria-hidden="true" tabindex="-1"></a>          --runs 2 <span class="kw">\</span></span>
+<span id="benchmark-10"><a href="#benchmark-10" aria-hidden="true" tabindex="-1"></a>          --style color <span class="kw">\</span></span>
+<span id="benchmark-11"><a href="#benchmark-11" aria-hidden="true" tabindex="-1"></a>          <span class="st">&#39;cargo run --release -- {alg} \</span></span>
+<span id="benchmark-12"><a href="#benchmark-12" aria-hidden="true" tabindex="-1"></a><span class="st">           &lt; ds/{set}R{n}_inst.dat \</span></span>
+<span id="benchmark-13"><a href="#benchmark-13" aria-hidden="true" tabindex="-1"></a><span class="st">           &gt; ../docs/measurements/{alg}-{set}{n}.txt&#39;</span> <span class="kw">2&gt;&amp;1</span> <span class="kw">\</span></span>
+<span id="benchmark-14"><a href="#benchmark-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">|</span> fold -w 120 -s</span></code></pre></div>
 </div>
 </div>
 </div>
 <div class="doctestResult">
 <div class="programOutput">
-<pre class="ansi2html-content">Linux f91928e90520 5.8.0-1042-azure #45~20.04.1-Ubuntu SMP Wed Sep 15 14:24:15 UTC 2021 x86_64 GNU/Linux
+<pre class="ansi2html-content">Linux dac609739475 5.8.0-1042-azure #45~20.04.1-Ubuntu SMP Wed Sep 15 14:24:15 UTC 2021 x86_64 GNU/Linux
 
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">                   .#################.          </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">Name:</span>       <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">Intel Xeon Platinum </span>
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">                   .#################.          </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">Name:</span>       <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">Intel Xeon E5-2673 v</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">              .####                   ####.     </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">Hypervisor:</span> <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">Microsoft Hyper-V</span>
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">          .##                             ###   </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">uArch:</span>      <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">Cascade Lake</span>
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">          .##                             ###   </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">uArch:</span>      <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">Broadwell</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">       ##                          :##     ###  </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">Technology:</span> <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">14nm</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">    #                ##            :##      ##  </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">Max Freq:</span>   <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">Unknown</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">  ##   ##  ######.   ####  ######  :##      ##  </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">Cores:</span>      <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">2 cores</span>
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7"> ##    ##  ##:  ##:  ##   ##   ### :##     ###  </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">AVX:</span>        <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">AVX,AVX2,AVX512</span>
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7"> ##    ##  ##:  ##:  ##   ##   ### :##     ###  </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">AVX:</span>        <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">AVX,AVX2</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">##     ##  ##:  ##:  ##  :######## :##    ##    </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">FMA:</span>        <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">FMA3</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">##     ##  ##:  ##:  ##   ##.   .  :## ####     </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">L1i Size:</span>   <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">32KB (64KB Total)</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">##      #  ##:  ##:  ####  #####:   ##          </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">L1d Size:</span>   <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">32KB (64KB Total)</span>
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7"> ##                                             </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">L2 Size:</span>    <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">1MB (2MB Total)</span>
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">  ###.                         ..o####.         </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">L3 Size:</span>    <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">35.75MB</span>
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7"> ##                                             </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">L2 Size:</span>    <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">256KB (512KB Total)</span>
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">  ###.                         ..o####.         </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">L3 Size:</span>    <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">50MB</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">   ######oo...         ..oo#######              </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">Peak Perf.:</span> <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">Unknown</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">          o###############o                     </span>
 
 <span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">1</span>: cargo run --release -- bf \
            &lt; ds/NR4_inst.dat \
-           &gt; ../docs/measurements/bf-4.txt
-  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">106.6 ms</span> ± <span style="color: #00aa00">  6.4 ms</span>    [User: <span style="color: #0000aa">87.7 ms</span>, 
-System: <span style="color: #0000aa">17.9 ms</span>]
-  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">102.0 ms</span> … <span style="color: #E850A8">111.1 ms</span>    <span style="font-weight: lighter">2 runs</span>
+           &gt; ../docs/measurements/bf-N4.txt
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">115.9 ms</span> ± <span style="color: #00aa00">  4.1 ms</span>    [User: <span style="color: #0000aa">102.4 ms</span>, 
+System: <span style="color: #0000aa">12.6 ms</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">113.0 ms</span> … <span style="color: #E850A8">118.8 ms</span>    <span style="font-weight: lighter">2 runs</span>
  
 <span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">2</span>: cargo run --release -- bf \
            &lt; ds/NR10_inst.dat \
-           &gt; ../docs/measurements/bf-10.txt
-  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">113.0 ms</span> ± <span style="color: #00aa00">  4.5 ms</span>    [User: <span style="color: #0000aa">94.2 ms</span>, 
-System: <span style="color: #0000aa">18.5 ms</span>]
-  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">109.8 ms</span> … <span style="color: #E850A8">116.1 ms</span>    <span style="font-weight: lighter">2 runs</span>
+           &gt; ../docs/measurements/bf-N10.txt
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">116.0 ms</span> ± <span style="color: #00aa00">  0.2 ms</span>    [User: <span style="color: #0000aa">92.0 ms</span>, 
+System: <span style="color: #0000aa">23.8 ms</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">115.9 ms</span> … <span style="color: #E850A8">116.1 ms</span>    <span style="font-weight: lighter">2 runs</span>
  
 <span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">3</span>: cargo run --release -- bf \
            &lt; ds/NR15_inst.dat \
-           &gt; ../docs/measurements/bf-15.txt
-  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">323.3 ms</span> ± <span style="color: #00aa00">  0.2 ms</span>    [User: <span style="color: #0000aa">305.2 ms</span>, 
-System: <span style="color: #0000aa">17.9 ms</span>]
-  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">323.1 ms</span> … <span style="color: #E850A8">323.4 ms</span>    <span style="font-weight: lighter">2 runs</span>
+           &gt; ../docs/measurements/bf-N15.txt
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">340.9 ms</span> ± <span style="color: #00aa00">  5.5 ms</span>    [User: <span style="color: #0000aa">320.2 ms</span>, 
+System: <span style="color: #0000aa">20.5 ms</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">337.0 ms</span> … <span style="color: #E850A8">344.8 ms</span>    <span style="font-weight: lighter">2 runs</span>
  
-<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">4</span>: cargo run --release -- bb \
+<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">4</span>: cargo run --release -- bf \
+           &lt; ds/ZR4_inst.dat \
+           &gt; ../docs/measurements/bf-Z4.txt
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">119.6 ms</span> ± <span style="color: #00aa00"> 12.2 ms</span>    [User: <span style="color: #0000aa">84.8 ms</span>, 
+System: <span style="color: #0000aa">34.7 ms</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">111.0 ms</span> … <span style="color: #E850A8">128.2 ms</span>    <span style="font-weight: lighter">2 runs</span>
+ 
+<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">5</span>: cargo run --release -- bf \
+           &lt; ds/ZR10_inst.dat \
+           &gt; ../docs/measurements/bf-Z10.txt
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">116.3 ms</span> ± <span style="color: #00aa00">  5.9 ms</span>    [User: <span style="color: #0000aa">94.2 ms</span>, 
+System: <span style="color: #0000aa">21.9 ms</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">112.1 ms</span> … <span style="color: #E850A8">120.5 ms</span>    <span style="font-weight: lighter">2 runs</span>
+ 
+<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">6</span>: cargo run --release -- bf \
+           &lt; ds/ZR15_inst.dat \
+           &gt; ../docs/measurements/bf-Z15.txt
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">469.4 ms</span> ± <span style="color: #00aa00"> 18.9 ms</span>    [User: <span style="color: #0000aa">446.7 ms</span>, 
+System: <span style="color: #0000aa">22.6 ms</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">456.0 ms</span> … <span style="color: #E850A8">482.8 ms</span>    <span style="font-weight: lighter">2 runs</span>
+ 
+<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">7</span>: cargo run --release -- bb \
            &lt; ds/NR4_inst.dat \
-           &gt; ../docs/measurements/bb-4.txt
-  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">104.2 ms</span> ± <span style="color: #00aa00">  3.0 ms</span>    [User: <span style="color: #0000aa">75.4 ms</span>, 
-System: <span style="color: #0000aa">29.0 ms</span>]
-  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">102.1 ms</span> … <span style="color: #E850A8">106.4 ms</span>    <span style="font-weight: lighter">2 runs</span>
- 
-<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">5</span>: cargo run --release -- bb \
-           &lt; ds/NR10_inst.dat \
-           &gt; ../docs/measurements/bb-10.txt
-  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">104.5 ms</span> ± <span style="color: #00aa00">  0.7 ms</span>    [User: <span style="color: #0000aa">89.9 ms</span>, 
-System: <span style="color: #0000aa">14.5 ms</span>]
-  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">104.0 ms</span> … <span style="color: #E850A8">104.9 ms</span>    <span style="font-weight: lighter">2 runs</span>
- 
-<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">6</span>: cargo run --release -- bb \
-           &lt; ds/NR15_inst.dat \
-           &gt; ../docs/measurements/bb-15.txt
-  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">139.0 ms</span> ± <span style="color: #00aa00">  3.7 ms</span>    [User: <span style="color: #0000aa">130.8 ms</span>, 
+           &gt; ../docs/measurements/bb-N4.txt
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">105.3 ms</span> ± <span style="color: #00aa00">  0.6 ms</span>    [User: <span style="color: #0000aa">97.5 ms</span>, 
 System: <span style="color: #0000aa">7.9 ms</span>]
-  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">136.4 ms</span> … <span style="color: #E850A8">141.6 ms</span>    <span style="font-weight: lighter">2 runs</span>
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">104.9 ms</span> … <span style="color: #E850A8">105.8 ms</span>    <span style="font-weight: lighter">2 runs</span>
+ 
+<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">8</span>: cargo run --release -- bb \
+           &lt; ds/NR10_inst.dat \
+           &gt; ../docs/measurements/bb-N10.txt
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">106.9 ms</span> ± <span style="color: #00aa00">  1.3 ms</span>    [User: <span style="color: #0000aa">92.5 ms</span>, 
+System: <span style="color: #0000aa">14.6 ms</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">106.0 ms</span> … <span style="color: #E850A8">107.8 ms</span>    <span style="font-weight: lighter">2 runs</span>
+ 
+<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">9</span>: cargo run --release -- bb \
+           &lt; ds/NR15_inst.dat \
+           &gt; ../docs/measurements/bb-N15.txt
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">136.4 ms</span> ± <span style="color: #00aa00">  6.6 ms</span>    [User: <span style="color: #0000aa">124.7 ms</span>, 
+System: <span style="color: #0000aa">11.8 ms</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">131.7 ms</span> … <span style="color: #E850A8">141.1 ms</span>    <span style="font-weight: lighter">2 runs</span>
+ 
+<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">10</span>: cargo run --release -- bb \
+           &lt; ds/ZR4_inst.dat \
+           &gt; ../docs/measurements/bb-Z4.txt
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">104.3 ms</span> ± <span style="color: #00aa00">  4.1 ms</span>    [User: <span style="color: #0000aa">91.5 ms</span>, 
+System: <span style="color: #0000aa">12.9 ms</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">101.4 ms</span> … <span style="color: #E850A8">107.2 ms</span>    <span style="font-weight: lighter">2 runs</span>
+ 
+<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">11</span>: cargo run --release -- bb \
+           &lt; ds/ZR10_inst.dat \
+           &gt; ../docs/measurements/bb-Z10.txt
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">114.8 ms</span> ± <span style="color: #00aa00">  1.6 ms</span>    [User: <span style="color: #0000aa">94.7 ms</span>, 
+System: <span style="color: #0000aa">20.2 ms</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">113.6 ms</span> … <span style="color: #E850A8">115.9 ms</span>    <span style="font-weight: lighter">2 runs</span>
+ 
+<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">12</span>: cargo run --release -- bb \
+           &lt; ds/ZR15_inst.dat \
+           &gt; ../docs/measurements/bb-Z15.txt
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">241.0 ms</span> ± <span style="color: #00aa00">  2.7 ms</span>    [User: <span style="color: #0000aa">227.2 ms</span>, 
+System: <span style="color: #0000aa">13.8 ms</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">239.1 ms</span> … <span style="color: #E850A8">242.9 ms</span>    <span style="font-weight: lighter">2 runs</span>
  
 <span style="font-weight: bold">Summary</span>
   '<span style="color: #00aaaa">cargo run --release -- bb \
+           &lt; ds/ZR4_inst.dat \
+           &gt; ../docs/measurements/bb-Z4.txt</span>' ran
+<span style="font-weight: bold; color: #00aa00">    1.01</span> ± <span style="color: #00aa00">0.04</span> times faster than '<span style="color: #E850A8">cargo run --release -- bb \
            &lt; ds/NR4_inst.dat \
-           &gt; ../docs/measurements/bb-4.txt</span>' ran
-<span style="font-weight: bold; color: #00aa00">    1.00</span> ± <span style="color: #00aa00">0.03</span> times faster than '<span style="color: #E850A8">cargo run --release -- bb \
+           &gt; ../docs/measurements/bb-N4.txt</span>'
+<span style="font-weight: bold; color: #00aa00">    1.02</span> ± <span style="color: #00aa00">0.04</span> times faster than '<span style="color: #E850A8">cargo run --release -- bb \
            &lt; ds/NR10_inst.dat \
-           &gt; ../docs/measurements/bb-10.txt</span>'
-<span style="font-weight: bold; color: #00aa00">    1.02</span> ± <span style="color: #00aa00">0.07</span> times faster than '<span style="color: #E850A8">cargo run --release -- bf \
+           &gt; ../docs/measurements/bb-N10.txt</span>'
+<span style="font-weight: bold; color: #00aa00">    1.10</span> ± <span style="color: #00aa00">0.05</span> times faster than '<span style="color: #E850A8">cargo run --release -- bb \
+           &lt; ds/ZR10_inst.dat \
+           &gt; ../docs/measurements/bb-Z10.txt</span>'
+<span style="font-weight: bold; color: #00aa00">    1.11</span> ± <span style="color: #00aa00">0.06</span> times faster than '<span style="color: #E850A8">cargo run --release -- bf \
            &lt; ds/NR4_inst.dat \
-           &gt; ../docs/measurements/bf-4.txt</span>'
-<span style="font-weight: bold; color: #00aa00">    1.08</span> ± <span style="color: #00aa00">0.05</span> times faster than '<span style="color: #E850A8">cargo run --release -- bf \
+           &gt; ../docs/measurements/bf-N4.txt</span>'
+<span style="font-weight: bold; color: #00aa00">    1.11</span> ± <span style="color: #00aa00">0.04</span> times faster than '<span style="color: #E850A8">cargo run --release -- bf \
            &lt; ds/NR10_inst.dat \
-           &gt; ../docs/measurements/bf-10.txt</span>'
-<span style="font-weight: bold; color: #00aa00">    1.33</span> ± <span style="color: #00aa00">0.05</span> times faster than '<span style="color: #E850A8">cargo run --release -- bb \
+           &gt; ../docs/measurements/bf-N10.txt</span>'
+<span style="font-weight: bold; color: #00aa00">    1.11</span> ± <span style="color: #00aa00">0.07</span> times faster than '<span style="color: #E850A8">cargo run --release -- bf \
+           &lt; ds/ZR10_inst.dat \
+           &gt; ../docs/measurements/bf-Z10.txt</span>'
+<span style="font-weight: bold; color: #00aa00">    1.15</span> ± <span style="color: #00aa00">0.12</span> times faster than '<span style="color: #E850A8">cargo run --release -- bf \
+           &lt; ds/ZR4_inst.dat \
+           &gt; ../docs/measurements/bf-Z4.txt</span>'
+<span style="font-weight: bold; color: #00aa00">    1.31</span> ± <span style="color: #00aa00">0.08</span> times faster than '<span style="color: #E850A8">cargo run --release -- bb \
            &lt; ds/NR15_inst.dat \
-           &gt; ../docs/measurements/bb-15.txt</span>'
-<span style="font-weight: bold; color: #00aa00">    3.10</span> ± <span style="color: #00aa00">0.09</span> times faster than '<span style="color: #E850A8">cargo run --release -- bf \
+           &gt; ../docs/measurements/bb-N15.txt</span>'
+<span style="font-weight: bold; color: #00aa00">    2.31</span> ± <span style="color: #00aa00">0.09</span> times faster than '<span style="color: #E850A8">cargo run --release -- bb \
+           &lt; ds/ZR15_inst.dat \
+           &gt; ../docs/measurements/bb-Z15.txt</span>'
+<span style="font-weight: bold; color: #00aa00">    3.27</span> ± <span style="color: #00aa00">0.14</span> times faster than '<span style="color: #E850A8">cargo run --release -- bf \
            &lt; ds/NR15_inst.dat \
-           &gt; ../docs/measurements/bf-15.txt</span>'
+           &gt; ../docs/measurements/bf-N15.txt</span>'
+<span style="font-weight: bold; color: #00aa00">    4.50</span> ± <span style="color: #00aa00">0.25</span> times faster than '<span style="color: #E850A8">cargo run --release -- bf \
+           &lt; ds/ZR15_inst.dat \
+           &gt; ../docs/measurements/bf-Z15.txt</span>'
 </pre>
 </div>
 </div>
@@ -377,9 +438,9 @@ System: <span style="color: #0000aa">7.9 ms</span>]
 <div class="fold-block">
 <button class="btn btn-outline-primary btn-sm fold-toggle" type="button" data-toggle="collapse" data-target="#json-to-csv-container" aria-controls="json-to-csv-container">&lt;&lt;json-to-csv&gt;&gt;=</button>
 <div id="json-to-csv-container" class="collapse">
-<div class="sourceCode" id="json-to-csv" style="max-height: 50vh"><pre class="sourceCode zsh eval bootstrap-fold overflow-auto"><code class="sourceCode zsh"><span id="json-to-csv-1"><a href="#json-to-csv-1" aria-hidden="true" tabindex="-1"></a><span class="kw">echo</span> <span class="st">&quot;algoritmus,</span><span class="dt">\$</span><span class="st">n</span><span class="dt">\$</span><span class="st">,průměr,</span><span class="dt">\$</span><span class="st">\pm \sigma</span><span class="dt">\$</span><span class="st">,minimum,medián,maximum&quot;</span> <span class="kw">&gt;</span> docs/bench.csv</span>
+<div class="sourceCode" id="json-to-csv" style="max-height: 50vh"><pre class="sourceCode zsh eval bootstrap-fold overflow-auto"><code class="sourceCode zsh"><span id="json-to-csv-1"><a href="#json-to-csv-1" aria-hidden="true" tabindex="-1"></a><span class="kw">echo</span> <span class="st">&quot;alg.,sada,</span><span class="dt">\$</span><span class="st">n</span><span class="dt">\$</span><span class="st">,průměr,</span><span class="dt">\$</span><span class="st">\pm \sigma</span><span class="dt">\$</span><span class="st">,minimum,medián,maximum&quot;</span> <span class="kw">&gt;</span> docs/bench.csv</span>
 <span id="json-to-csv-2"><a href="#json-to-csv-2" aria-hidden="true" tabindex="-1"></a>jq -r <span class="kw">\</span></span>
-<span id="json-to-csv-3"><a href="#json-to-csv-3" aria-hidden="true" tabindex="-1"></a>   <span class="st">&#39;.[] | .[] | [.parameters.alg, .parameters.n</span></span>
+<span id="json-to-csv-3"><a href="#json-to-csv-3" aria-hidden="true" tabindex="-1"></a>   <span class="st">&#39;.[] | .[] | [.parameters.alg, .parameters.set, .parameters.n</span></span>
 <span id="json-to-csv-4"><a href="#json-to-csv-4" aria-hidden="true" tabindex="-1"></a><span class="st">                , ([.mean, .stddev, .min, .median, .max]</span></span>
 <span id="json-to-csv-5"><a href="#json-to-csv-5" aria-hidden="true" tabindex="-1"></a><span class="st">                   | map(&quot;**&quot; + (100000 * . + 0.5</span></span>
 <span id="json-to-csv-6"><a href="#json-to-csv-6" aria-hidden="true" tabindex="-1"></a><span class="st">                         | floor</span></span>
@@ -406,17 +467,19 @@ System: <span style="color: #0000aa">7.9 ms</span>]
 <table>
 <caption>Měření výkonu pro různé kombinace velikosti instancí problému (<span class="math inline">\(n\)</span>) a zvoleného algoritmu. </caption>
 <colgroup>
-<col style="width: 13%" />
 <col style="width: 7%" />
-<col style="width: 16%" />
+<col style="width: 7%" />
+<col style="width: 6%" />
 <col style="width: 15%" />
-<col style="width: 16%" />
-<col style="width: 16%" />
-<col style="width: 16%" />
+<col style="width: 14%" />
+<col style="width: 15%" />
+<col style="width: 15%" />
+<col style="width: 15%" />
 </colgroup>
 <thead>
 <tr class="header">
-<th>algoritmus</th>
+<th>alg.</th>
+<th>sada</th>
 <th><span class="math inline">\(n\)</span></th>
 <th>průměr</th>
 <th><span class="math inline">\(\pm \sigma\)</span></th>
@@ -428,119 +491,309 @@ System: <span style="color: #0000aa">7.9 ms</span>]
 <tbody>
 <tr class="odd">
 <td>bf</td>
+<td>N</td>
 <td>4</td>
-<td><strong>106</strong>.56 ms</td>
-<td><strong>6</strong>.39 ms</td>
-<td><strong>102</strong>.04 ms</td>
-<td><strong>106</strong>.56 ms</td>
-<td><strong>111</strong>.08 ms</td>
+<td><strong>115</strong>.9 ms</td>
+<td><strong>4</strong>.08 ms</td>
+<td><strong>113</strong>.01 ms</td>
+<td><strong>115</strong>.9 ms</td>
+<td><strong>118</strong>.78 ms</td>
 </tr>
 <tr class="even">
 <td>bf</td>
+<td>N</td>
 <td>10</td>
-<td><strong>112</strong>.95 ms</td>
-<td><strong>4</strong>.51 ms</td>
-<td><strong>109</strong>.76 ms</td>
-<td><strong>112</strong>.95 ms</td>
-<td><strong>116</strong>.14 ms</td>
+<td><strong>116</strong> ms</td>
+<td><strong>0</strong>.2 ms</td>
+<td><strong>115</strong>.86 ms</td>
+<td><strong>116</strong> ms</td>
+<td><strong>116</strong>.15 ms</td>
 </tr>
 <tr class="odd">
 <td>bf</td>
+<td>N</td>
 <td>15</td>
-<td><strong>323</strong>.27 ms</td>
-<td><strong>0</strong>.22 ms</td>
-<td><strong>323</strong>.12 ms</td>
-<td><strong>323</strong>.27 ms</td>
-<td><strong>323</strong>.43 ms</td>
+<td><strong>340</strong>.88 ms</td>
+<td><strong>5</strong>.51 ms</td>
+<td><strong>336</strong>.98 ms</td>
+<td><strong>340</strong>.88 ms</td>
+<td><strong>344</strong>.77 ms</td>
 </tr>
 <tr class="even">
-<td>bb</td>
+<td>bf</td>
+<td>Z</td>
 <td>4</td>
-<td><strong>104</strong>.23 ms</td>
-<td><strong>3</strong> ms</td>
-<td><strong>102</strong>.11 ms</td>
-<td><strong>104</strong>.23 ms</td>
-<td><strong>106</strong>.35 ms</td>
+<td><strong>119</strong>.6 ms</td>
+<td><strong>12</strong>.17 ms</td>
+<td><strong>110</strong>.99 ms</td>
+<td><strong>119</strong>.6 ms</td>
+<td><strong>128</strong>.21 ms</td>
+</tr>
+<tr class="odd">
+<td>bf</td>
+<td>Z</td>
+<td>10</td>
+<td><strong>116</strong>.27 ms</td>
+<td><strong>5</strong>.91 ms</td>
+<td><strong>112</strong>.09 ms</td>
+<td><strong>116</strong>.27 ms</td>
+<td><strong>120</strong>.46 ms</td>
+</tr>
+<tr class="even">
+<td>bf</td>
+<td>Z</td>
+<td>15</td>
+<td><strong>469</strong>.4 ms</td>
+<td><strong>18</strong>.94 ms</td>
+<td><strong>456</strong>.01 ms</td>
+<td><strong>469</strong>.4 ms</td>
+<td><strong>482</strong>.79 ms</td>
 </tr>
 <tr class="odd">
 <td>bb</td>
-<td>10</td>
-<td><strong>104</strong>.45 ms</td>
-<td><strong>0</strong>.68 ms</td>
-<td><strong>103</strong>.97 ms</td>
-<td><strong>104</strong>.45 ms</td>
-<td><strong>104</strong>.93 ms</td>
+<td>N</td>
+<td>4</td>
+<td><strong>105</strong>.33 ms</td>
+<td><strong>0</strong>.6 ms</td>
+<td><strong>104</strong>.91 ms</td>
+<td><strong>105</strong>.33 ms</td>
+<td><strong>105</strong>.76 ms</td>
 </tr>
 <tr class="even">
 <td>bb</td>
+<td>N</td>
+<td>10</td>
+<td><strong>106</strong>.91 ms</td>
+<td><strong>1</strong>.25 ms</td>
+<td><strong>106</strong>.02 ms</td>
+<td><strong>106</strong>.91 ms</td>
+<td><strong>107</strong>.79 ms</td>
+</tr>
+<tr class="odd">
+<td>bb</td>
+<td>N</td>
 <td>15</td>
-<td><strong>139</strong>.04 ms</td>
-<td><strong>3</strong>.67 ms</td>
-<td><strong>136</strong>.44 ms</td>
-<td><strong>139</strong>.04 ms</td>
-<td><strong>141</strong>.64 ms</td>
+<td><strong>136</strong>.38 ms</td>
+<td><strong>6</strong>.63 ms</td>
+<td><strong>131</strong>.7 ms</td>
+<td><strong>136</strong>.38 ms</td>
+<td><strong>141</strong>.07 ms</td>
+</tr>
+<tr class="even">
+<td>bb</td>
+<td>Z</td>
+<td>4</td>
+<td><strong>104</strong>.3 ms</td>
+<td><strong>4</strong>.08 ms</td>
+<td><strong>101</strong>.42 ms</td>
+<td><strong>104</strong>.3 ms</td>
+<td><strong>107</strong>.19 ms</td>
+</tr>
+<tr class="odd">
+<td>bb</td>
+<td>Z</td>
+<td>10</td>
+<td><strong>114</strong>.76 ms</td>
+<td><strong>1</strong>.61 ms</td>
+<td><strong>113</strong>.62 ms</td>
+<td><strong>114</strong>.76 ms</td>
+<td><strong>115</strong>.9 ms</td>
+</tr>
+<tr class="even">
+<td>bb</td>
+<td>Z</td>
+<td>15</td>
+<td><strong>240</strong>.97 ms</td>
+<td><strong>2</strong>.68 ms</td>
+<td><strong>239</strong>.08 ms</td>
+<td><strong>240</strong>.97 ms</td>
+<td><strong>242</strong>.86 ms</td>
 </tr>
 </tbody>
 </table>
 <h3 id="srovnání-algoritmů">Srovnání algoritmů</h3>
-<div class="doctest" data-status="SUCCESS">
+<div class="doctest" data-status="ERROR">
 <div class="doctestInput">
-<div class="sourceCode" id="cb1"><pre class="sourceCode python eval"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
-<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pandas.core.tools.numeric <span class="im">import</span> to_numeric</span>
+<div class="sourceCode" id="cb1"><pre class="sourceCode python eval"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>preprocessing<span class="op">&gt;&gt;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>performance<span class="op">-</span>chart<span class="op">&gt;&gt;</span></span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.read_csv(<span class="st">&quot;docs/bench.csv&quot;</span>, dtype <span class="op">=</span> <span class="st">&quot;string&quot;</span>)</span>
-<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>df.rename({</span>
-<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;algoritmus&quot;</span>: <span class="st">&quot;alg&quot;</span>,</span>
-<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;$n$&quot;</span>: <span class="st">&quot;n&quot;</span>,</span>
-<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;průměr&quot;</span>: <span class="st">&quot;avg&quot;</span>,</span>
-<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;$\pm \sigma$&quot;</span>: <span class="st">&quot;sigma&quot;</span>,</span>
-<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;medián&quot;</span>: <span class="st">&quot;median&quot;</span>,</span>
-<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;minimum&quot;</span>: <span class="st">&quot;min&quot;</span>,</span>
-<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;maximum&quot;</span>: <span class="st">&quot;max&quot;</span>,</span>
-<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>    },</span>
-<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a>    inplace <span class="op">=</span> <span class="va">True</span>,</span>
-<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>    errors  <span class="op">=</span> <span class="st">&quot;raise&quot;</span>,</span>
-<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a>    axis    <span class="op">=</span> <span class="dv">1</span>,</span>
-<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>numeric_columns <span class="op">=</span> [<span class="st">&quot;n&quot;</span>, <span class="st">&quot;avg&quot;</span>, <span class="st">&quot;sigma&quot;</span>, <span class="st">&quot;min&quot;</span>, <span class="st">&quot;median&quot;</span>, <span class="st">&quot;max&quot;</span>]</span>
-<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>df[numeric_columns] <span class="op">=</span> df[numeric_columns].<span class="bu">apply</span>(<span class="kw">lambda</span> c:</span>
-<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>    c.<span class="bu">apply</span>(<span class="kw">lambda</span> x:</span>
-<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>        to_numeric(x.replace(<span class="st">&quot;**&quot;</span>, <span class="st">&quot;&quot;</span>).replace(<span class="st">&quot; ms&quot;</span>, <span class="st">&quot;&quot;</span>))</span>
-<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a figure and a set of subplots.</span></span>
-<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize <span class="op">=</span> (<span class="dv">11</span>, <span class="dv">6</span>))</span>
-<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>labels <span class="op">=</span> { <span class="st">&quot;bf&quot;</span>: <span class="st">&quot;Hrubá síla&quot;</span></span>
-<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>         , <span class="st">&quot;bb&quot;</span>: <span class="st">&quot;Branch &amp; bound&quot;</span></span>
-<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>         , <span class="st">&quot;dp&quot;</span>: <span class="st">&quot;Dynamické programování&quot;</span></span>
-<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>         }</span>
-<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a><span class="co"># Group the dataframe by alg and create a line for each group.</span></span>
-<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> name, group <span class="kw">in</span> df.groupby(<span class="st">&quot;alg&quot;</span>):</span>
-<span id="cb1-36"><a href="#cb1-36" aria-hidden="true" tabindex="-1"></a>    (x, y, sigma) <span class="op">=</span> (group[<span class="st">&quot;n&quot;</span>], group[<span class="st">&quot;avg&quot;</span>], group[<span class="st">&quot;sigma&quot;</span>])</span>
-<span id="cb1-37"><a href="#cb1-37" aria-hidden="true" tabindex="-1"></a>    ax.plot(x, y, label <span class="op">=</span> labels[name])</span>
-<span id="cb1-38"><a href="#cb1-38" aria-hidden="true" tabindex="-1"></a>    ax.fill_between(x, y <span class="op">+</span> sigma, y <span class="op">-</span> sigma, alpha <span class="op">=</span> <span class="fl">0.3</span>)</span>
-<span id="cb1-39"><a href="#cb1-39" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-40"><a href="#cb1-40" aria-hidden="true" tabindex="-1"></a><span class="co"># Axis metadata: ticks, scaling, margins, and the legend</span></span>
-<span id="cb1-41"><a href="#cb1-41" aria-hidden="true" tabindex="-1"></a>plt.xticks(df[<span class="st">&quot;n&quot;</span>])</span>
-<span id="cb1-42"><a href="#cb1-42" aria-hidden="true" tabindex="-1"></a>ax.set_yscale(<span class="st">&quot;log&quot;</span>, base <span class="op">=</span> <span class="dv">10</span>)</span>
-<span id="cb1-43"><a href="#cb1-43" aria-hidden="true" tabindex="-1"></a>ax.set_yticks(<span class="bu">list</span>(plt.yticks()[<span class="dv">0</span>]) <span class="op">+</span> <span class="bu">list</span>(df[<span class="st">&quot;avg&quot;</span>]), minor <span class="op">=</span> <span class="va">True</span>)</span>
-<span id="cb1-44"><a href="#cb1-44" aria-hidden="true" tabindex="-1"></a>ax.margins(<span class="fl">0.05</span>, <span class="fl">0.1</span>)</span>
-<span id="cb1-45"><a href="#cb1-45" aria-hidden="true" tabindex="-1"></a>ax.legend(loc<span class="op">=</span><span class="st">&quot;upper left&quot;</span>)</span>
-<span id="cb1-46"><a href="#cb1-46" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-47"><a href="#cb1-47" aria-hidden="true" tabindex="-1"></a>plt.savefig(<span class="st">&quot;docs/graph.svg&quot;</span>)</span></code></pre></div>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>histogram<span class="op">&gt;&gt;</span></span></code></pre></div>
 </div>
-<div class="doctestResult">
+<div class="doctestError">
 <div class="programOutput">
-<pre class="ansi2html-content">&lt;Figure size 792x432 with 1 Axes&gt;</pre>
+<pre class="ansi2html-content"><span style="color: #aa0000">---------------------------------------------------------------------------</span>
+<span style="color: #aa0000">FileNotFoundError</span>                         Traceback (most recent call last)
+<span style="color: #00aa00">/tmp/ipykernel_1881/1631082543.py</span> in <span style="color: #00aaaa">&lt;module&gt;</span><span style="color: #0000aa"></span>
+<span style="font-weight: bold; color: #00aa00">     51</span> plt<span style="color: #0000aa">.</span>legend<span style="color: #0000aa">(</span><span style="color: #0000aa">[</span>handles<span style="color: #0000aa">[</span>idx<span style="color: #0000aa">]</span> <span style="color: #00aa00">for</span> idx <span style="color: #00aa00">in</span> order<span style="color: #0000aa">]</span><span style="color: #0000aa">,</span><span style="color: #0000aa">[</span>labels<span style="color: #0000aa">[</span>idx<span style="color: #0000aa">]</span> <span style="color: #00aa00">for</span> idx <span style="color: #00aa00">in</span> order<span style="color: #0000aa">]</span><span style="color: #0000aa">)</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+<span style="font-weight: bold; color: #00aa00">     52</span> <span style="color: #0000aa"></span>
+<span style="color: #00aa00">---&gt; 53</span><span style="color: #aa0000"> </span>plt<span style="color: #0000aa">.</span>savefig<span style="color: #0000aa">(</span><span style="color: #0000aa">"docs/assets/graph.svg"</span><span style="color: #0000aa">)</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+<span style="font-weight: bold; color: #00aa00">     54</span> <span style="color: #0000aa"></span>
+<span style="font-weight: bold; color: #00aa00">     55</span> <span style="color: #00aa00">import</span> numpy <span style="color: #00aa00">as</span> np<span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+
+<span style="color: #00aa00">/__w/ni-kop/ni-kop/1-exact-knapsack/entangled-filters/lib/python3.9/site-packages/matplotlib/pyplot.py</span> in <span style="color: #00aaaa">savefig</span><span style="color: #0000aa">(*args, **kwargs)</span>
+<span style="font-weight: bold; color: #00aa00">    964</span> <span style="color: #00aa00">def</span> savefig<span style="color: #0000aa">(</span><span style="color: #0000aa">*</span>args<span style="color: #0000aa">,</span> <span style="color: #0000aa">**</span>kwargs<span style="color: #0000aa">)</span><span style="color: #0000aa">:</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+<span style="font-weight: bold; color: #00aa00">    965</span>     fig <span style="color: #0000aa">=</span> gcf<span style="color: #0000aa">(</span><span style="color: #0000aa">)</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+<span style="color: #00aa00">--&gt; 966</span><span style="color: #aa0000">     </span>res <span style="color: #0000aa">=</span> fig<span style="color: #0000aa">.</span>savefig<span style="color: #0000aa">(</span><span style="color: #0000aa">*</span>args<span style="color: #0000aa">,</span> <span style="color: #0000aa">**</span>kwargs<span style="color: #0000aa">)</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+<span style="font-weight: bold; color: #00aa00">    967</span>     fig<span style="color: #0000aa">.</span>canvas<span style="color: #0000aa">.</span>draw_idle<span style="color: #0000aa">(</span><span style="color: #0000aa">)</span>   <span style="color: #aa0000"># need this if 'transparent=True' to reset colors</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+<span style="font-weight: bold; color: #00aa00">    968</span>     <span style="color: #00aa00">return</span> res<span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+
+<span style="color: #00aa00">/__w/ni-kop/ni-kop/1-exact-knapsack/entangled-filters/lib/python3.9/site-packages/matplotlib/figure.py</span> in <span style="color: #00aaaa">savefig</span><span style="color: #0000aa">(self, fname, transparent, **kwargs)</span>
+<span style="font-weight: bold; color: #00aa00">   3013</span>                 patch<span style="color: #0000aa">.</span>set_edgecolor<span style="color: #0000aa">(</span><span style="color: #0000aa">'none'</span><span style="color: #0000aa">)</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+<span style="font-weight: bold; color: #00aa00">   3014</span> <span style="color: #0000aa"></span>
+<span style="color: #00aa00">-&gt; 3015</span><span style="color: #aa0000">         </span>self<span style="color: #0000aa">.</span>canvas<span style="color: #0000aa">.</span>print_figure<span style="color: #0000aa">(</span>fname<span style="color: #0000aa">,</span> <span style="color: #0000aa">**</span>kwargs<span style="color: #0000aa">)</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+<span style="font-weight: bold; color: #00aa00">   3016</span> <span style="color: #0000aa"></span>
+<span style="font-weight: bold; color: #00aa00">   3017</span>         <span style="color: #00aa00">if</span> transparent<span style="color: #0000aa">:</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+
+<span style="color: #00aa00">/__w/ni-kop/ni-kop/1-exact-knapsack/entangled-filters/lib/python3.9/site-packages/matplotlib/backend_bases.py</span> in <span style="color: #00aaaa">print_figure</span><span style="color: #0000aa">(self, filename, dpi, facecolor, edgecolor, orientation, format, bbox_inches, pad_inches, bbox_extra_artists, backend, **kwargs)</span>
+<span style="font-weight: bold; color: #00aa00">   2253</span>                 <span style="color: #aa0000"># force the figure dpi to 72), so we need to set it again here.</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+<span style="font-weight: bold; color: #00aa00">   2254</span>                 <span style="color: #00aa00">with</span> cbook<span style="color: #0000aa">.</span>_setattr_cm<span style="color: #0000aa">(</span>self<span style="color: #0000aa">.</span>figure<span style="color: #0000aa">,</span> dpi<span style="color: #0000aa">=</span>dpi<span style="color: #0000aa">)</span><span style="color: #0000aa">:</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+<span style="color: #00aa00">-&gt; 2255</span><span style="color: #aa0000">                     result = print_method(
+</span><span style="font-weight: bold; color: #00aa00">   2256</span>                         filename<span style="color: #0000aa">,</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+<span style="font-weight: bold; color: #00aa00">   2257</span>                         facecolor<span style="color: #0000aa">=</span>facecolor<span style="color: #0000aa">,</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+
+<span style="color: #00aa00">/__w/ni-kop/ni-kop/1-exact-knapsack/entangled-filters/lib/python3.9/site-packages/matplotlib/backends/backend_svg.py</span> in <span style="color: #00aaaa">print_svg</span><span style="color: #0000aa">(self, filename, *args, **kwargs)</span>
+<span style="font-weight: bold; color: #00aa00">   1319</span>             __ DC_<span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+<span style="font-weight: bold; color: #00aa00">   1320</span>         """
+<span style="color: #00aa00">-&gt; 1321</span><span style="color: #aa0000">         </span><span style="color: #00aa00">with</span> cbook<span style="color: #0000aa">.</span>open_file_cm<span style="color: #0000aa">(</span>filename<span style="color: #0000aa">,</span> <span style="color: #0000aa">"w"</span><span style="color: #0000aa">,</span> encoding<span style="color: #0000aa">=</span><span style="color: #0000aa">"utf-8"</span><span style="color: #0000aa">)</span> <span style="color: #00aa00">as</span> fh<span style="color: #0000aa">:</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+<span style="font-weight: bold; color: #00aa00">   1322</span> <span style="color: #0000aa"></span>
+<span style="font-weight: bold; color: #00aa00">   1323</span>             filename <span style="color: #0000aa">=</span> getattr<span style="color: #0000aa">(</span>fh<span style="color: #0000aa">,</span> <span style="color: #0000aa">'name'</span><span style="color: #0000aa">,</span> <span style="color: #0000aa">''</span><span style="color: #0000aa">)</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+
+<span style="color: #00aa00">/usr/lib/python3.9/contextlib.py</span> in <span style="color: #00aaaa">__enter__</span><span style="color: #0000aa">(self)</span>
+<span style="font-weight: bold; color: #00aa00">    115</span>         <span style="color: #00aa00">del</span> self<span style="color: #0000aa">.</span>args<span style="color: #0000aa">,</span> self<span style="color: #0000aa">.</span>kwds<span style="color: #0000aa">,</span> self<span style="color: #0000aa">.</span>func<span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+<span style="font-weight: bold; color: #00aa00">    116</span>         <span style="color: #00aa00">try</span><span style="color: #0000aa">:</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+<span style="color: #00aa00">--&gt; 117</span><span style="color: #aa0000">             </span><span style="color: #00aa00">return</span> next<span style="color: #0000aa">(</span>self<span style="color: #0000aa">.</span>gen<span style="color: #0000aa">)</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+<span style="font-weight: bold; color: #00aa00">    118</span>         <span style="color: #00aa00">except</span> StopIteration<span style="color: #0000aa">:</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+<span style="font-weight: bold; color: #00aa00">    119</span>             <span style="color: #00aa00">raise</span> RuntimeError<span style="color: #0000aa">(</span><span style="color: #0000aa">"generator didn't yield"</span><span style="color: #0000aa">)</span> <span style="color: #00aa00">from</span> <span style="color: #00aa00">None</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+
+<span style="color: #00aa00">/__w/ni-kop/ni-kop/1-exact-knapsack/entangled-filters/lib/python3.9/site-packages/matplotlib/cbook/__init__.py</span> in <span style="color: #00aaaa">open_file_cm</span><span style="color: #0000aa">(path_or_file, mode, encoding)</span>
+<span style="font-weight: bold; color: #00aa00">    475</span> <span style="color: #00aa00">def</span> open_file_cm<span style="color: #0000aa">(</span>path_or_file<span style="color: #0000aa">,</span> mode<span style="color: #0000aa">=</span><span style="color: #0000aa">"r"</span><span style="color: #0000aa">,</span> encoding<span style="color: #0000aa">=</span><span style="color: #00aa00">None</span><span style="color: #0000aa">)</span><span style="color: #0000aa">:</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+<span style="font-weight: bold; color: #00aa00">    476</span>     <span style="color: #0000aa">r"""Pass through file objects and context-manage path-likes."""</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+<span style="color: #00aa00">--&gt; 477</span><span style="color: #aa0000">     </span>fh<span style="color: #0000aa">,</span> opened <span style="color: #0000aa">=</span> to_filehandle<span style="color: #0000aa">(</span>path_or_file<span style="color: #0000aa">,</span> mode<span style="color: #0000aa">,</span> <span style="color: #00aa00">True</span><span style="color: #0000aa">,</span> encoding<span style="color: #0000aa">)</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+<span style="font-weight: bold; color: #00aa00">    478</span>     <span style="color: #00aa00">if</span> opened<span style="color: #0000aa">:</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+<span style="font-weight: bold; color: #00aa00">    479</span>         <span style="color: #00aa00">with</span> fh<span style="color: #0000aa">:</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+
+<span style="color: #00aa00">/__w/ni-kop/ni-kop/1-exact-knapsack/entangled-filters/lib/python3.9/site-packages/matplotlib/cbook/__init__.py</span> in <span style="color: #00aaaa">to_filehandle</span><span style="color: #0000aa">(fname, flag, return_opened, encoding)</span>
+<span style="font-weight: bold; color: #00aa00">    460</span>             fh <span style="color: #0000aa">=</span> bz2<span style="color: #0000aa">.</span>BZ2File<span style="color: #0000aa">(</span>fname<span style="color: #0000aa">,</span> flag<span style="color: #0000aa">)</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+<span style="font-weight: bold; color: #00aa00">    461</span>         <span style="color: #00aa00">else</span><span style="color: #0000aa">:</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+<span style="color: #00aa00">--&gt; 462</span><span style="color: #aa0000">             </span>fh <span style="color: #0000aa">=</span> open<span style="color: #0000aa">(</span>fname<span style="color: #0000aa">,</span> flag<span style="color: #0000aa">,</span> encoding<span style="color: #0000aa">=</span>encoding<span style="color: #0000aa">)</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+<span style="font-weight: bold; color: #00aa00">    463</span>         opened <span style="color: #0000aa">=</span> <span style="color: #00aa00">True</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+<span style="font-weight: bold; color: #00aa00">    464</span>     <span style="color: #00aa00">elif</span> hasattr<span style="color: #0000aa">(</span>fname<span style="color: #0000aa">,</span> <span style="color: #0000aa">'seek'</span><span style="color: #0000aa">)</span><span style="color: #0000aa">:</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+
+<span style="color: #aa0000">FileNotFoundError</span>: [Errno 2] No such file or directory: 'docs/assets/graph.svg'</pre>
 </div>
+</div>
+</div>
+<div class="fold-block">
+<button class="btn btn-outline-primary btn-sm fold-toggle" type="button" data-toggle="collapse" data-target="#preprocessing-container" aria-controls="preprocessing-container">&lt;&lt;preprocessing&gt;&gt;=</button>
+<div id="preprocessing-container" class="collapse">
+<div class="sourceCode" id="preprocessing" style="max-height: 50vh"><pre class="sourceCode python bootstrap-fold overflow-auto"><code class="sourceCode python"><span id="preprocessing-1"><a href="#preprocessing-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="preprocessing-2"><a href="#preprocessing-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="preprocessing-3"><a href="#preprocessing-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pandas.core.tools.numeric <span class="im">import</span> to_numeric</span>
+<span id="preprocessing-4"><a href="#preprocessing-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="preprocessing-5"><a href="#preprocessing-5" aria-hidden="true" tabindex="-1"></a>bench <span class="op">=</span> pd.read_csv(<span class="st">&quot;docs/bench.csv&quot;</span>, dtype <span class="op">=</span> <span class="st">&quot;string&quot;</span>)</span>
+<span id="preprocessing-6"><a href="#preprocessing-6" aria-hidden="true" tabindex="-1"></a>bench.rename({</span>
+<span id="preprocessing-7"><a href="#preprocessing-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;alg.&quot;</span>: <span class="st">&quot;alg&quot;</span>,</span>
+<span id="preprocessing-8"><a href="#preprocessing-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;$n$&quot;</span>: <span class="st">&quot;n&quot;</span>,</span>
+<span id="preprocessing-9"><a href="#preprocessing-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;sada&quot;</span>: <span class="st">&quot;set&quot;</span>,</span>
+<span id="preprocessing-10"><a href="#preprocessing-10" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;průměr&quot;</span>: <span class="st">&quot;avg&quot;</span>,</span>
+<span id="preprocessing-11"><a href="#preprocessing-11" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;$\pm \sigma$&quot;</span>: <span class="st">&quot;sigma&quot;</span>,</span>
+<span id="preprocessing-12"><a href="#preprocessing-12" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;medián&quot;</span>: <span class="st">&quot;median&quot;</span>,</span>
+<span id="preprocessing-13"><a href="#preprocessing-13" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;minimum&quot;</span>: <span class="st">&quot;min&quot;</span>,</span>
+<span id="preprocessing-14"><a href="#preprocessing-14" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;maximum&quot;</span>: <span class="st">&quot;max&quot;</span>,</span>
+<span id="preprocessing-15"><a href="#preprocessing-15" aria-hidden="true" tabindex="-1"></a>    },</span>
+<span id="preprocessing-16"><a href="#preprocessing-16" aria-hidden="true" tabindex="-1"></a>    inplace <span class="op">=</span> <span class="va">True</span>,</span>
+<span id="preprocessing-17"><a href="#preprocessing-17" aria-hidden="true" tabindex="-1"></a>    errors  <span class="op">=</span> <span class="st">&quot;raise&quot;</span>,</span>
+<span id="preprocessing-18"><a href="#preprocessing-18" aria-hidden="true" tabindex="-1"></a>    axis    <span class="op">=</span> <span class="dv">1</span>,</span>
+<span id="preprocessing-19"><a href="#preprocessing-19" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="preprocessing-20"><a href="#preprocessing-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="preprocessing-21"><a href="#preprocessing-21" aria-hidden="true" tabindex="-1"></a>numeric_columns <span class="op">=</span> [<span class="st">&quot;n&quot;</span>, <span class="st">&quot;avg&quot;</span>, <span class="st">&quot;sigma&quot;</span>, <span class="st">&quot;min&quot;</span>, <span class="st">&quot;median&quot;</span>, <span class="st">&quot;max&quot;</span>]</span>
+<span id="preprocessing-22"><a href="#preprocessing-22" aria-hidden="true" tabindex="-1"></a>bench[numeric_columns] <span class="op">=</span> bench[numeric_columns].<span class="bu">apply</span>(<span class="kw">lambda</span> c:</span>
+<span id="preprocessing-23"><a href="#preprocessing-23" aria-hidden="true" tabindex="-1"></a>    c.<span class="bu">apply</span>(<span class="kw">lambda</span> x:</span>
+<span id="preprocessing-24"><a href="#preprocessing-24" aria-hidden="true" tabindex="-1"></a>        to_numeric(x.replace(<span class="st">&quot;**&quot;</span>, <span class="st">&quot;&quot;</span>).replace(<span class="st">&quot; ms&quot;</span>, <span class="st">&quot;&quot;</span>))</span>
+<span id="preprocessing-25"><a href="#preprocessing-25" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="preprocessing-26"><a href="#preprocessing-26" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+</div>
+</div>
+<div class="fold-block">
+<button class="btn btn-outline-primary btn-sm fold-toggle" type="button" data-toggle="collapse" data-target="#performance-chart-container" aria-controls="performance-chart-container">&lt;&lt;performance-chart&gt;&gt;=</button>
+<div id="performance-chart-container" class="collapse">
+<div class="sourceCode" id="performance-chart" style="max-height: 50vh"><pre class="sourceCode python bootstrap-fold overflow-auto"><code class="sourceCode python"><span id="performance-chart-1"><a href="#performance-chart-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a figure and a set of subplots.</span></span>
+<span id="performance-chart-2"><a href="#performance-chart-2" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize <span class="op">=</span> (<span class="dv">11</span>, <span class="dv">6</span>))</span>
+<span id="performance-chart-3"><a href="#performance-chart-3" aria-hidden="true" tabindex="-1"></a>labels <span class="op">=</span> { <span class="st">&quot;bf&quot;</span>: <span class="st">&quot;Hrubá síla&quot;</span></span>
+<span id="performance-chart-4"><a href="#performance-chart-4" aria-hidden="true" tabindex="-1"></a>         , <span class="st">&quot;bb&quot;</span>: <span class="st">&quot;Branch &amp; bound&quot;</span></span>
+<span id="performance-chart-5"><a href="#performance-chart-5" aria-hidden="true" tabindex="-1"></a>         , <span class="st">&quot;dp&quot;</span>: <span class="st">&quot;Dynamické programování&quot;</span></span>
+<span id="performance-chart-6"><a href="#performance-chart-6" aria-hidden="true" tabindex="-1"></a>         }</span>
+<span id="performance-chart-7"><a href="#performance-chart-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="performance-chart-8"><a href="#performance-chart-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Group the dataframe by alg and create a line for each group.</span></span>
+<span id="performance-chart-9"><a href="#performance-chart-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> name, group <span class="kw">in</span> bench.groupby([<span class="st">&quot;alg&quot;</span>, <span class="st">&quot;set&quot;</span>]):</span>
+<span id="performance-chart-10"><a href="#performance-chart-10" aria-hidden="true" tabindex="-1"></a>    (x, y, sigma) <span class="op">=</span> (group[<span class="st">&quot;n&quot;</span>], group[<span class="st">&quot;avg&quot;</span>], group[<span class="st">&quot;sigma&quot;</span>])</span>
+<span id="performance-chart-11"><a href="#performance-chart-11" aria-hidden="true" tabindex="-1"></a>    ax.plot(x, y, label <span class="op">=</span> labels[name[<span class="dv">0</span>]] <span class="op">+</span> <span class="st">&quot; na sadě &quot;</span> <span class="op">+</span> name[<span class="dv">1</span>])</span>
+<span id="performance-chart-12"><a href="#performance-chart-12" aria-hidden="true" tabindex="-1"></a>    ax.fill_between(x, y <span class="op">+</span> sigma, y <span class="op">-</span> sigma, alpha <span class="op">=</span> <span class="fl">0.3</span>)</span>
+<span id="performance-chart-13"><a href="#performance-chart-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="performance-chart-14"><a href="#performance-chart-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Axis metadata: ticks, scaling, margins, and the legend</span></span>
+<span id="performance-chart-15"><a href="#performance-chart-15" aria-hidden="true" tabindex="-1"></a>plt.xticks(bench[<span class="st">&quot;n&quot;</span>])</span>
+<span id="performance-chart-16"><a href="#performance-chart-16" aria-hidden="true" tabindex="-1"></a>ax.set_yscale(<span class="st">&quot;log&quot;</span>, base <span class="op">=</span> <span class="dv">10</span>)</span>
+<span id="performance-chart-17"><a href="#performance-chart-17" aria-hidden="true" tabindex="-1"></a>ax.set_yticks(<span class="bu">list</span>(plt.yticks()[<span class="dv">0</span>]) <span class="op">+</span> <span class="bu">list</span>(bench[<span class="st">&quot;avg&quot;</span>]), minor <span class="op">=</span> <span class="va">True</span>)</span>
+<span id="performance-chart-18"><a href="#performance-chart-18" aria-hidden="true" tabindex="-1"></a>ax.margins(<span class="fl">0.05</span>, <span class="fl">0.1</span>)</span>
+<span id="performance-chart-19"><a href="#performance-chart-19" aria-hidden="true" tabindex="-1"></a>ax.legend(loc<span class="op">=</span><span class="st">&quot;upper left&quot;</span>)</span>
+<span id="performance-chart-20"><a href="#performance-chart-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="performance-chart-21"><a href="#performance-chart-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Reverse the legend</span></span>
+<span id="performance-chart-22"><a href="#performance-chart-22" aria-hidden="true" tabindex="-1"></a>handles, labels <span class="op">=</span> plt.gca().get_legend_handles_labels()</span>
+<span id="performance-chart-23"><a href="#performance-chart-23" aria-hidden="true" tabindex="-1"></a>order <span class="op">=</span> <span class="bu">range</span>(<span class="bu">len</span>(labels) <span class="op">-</span> <span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>)</span>
+<span id="performance-chart-24"><a href="#performance-chart-24" aria-hidden="true" tabindex="-1"></a>plt.legend([handles[idx] <span class="cf">for</span> idx <span class="kw">in</span> order],[labels[idx] <span class="cf">for</span> idx <span class="kw">in</span> order])</span>
+<span id="performance-chart-25"><a href="#performance-chart-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="performance-chart-26"><a href="#performance-chart-26" aria-hidden="true" tabindex="-1"></a>plt.savefig(<span class="st">&quot;docs/assets/graph.svg&quot;</span>)</span></code></pre></div>
 </div>
 </div>
 <figure>
-<img src="graph.svg" alt="Závislost doby běhu na počtu předmětů. Částečně průhledná oblast značí směrodatnou odchylku (\sigma)." /><figcaption aria-hidden="true">Závislost doby běhu na počtu předmětů. Částečně průhledná oblast značí směrodatnou odchylku (<span class="math inline">\(\sigma\)</span>).</figcaption>
+<img src="assets/graph.svg" alt="Závislost doby běhu na počtu předmětů. Částečně průhledná oblast značí směrodatnou odchylku (\sigma)." /><figcaption aria-hidden="true">Závislost doby běhu na počtu předmětů. Částečně průhledná oblast značí směrodatnou odchylku (<span class="math inline">\(\sigma\)</span>).</figcaption>
+</figure>
+<div class="fold-block">
+<button class="btn btn-outline-primary btn-sm fold-toggle" type="button" data-toggle="collapse" data-target="#histogram-container" aria-controls="histogram-container">&lt;&lt;histogram&gt;&gt;=</button>
+<div id="histogram-container" class="collapse">
+<div class="sourceCode" id="histogram" style="max-height: 50vh"><pre class="sourceCode python bootstrap-fold overflow-auto"><code class="sourceCode python"><span id="histogram-1"><a href="#histogram-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="histogram-2"><a href="#histogram-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
+<span id="histogram-3"><a href="#histogram-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="histogram-4"><a href="#histogram-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Load the data</span></span>
+<span id="histogram-5"><a href="#histogram-5" aria-hidden="true" tabindex="-1"></a>data <span class="op">=</span> []</span>
+<span id="histogram-6"><a href="#histogram-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="histogram-7"><a href="#histogram-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> filename <span class="kw">in</span> os.listdir(<span class="st">&#39;docs/measurements&#39;</span>):</span>
+<span id="histogram-8"><a href="#histogram-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> filename.endswith(<span class="st">&quot;.txt&quot;</span>):</span>
+<span id="histogram-9"><a href="#histogram-9" aria-hidden="true" tabindex="-1"></a>        alg <span class="op">=</span> filename[:<span class="op">-</span><span class="dv">4</span>]</span>
+<span id="histogram-10"><a href="#histogram-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">with</span> <span class="bu">open</span>(<span class="st">&#39;docs/measurements/&#39;</span> <span class="op">+</span> filename) <span class="im">as</span> f:</span>
+<span id="histogram-11"><a href="#histogram-11" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> line <span class="kw">in</span> f:</span>
+<span id="histogram-12"><a href="#histogram-12" aria-hidden="true" tabindex="-1"></a>                data.append({<span class="st">&#39;alg&#39;</span>: alg, <span class="st">&#39;n&#39;</span>: <span class="bu">int</span>(line)})</span>
+<span id="histogram-13"><a href="#histogram-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="histogram-14"><a href="#histogram-14" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.DataFrame(data)</span>
+<span id="histogram-15"><a href="#histogram-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="histogram-16"><a href="#histogram-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot the histograms</span></span>
+<span id="histogram-17"><a href="#histogram-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="histogram-18"><a href="#histogram-18" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> alg <span class="kw">in</span> df.alg.unique():</span>
+<span id="histogram-19"><a href="#histogram-19" aria-hidden="true" tabindex="-1"></a>    plt.figure()</span>
+<span id="histogram-20"><a href="#histogram-20" aria-hidden="true" tabindex="-1"></a>    plt.xlabel(<span class="st">&#39;Počet konfigurací&#39;</span>)</span>
+<span id="histogram-21"><a href="#histogram-21" aria-hidden="true" tabindex="-1"></a>    plt.ylabel(<span class="st">&#39;Četnost výskytu&#39;</span>)</span>
+<span id="histogram-22"><a href="#histogram-22" aria-hidden="true" tabindex="-1"></a>    plt.hist(df[df.alg <span class="op">==</span> alg].n, color <span class="op">=</span> <span class="st">&#39;tab:blue&#39;</span> <span class="cf">if</span> alg[<span class="op">-</span><span class="dv">3</span>] <span class="op">==</span> <span class="st">&#39;N&#39;</span> <span class="cf">else</span> <span class="st">&#39;orange&#39;</span>, bins <span class="op">=</span> <span class="dv">20</span>)<span class="co">#bins = np.logspace(1, 6, 20))</span></span>
+<span id="histogram-23"><a href="#histogram-23" aria-hidden="true" tabindex="-1"></a>    plt.xlim(xmin <span class="op">=</span> <span class="dv">0</span>)</span>
+<span id="histogram-24"><a href="#histogram-24" aria-hidden="true" tabindex="-1"></a>    <span class="co"># plt.gca().set_xscale(&#39;log&#39;)</span></span>
+<span id="histogram-25"><a href="#histogram-25" aria-hidden="true" tabindex="-1"></a>    plt.savefig(<span class="st">&#39;docs/assets/histogram-&#39;</span> <span class="op">+</span> alg <span class="op">+</span> <span class="st">&#39;.svg&#39;</span>)</span>
+<span id="histogram-26"><a href="#histogram-26" aria-hidden="true" tabindex="-1"></a>    plt.close()</span></code></pre></div>
+</div>
+</div>
+<figure>
+<img src="assets/histogram.svg" alt="TODO: histogram" /><figcaption aria-hidden="true"><strong>TODO</strong>: histogram</figcaption>
+</figure>
+<figure>
+<img src="assets/histogram-bf-N15.svg" alt="NR bf 15" /><figcaption aria-hidden="true">NR bf 15</figcaption>
+</figure>
+<figure>
+<img src="assets/histogram-bb-N15.svg" alt="NR bb 15" /><figcaption aria-hidden="true">NR bb 15</figcaption>
+</figure>
+<figure>
+<img src="assets/histogram-bf-Z15.svg" alt="ZR bf 15" /><figcaption aria-hidden="true">ZR bf 15</figcaption>
+</figure>
+<figure>
+<img src="assets/histogram-bb-Z15.svg" alt="ZR bb 15" /><figcaption aria-hidden="true">ZR bb 15</figcaption>
 </figure>
 <h2 id="implementace">Implementace</h2>
 <p>Program začíná definicí datové struktury reprezentující instanci problému batohu.</p>
