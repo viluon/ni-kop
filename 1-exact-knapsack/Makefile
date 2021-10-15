@@ -87,8 +87,7 @@ watch-pandoc:
 watch-browser-sync:
 	browser-sync start -w -s $(docs_dir)
 
-$(docs_dir):
-	mkdir -p $(docs_dir)
+$(docs_dir)/assets:
 	mkdir -p $(docs_dir)/assets
 #	Hack to allow ![](assets/foo) both in the PDF and the website
 	ln -sf $(docs_dir)/assets assets
