@@ -89,7 +89,9 @@ watch-browser-sync:
 
 $(docs_dir):
 	mkdir -p $(docs_dir)
-	mkdir -p $(docs_dir)/assets/
+	mkdir -p $(docs_dir)/assets
+#	Hack to allow ![](assets/foo) both in the PDF and the website
+	ln -sf $(docs_dir)/assets assets
 
 $(pandoc_intermediary): $(input_files) $(docs_dir)
 	JUPYTER=1 pandoc $(pandoc_args) $(input_files) -o $@
@@ -98,8 +100,6 @@ $(docs_dir)/index.html: Makefile $(pandoc_intermediary) $(bootstrap_dir)/templat
 	pandoc $(pandoc_args_html) $(pandoc_intermediary) -o $@
 
 $(docs_dir)/report.pdf: Makefile $(pandoc_intermediary) templates/template.tex
-#	Hack to allow ![](assets/foo) both in the PDF and the website
-	ln -sf $(docs_dir)/assets assets
 	pandoc $(pandoc_args_pdf) $(pandoc_intermediary) -o $@
 
 $(docs_dir)/css/mods.css: $(bootstrap_dir)/mods.css

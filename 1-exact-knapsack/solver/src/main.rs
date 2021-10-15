@@ -191,7 +191,9 @@ impl Instance {
 
         fn go<'a>(state: &'a State, current: Solution<'a>, best: Solution<'a>, i: usize, m: u32) -> Solution<'a> {
             let State(items, prices) = state;
-            if i >= items.len() || current.cost + prices[i] <= best.cost { return current }
+            if i >= items.len() || current.cost >= current.inst.b || current.cost + prices[i] <= best.cost {
+                return current
+            }
 
             let (w, _c) = items[i];
             let next = |current, best, m| go(state, current, best, i + 1, m);
@@ -204,8 +206,10 @@ impl Instance {
 
             if w <= m {
                 let x = include();
-                let y = exclude(x);
-                Solution { visited: x.visited + y.visited, ..max(x, y) }
+                if x.cost < x.inst.b {
+                    let y = exclude(x);
+                    Solution { visited: x.visited + y.visited, ..max(x, y) }
+                } else { x }
             }
             else { exclude(best) }
         }
@@ -243,7 +247,7 @@ impl Instance {
 
     fn brute_force2(&self) -> Solution {
         fn go<'a>(items: &'a [(u32, u32)], current: Solution<'a>, i: usize, m: u32) -> Solution<'a> {
-            if i >= items.len() { return current }
+            if i >= items.len() || current.cost >= current.inst.b { return current }
 
             let (w, _c) = items[i];
             let next = |current, m| go(items, current, i + 1, m);
@@ -255,8 +259,10 @@ impl Instance {
 
             if w <= m {
                 let x = include();
-                let y = exclude();
-                max(x, y).set_visited(x.visited + y.visited)
+                if x.cost < x.inst.b {
+                    let y = exclude();
+                    max(x, y).set_visited(x.visited + y.visited)
+                } else { x }
             }
             else { exclude() }
         }

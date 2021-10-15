@@ -47,9 +47,9 @@ například:
 První úkol předmětu NI-KOP jsem se rozhodl implementovat v jazyce Rust za pomoci
 nástrojů na *literate programming* -- přístup k psaní zdrojového kódu, který
 upřednostňuje lidsky čitelný popis před seznamem příkazů pro počítač. Tento
-soubor obsahuje veškerý zdrojový kód nutný k reprodukci mojí práce. Výsledek je
-dostupný online jako statická [webová stránka](http://viluon.me/ni-kop/) a [ke
-stažení v PDF](http://viluon.me/ni-kop/report.pdf).
+dokument obsahuje veškerý zdrojový kód nutný k reprodukci mojí práce. Výsledek
+je dostupný online jako statická [webová stránka](http://viluon.me/ni-kop/) a
+[ke stažení v PDF](http://viluon.me/ni-kop/report.pdf).
 
 ## Instrukce k sestavení programu
 Program využívá standardních nástrojů jazyka Rust. O sestavení stačí požádat
@@ -70,7 +70,7 @@ uname -a
 mkdir -p docs/measurements/
 cd solver
 hyperfine --export-json ../docs/bench.json \
-          --parameter-list n 4,10,15 \
+          --parameter-list n 4,10,15,20,22 \
           --parameter-list set N,Z \
           --parameter-list alg bf,bb \
           --runs 2 \
@@ -206,15 +206,32 @@ for alg in df.alg.unique():
     plt.close()
 ```
 
-![**TODO**: histogram](assets/histogram.svg)
+![Sada NR: Hrubá síla pro $n = 15$](assets/histogram-bf-N15.svg)
 
-![NR bf 15](assets/histogram-bf-N15.svg)
+![Sada NR: Metoda větví a hranic pro $n = 15$](assets/histogram-bb-N15.svg)
 
-![NR bb 15](assets/histogram-bb-N15.svg)
+![Sada ZR: Hrubá síla pro $n = 15$](assets/histogram-bf-Z15.svg)
 
-![ZR bf 15](assets/histogram-bf-Z15.svg)
+![Sada ZR: Metoda větví a hranic pro $n = 15$](assets/histogram-bb-Z15.svg)
 
-![ZR bb 15](assets/histogram-bb-Z15.svg)
+### Analýza
+
+#### Vyhovují nejhorší případy očekávané závislosti?
+
+Ano. Jak ukazují měření, s rostoucím počtem předmětů v batohu počet konfigurací
+i skutečný CPU čas velmi rychle roste. Pro $n < 15$ můžeme pozorovat jisté
+fluktuace doby běhu, pro větší instance už ale není pochyb.
+
+#### Závisí střední hodnota výpočetní závislosti na sadě instancí?
+
+Pro hrubou sílu není znát velký rozdíl, ale rozdíly metody větví a hranic jsou
+mezi sadami dobře vidět z histogramů v předchozí podsekci. Metoda větví a hranic
+si k rychlému ukončení dopomáhá součtem cen dosud nepřidaných předmětů -- strom
+rekurzivních volání se zařízne, pokud nepřidané předměty nemohou dosáhnout ceny
+nejlepšího známého řešení. Aby tato podmínka výpočet urychlila, měly by se
+lehké, cenné předměty nacházet především na začátku seznamu. Zdá se, že sada ZR
+obsahuje méně takto vhodných instancí. Algoritmus bych chtěl do budoucna
+vylepšit předzpracováním v podobě seřazení seznamu předmětů.
 
 ## Implementace
 
@@ -356,7 +373,7 @@ fn brute_force_old(&self) -> u32 {
 
 fn brute_force2(&self) -> Solution {
     fn go<'a>(items: &'a [(u32, u32)], current: Solution<'a>, i: usize, m: u32) -> Solution<'a> {
-        if i >= items.len() { return current }
+        if i >= items.len() || current.cost >= current.inst.b { return current }
 
         let (w, _c) = items[i];
         let next = |current, m| go(items, current, i + 1, m);
@@ -368,8 +385,10 @@ fn brute_force2(&self) -> Solution {
 
         if w <= m {
             let x = include();
-            let y = exclude();
-            max(x, y).set_visited(x.visited + y.visited)
+            if x.cost < x.inst.b {
+                let y = exclude();
+                max(x, y).set_visited(x.visited + y.visited)
+            } else { x }
         }
         else { exclude() }
     }
@@ -398,7 +417,9 @@ fn branch_and_bound2(&self) -> Solution {
 
     fn go<'a>(state: &'a State, current: Solution<'a>, best: Solution<'a>, i: usize, m: u32) -> Solution<'a> {
         let State(items, prices) = state;
-        if i >= items.len() || current.cost + prices[i] <= best.cost { return current }
+        if i >= items.len() || current.cost >= current.inst.b || current.cost + prices[i] <= best.cost {
+            return current
+        }
 
         let (w, _c) = items[i];
         let next = |current, best, m| go(state, current, best, i + 1, m);
@@ -411,8 +432,10 @@ fn branch_and_bound2(&self) -> Solution {
 
         if w <= m {
             let x = include();
-            let y = exclude(x);
-            Solution { visited: x.visited + y.visited, ..max(x, y) }
+            if x.cost < x.inst.b {
+                let y = exclude(x);
+                Solution { visited: x.visited + y.visited, ..max(x, y) }
+            } else { x }
         }
         else { exclude(best) }
     }
