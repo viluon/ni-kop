@@ -70,10 +70,10 @@ uname -a
 mkdir -p docs/measurements/
 cd solver
 hyperfine --export-json ../docs/bench.json \
-          --parameter-list n 4,10,15,20,22 \
+          --parameter-list n 4,10,15,20,22,25 \
           --parameter-list set N,Z \
           --parameter-list alg bf,bb \
-          --runs 2 \
+          --min-runs 4 \
           --style color \
           'cargo run --release -- {alg} \
            < ds/{set}R{n}_inst.dat \
