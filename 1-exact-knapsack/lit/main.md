@@ -162,7 +162,6 @@ for name, group in bench.groupby(["alg", "set"]):
 # Axis metadata: ticks, scaling, margins, and the legend
 plt.xticks(bench["n"])
 ax.set_yscale("log", base = 10)
-ax.set_yticks(list(plt.yticks()[0]) + list(bench["avg"]), minor = True)
 ax.margins(0.05, 0.1)
 ax.legend(loc="upper left")
 
@@ -178,7 +177,6 @@ plt.savefig("docs/assets/graph.svg")
 směrodatnou odchylku ($\sigma$).](assets/graph.svg)
 
 ```{.python #histogram .bootstrap-fold}
-import numpy as np
 import os
 
 # Load the data
@@ -199,9 +197,8 @@ for alg in df.alg.unique():
     plt.figure()
     plt.xlabel('Počet konfigurací')
     plt.ylabel('Četnost výskytu')
-    plt.hist(df[df.alg == alg].n, color = 'tab:blue' if alg[-3] == 'N' else 'orange', bins = 20)#bins = np.logspace(1, 6, 20))
+    plt.hist(df[df.alg == alg].n, color = 'tab:blue' if alg[-3] == 'N' else 'orange', bins = 20)
     plt.xlim(xmin = 0)
-    # plt.gca().set_xscale('log')
     plt.savefig('docs/assets/histogram-' + alg + '.svg')
     plt.close()
 ```
