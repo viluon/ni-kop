@@ -92,7 +92,7 @@ $(docs_dir)/assets:
 #	Hack to allow ![](assets/foo) both in the PDF and the website
 	ln -sf $(docs_dir)/assets assets
 
-$(pandoc_intermediary): $(input_files) $(docs_dir)
+$(pandoc_intermediary): $(input_files) $(docs_dir)/assets
 	JUPYTER=1 pandoc $(pandoc_args) $(input_files) -o $@
 
 $(docs_dir)/index.html: Makefile $(pandoc_intermediary) $(bootstrap_dir)/template.html

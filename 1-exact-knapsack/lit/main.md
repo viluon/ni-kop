@@ -245,14 +245,13 @@ struct Instance {
 }
 ```
 
-``` {.rust file=solver/src/main.rs}
-use std::{io::stdin, str::FromStr, cmp, cmp::max};
-use anyhow::{Context, Result, anyhow};
-use bitvec::prelude::BitArr;
+Následující úryvek poskytuje ptačí pohled na strukturu souboru. Použité knihovny
+jsou importovány na začátku, následuje již zmíněná definice instance problému,
+dále funkce `main()`, parser, definice struktury řešení a její podpůrné funkce,
+samotné algoritmy řešiče a v neposlední řadě sada automatických testů.
 
-#[cfg(test)]
-#[macro_use(quickcheck)]
-extern crate quickcheck_macros;
+``` {.rust file=solver/src/main.rs}
+<<imports>>
 
 <<problem-instance-definition>>
 
@@ -273,28 +272,36 @@ fn main() -> Result<()> {
 
 <<parser>>
 
-#[inline(always)]
-fn smart_max_<A, F, G>(f: F, g: G) -> A
-where F: Fn()  -> A
-    , G: Fn(A) -> A
-    , A: cmp::Ord + Copy {
-    let x = f();
-    max(x, g(x))
+<<solution-definition>>
+
+impl Instance {
+    <<solver-dp>>
+
+    <<solver-bb>>
+
+    <<solver-bf>>
 }
 
-#[inline]
-fn smart_max<'a, F, G>(f: F, g: G) -> Solution<'a>
-  where F: Fn()         -> Solution<'a>
-      , G: Fn(Solution) -> Solution {
-    let x = f();
-    let y = g(x);
-    Solution { visited: x.visited + y.visited, ..max(x, y) }
-}
+<<tests>>
+```
 
+Řešení v podobě datové struktury `Solution` má kromě reference na instanci
+problému především bit array udávající množinu předmětů v pomyslném batohu.
+Zároveň nese informaci o počtu navštívených konfigurací při jeho výpočtu.
+
+```{.rust #solution-definition}
 type Config = BitArr!(for 64);
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 struct Solution<'a> { weight: u32, cost: u32, cfg: Config, visited: u64, inst: &'a Instance }
 
+<<solution-helpers>>
+```
+
+Protože se strukturami typu `Solution` se v algoritmech pracuje hojně,
+implementoval jsem pro ně koncept řazení a pomocné metody k počítání
+navštívených konfigurací a přidávání předmětů do batohu.
+
+```{.rust #solution-helpers .bootstrap-fold}
 impl <'a> PartialOrd for Solution<'a> {
     fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
         use cmp::Ordering;
@@ -331,47 +338,12 @@ impl <'a> Solution<'a> {
         self.set_visited(self.visited + 1)
     }
 }
-
-impl Instance {
-    <<solver-dp>>
-
-    <<solver-bb>>
-
-    <<solver-bf>>
-}
-
-<<tests>>
 ```
-
-## Algoritmy
 
 ### Hrubá síla
 
 ``` {.rust #solver-bf}
-fn brute_force(&self) -> u32 {
-    self.brute_force2().cost
-}
-
-fn brute_force_old(&self) -> u32 {
-    let (m, b, items) = (self.m, self.b, &self.items);
-    fn go(items: &Vec<(u32, u32)>, cap: u32, i: usize) -> u32 {
-        if i >= items.len() { return 0; }
-
-        let (w, c) = items[i];
-        let next = |cap| go(items, cap, i + 1);
-        let include = || next(cap - w);
-        let exclude = || next(cap);
-        if w <= cap {
-            max(c + include(), exclude())
-        } else {
-            exclude()
-        }
-    }
-
-    go(items, m, 0)
-}
-
-fn brute_force2(&self) -> Solution {
+fn brute_force(&self) -> Solution {
     fn go<'a>(items: &'a [(u32, u32)], current: Solution<'a>, i: usize, m: u32) -> Solution<'a> {
         if i >= items.len() || current.cost >= current.inst.b { return current }
 
@@ -400,11 +372,7 @@ fn brute_force2(&self) -> Solution {
 
 ### Branch & bound
 ``` {.rust #solver-bb}
-fn branch_and_bound(&self) -> u32 {
-    self.branch_and_bound2().cost
-}
-
-fn branch_and_bound2(&self) -> Solution {
+fn branch_and_bound(&self) -> Solution {
     struct State<'a>(&'a Vec<(u32, u32)>, Vec<u32>);
     let prices: Vec<u32> = {
         self.items.iter().rev()
@@ -449,6 +417,14 @@ fn branch_and_bound2(&self) -> Solution {
 
 ### Dynamické programování
 
+Kromě dvou zkoumaných algoritmů jsem implementoval ještě třetí, který je ovšem
+založen na dynamickém programování. Jeho časová složitost je $\Theta(nM)$, kde
+$M$ je kapacita batohu. Vzhledem k parametrům vstupních dat v tomto úkolu zvládá
+i ZR40 vstupy extrémně rychle (všech 500 instancí pod 300 ms), s velkými
+hodnotami $M$ by si ovšem neporadil. V tuto chvíli nelze použít, protože počítá
+jen (konstruktivní) cenu, nikoliv celé řešení v podobě objektu struktury
+`Solution` jako je tomu u ostatních dvou.
+
 ``` {.rust #solver-dp}
 fn dynamic_programming(&self) -> u32 {
     let (m, b, items) = (self.m, self.b, &self.items);
@@ -474,7 +450,29 @@ fn dynamic_programming(&self) -> u32 {
 }
 ```
 
+## Závěr
+
+Tento úvodní problém byl příležitostí připravit si technické zázemí pro
+nadcházející úkoly. Implementace, které odevzdávám, se značně spoléhají na
+bezpečí typového systému jazyka Rust. Čas ukáže, jestli to usnadní jejich další
+rozšiřování a obohacování. Zadání jsem se pokusil splnit v celém rozsahu, ale
+neměl jsem už čas implementovat ořezávání s pomocí fragmentální varianty
+problému batohu v metodě větví a hranic.
+
 ## Appendix
+
+Dodatek obsahuje nezajímavé části implementace, jako je import symbolů z
+knihoven.
+
+``` {.rust #imports .bootstrap-fold}
+use std::{io::stdin, str::FromStr, cmp, cmp::max};
+use anyhow::{Context, Result, anyhow};
+use bitvec::prelude::BitArr;
+
+#[cfg(test)]
+#[macro_use(quickcheck)]
+extern crate quickcheck_macros;
+```
 
 Zpracování vstupu zajišťuje jednoduchý parser pracující řádek po řádku.
 
@@ -513,8 +511,8 @@ let args: Vec<String> = std::env::args().collect();
 if args.len() == 2 {
     let ok = |x: fn(&Instance) -> Solution| Ok(x);
     match &args[1][..] {
-        "bf"    => ok(Instance::brute_force2),
-        "bb"    => ok(Instance::branch_and_bound2),
+        "bf"    => ok(Instance::brute_force),
+        "bb"    => ok(Instance::branch_and_bound),
         // "dp"    => ok(Instance::dynamic_programming),
         invalid => Err(anyhow!("\"{}\" is not a known algorithm", invalid)),
     }
@@ -547,7 +545,9 @@ impl Boilerplate for std::str::SplitWhitespace<'_> {
 ```
 
 ### Automatické testy
-Implementaci doplňují automatické testy k ověření správnosti.
+Implementaci doplňují automatické testy k ověření správnosti, včetně
+property-based testu s knihovnou
+[quickcheck](https://github.com/BurntSushi/quickcheck).
 
 ``` {.rust #tests .bootstrap-fold}
 #[cfg(test)]
@@ -614,7 +614,7 @@ mod tests {
         // let i = Instance { id: 0, m: 1, b: 0, items: vec![(1, 0), (1, 0)] };
         // i.branch_and_bound2().assert_valid(&i);
         let i = Instance { id: 0, m: 1, b: 0, items: vec![(1, 1), (1, 2), (0, 1)] };
-        assert_eq!(i.branch_and_bound(), i.brute_force())
+        assert_eq!(i.branch_and_bound().cost, i.brute_force().cost)
     }
 
     #[test]
@@ -629,7 +629,7 @@ mod tests {
                        , (239, 2388)
                        ],
         };
-        a.branch_and_bound2().assert_valid(&a);
+        a.branch_and_bound().assert_valid(&a);
     }
 
     #[test]
@@ -640,13 +640,13 @@ mod tests {
             BufReader::new(File::open("ds/NR15_inst.dat")?)
         )?.unwrap();
         println!("testing {:?}", inst);
-        inst.branch_and_bound2().assert_valid(&inst);
+        inst.branch_and_bound().assert_valid(&inst);
         Ok(())
     }
 
     #[quickcheck]
     fn qc_bb_is_really_correct(inst: Instance) {
-        assert_eq!(inst.branch_and_bound2().cost, inst.brute_force());
+        assert_eq!(inst.branch_and_bound().cost, inst.brute_force().cost);
     }
 }
 

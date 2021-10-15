@@ -1,5 +1,6 @@
 // ~\~ language=Rust filename=solver/src/main.rs
 // ~\~ begin <<lit/main.md|solver/src/main.rs>>[0]
+// ~\~ begin <<lit/main.md|imports>>[0]
 use std::{io::stdin, str::FromStr, cmp, cmp::max};
 use anyhow::{Context, Result, anyhow};
 use bitvec::prelude::BitArr;
@@ -7,6 +8,7 @@ use bitvec::prelude::BitArr;
 #[cfg(test)]
 #[macro_use(quickcheck)]
 extern crate quickcheck_macros;
+// ~\~ end
 
 // ~\~ begin <<lit/main.md|problem-instance-definition>>[0]
 #[derive(Debug, PartialEq, Eq, Clone)]
@@ -22,8 +24,8 @@ fn main() -> Result<()> {
         if args.len() == 2 {
             let ok = |x: fn(&Instance) -> Solution| Ok(x);
             match &args[1][..] {
-                "bf"    => ok(Instance::brute_force2),
-                "bb"    => ok(Instance::branch_and_bound2),
+                "bf"    => ok(Instance::brute_force),
+                "bb"    => ok(Instance::branch_and_bound),
                 // "dp"    => ok(Instance::dynamic_programming),
                 invalid => Err(anyhow!("\"{}\" is not a known algorithm", invalid)),
             }
@@ -88,28 +90,12 @@ fn parse_line<T>(mut stream: T) -> Result<Option<Instance>> where T: std::io::Bu
 }
 // ~\~ end
 
-#[inline(always)]
-fn smart_max_<A, F, G>(f: F, g: G) -> A
-where F: Fn()  -> A
-    , G: Fn(A) -> A
-    , A: cmp::Ord + Copy {
-    let x = f();
-    max(x, g(x))
-}
-
-#[inline]
-fn smart_max<'a, F, G>(f: F, g: G) -> Solution<'a>
-  where F: Fn()         -> Solution<'a>
-      , G: Fn(Solution) -> Solution {
-    let x = f();
-    let y = g(x);
-    Solution { visited: x.visited + y.visited, ..max(x, y) }
-}
-
+// ~\~ begin <<lit/main.md|solution-definition>>[0]
 type Config = BitArr!(for 64);
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 struct Solution<'a> { weight: u32, cost: u32, cfg: Config, visited: u64, inst: &'a Instance }
 
+// ~\~ begin <<lit/main.md|solution-helpers>>[0]
 impl <'a> PartialOrd for Solution<'a> {
     fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
         use cmp::Ordering;
@@ -146,6 +132,8 @@ impl <'a> Solution<'a> {
         self.set_visited(self.visited + 1)
     }
 }
+// ~\~ end
+// ~\~ end
 
 impl Instance {
     // ~\~ begin <<lit/main.md|solver-dp>>[0]
@@ -174,11 +162,7 @@ impl Instance {
     // ~\~ end
 
     // ~\~ begin <<lit/main.md|solver-bb>>[0]
-    fn branch_and_bound(&self) -> u32 {
-        self.branch_and_bound2().cost
-    }
-
-    fn branch_and_bound2(&self) -> Solution {
+    fn branch_and_bound(&self) -> Solution {
         struct State<'a>(&'a Vec<(u32, u32)>, Vec<u32>);
         let prices: Vec<u32> = {
             self.items.iter().rev()
@@ -222,30 +206,7 @@ impl Instance {
     // ~\~ end
 
     // ~\~ begin <<lit/main.md|solver-bf>>[0]
-    fn brute_force(&self) -> u32 {
-        self.brute_force2().cost
-    }
-
-    fn brute_force_old(&self) -> u32 {
-        let (m, b, items) = (self.m, self.b, &self.items);
-        fn go(items: &Vec<(u32, u32)>, cap: u32, i: usize) -> u32 {
-            if i >= items.len() { return 0; }
-
-            let (w, c) = items[i];
-            let next = |cap| go(items, cap, i + 1);
-            let include = || next(cap - w);
-            let exclude = || next(cap);
-            if w <= cap {
-                max(c + include(), exclude())
-            } else {
-                exclude()
-            }
-        }
-
-        go(items, m, 0)
-    }
-
-    fn brute_force2(&self) -> Solution {
+    fn brute_force(&self) -> Solution {
         fn go<'a>(items: &'a [(u32, u32)], current: Solution<'a>, i: usize, m: u32) -> Solution<'a> {
             if i >= items.len() || current.cost >= current.inst.b { return current }
 
@@ -338,7 +299,7 @@ mod tests {
         // let i = Instance { id: 0, m: 1, b: 0, items: vec![(1, 0), (1, 0)] };
         // i.branch_and_bound2().assert_valid(&i);
         let i = Instance { id: 0, m: 1, b: 0, items: vec![(1, 1), (1, 2), (0, 1)] };
-        assert_eq!(i.branch_and_bound(), i.brute_force())
+        assert_eq!(i.branch_and_bound().cost, i.brute_force().cost)
     }
 
     #[test]
@@ -353,7 +314,7 @@ mod tests {
                        , (239, 2388)
                        ],
         };
-        a.branch_and_bound2().assert_valid(&a);
+        a.branch_and_bound().assert_valid(&a);
     }
 
     #[test]
@@ -364,13 +325,13 @@ mod tests {
             BufReader::new(File::open("ds/NR15_inst.dat")?)
         )?.unwrap();
         println!("testing {:?}", inst);
-        inst.branch_and_bound2().assert_valid(&inst);
+        inst.branch_and_bound().assert_valid(&inst);
         Ok(())
     }
 
     #[quickcheck]
     fn qc_bb_is_really_correct(inst: Instance) {
-        assert_eq!(inst.branch_and_bound2().cost, inst.brute_force());
+        assert_eq!(inst.branch_and_bound().cost, inst.brute_force().cost);
     }
 }
 
