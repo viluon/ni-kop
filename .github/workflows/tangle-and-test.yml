@@ -29,7 +29,7 @@ jobs:
           apt-get install -y --no-install-recommends \
             librsvg2-bin lmodern rsync texlive-fonts-recommended texlive-xetex wget
 
-          cd 1-exact-knapsack/
+          cd 2-heuristic-knapsack/
           wget -O cpufetch https://github.com/Dr-Noob/cpufetch/releases/download/v1.00/cpufetch_x86-64_linux
           chmod +x cpufetch
           ./ci.sh
@@ -37,13 +37,13 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: docs
-          path: 1-exact-knapsack/docs/
+          path: 2-heuristic-knapsack/docs/
       - name: test
         run: |
-          cd 1-exact-knapsack/solver/
+          cd 2-heuristic-knapsack/solver/
           QUICKCHECK_TESTS=10000 cargo test -- --show-output
       - name: deploy
         uses: JamesIves/github-pages-deploy-action@4.1.4
         with:
           branch: gh-pages
-          folder: 1-exact-knapsack/docs/
+          folder: 2-heuristic-knapsack/docs/
