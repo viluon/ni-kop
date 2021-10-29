@@ -1,5 +1,5 @@
 ---
-title: 'NI-KOP -- úkol 1'
+title: 'NI-KOP -- úkol 2'
 author: 'Ondřej Kvapil'
 ---
 
@@ -7,44 +7,79 @@ author: 'Ondřej Kvapil'
 
 ## Zadání
 
-- Experimentálně vyhodnoťte závislost výpočetní složitosti na velikosti instance
-  u následujících algoritmů rozhodovací verze 0/1 problému batohu:
-  - hrubá síla
-  - metoda větví a hranic (B&B)
-- Otázky, které má experiment zodpovědět:
-  - Vyhovují nejhorší případy očekávané závislosti?
-  - Závisí střední hodnota výpočetní závislosti na sadě instancí? Jestliže ano,
-    proč?
+- Na sadách instancí (NK, ZKC, ZKW) experimentálně vyhodnoťte závislost
+  výpočetního času a u všech heuristických algoritmů také relativní chyby
+  (průměrné i maximální)  na velikosti instance následujících algoritmů pro
+  - konstruktivní verzi problému batohu:
+  - Metoda větví a hranic.
+  - Metoda dynamického programování (dekompozice podle kapacity nebo podle cen),
+  - Jednoduchá greedy heuristika
+  - Modifikace této heuristiky (redux), která uvažuje také řešení se sólo
+    nejdražší věcí
+  - FPTAS algoritmem, tj. s použitím modifikovaného dynamického programování s
+    dekompozicí podle ceny (při použití dekompozice podle kapacity není
+    algoritmus FPTAS)
+- Experiment má odpovědět na tyto otázky:
+  - Odpovídají obě závislosti (kvality a času) předpokladům?
+  - Je některá heuristická metoda systematicky lepší (tzv. dominance) v některém
+    kritériu?
+  - Jak se liší obtížnost jednotlivých sad z hlediska jednotlivých metod?
+  - Jaká je závislost maximální chyby ($\varepsilon$) a času FPTAS algoritmu na
+    zvolené přesnosti? Odpovídá předpokladům?
 
 ### Pokyny
 
-Oba algoritmy naprogramujte. Výpočetní složitost (čas) je nejspolehlivější a
-nejjednodušší měřit počtem navštívených konfigurací, to jest vyhodnocených
-sestav věcí v batohu. Na obou sadách pozorujte závislost výpočetního času na
-$n$, pro $n$ v rozsahu, jaký je Vaše výpočetní platforma schopna zvládnout, a to
-jak maximální, tak průměrný čas. Pro alespoň jednu hodnotu $n$ (volte instance
-velikosti alespoň 10) zjistěte četnosti jednotlivých hodnot (histogram) a
-pokuste se jej vysvětlit. Ohledně metody větví a hranic -- uvědomte si, že se
-jedná o rozhodovací problém a podle toho ořezávejte. Nápověda: i když je to
-rozhodovací problém, lze použít ořezávání podle ceny. Jak? Implementované
-způsoby ořezávání popište ve zprávě.
+Algoritmy naprogramujte, využijte části programů z minulé úlohy.
 
-Sady NR a ZR vyhodnocujte zvlášť a proveďte jejich srovnání (stačí diskuze).
+Metodu větví a hranic použijte tak, aby omezujícím faktorem byla hodnota
+optimalizačního kritéria. Tj. použijte ořezávání shora (překročení kapacity
+batohu) i zdola (stávající řešení nemůže být lepší než nejlepší dosud nalezené).
+
+Pozor! Pokud implementujete FPTAS pomocí zanedbávání bitů, musíte pro daný počet
+zanedbaných bitů vypočítat max. chybu ($\varepsilon$). V experimentálních
+výsledcích by počet zanedbaných bitů neměl figurovat, neb neříká nic konkrétního
+o přesnosti. Pozor, tato max. chyba je jiná pro každou instanci, nezávisí pouze
+na velikosti instance, ale také na max. ceně.
+
+Pozor! V některých instancích se objevují věci, které svojí hmotností překračují
+kapacitu batohu. Samozřejmě se jedná o platné instance. Nicméně tyto věci
+komplikují přepočet cen u FPTAS. Zvažte sami, jak se s tím vypořádat. Řešení je
+snadné.
+
+Pozn.: u této úlohy je opravdu lepší měřit skutečný CPU čas, namísto počtu
+konfigurací, jak tomu bylo u předchozího úkolu. Srovnávají se zde principiálně
+velice odlišné algoritmy, najít jiný relevantní způsob měření složitosti by bylo
+obtížné (ne-li nemožné).
+
+### Zpráva bude obsahovat
+
+- [ ] Popis implementovaných metod.
+- [ ] Srovnání výpočetních časů metody větví a hranic, dynamického programování
+  a heuristiky cena/váha (stačí jedna). Grafy vítány.
+  - Tj. závislosti výpočetních časů na velikosti instance
+- [ ] Porovnání relativních chyb (průměrných a maximálních) obou heuristik.
+  - Tj. závislosti rel. chyby na velikosti instance
+- [ ] U FPTAS algoritmu pozorujte (naměřte, zdokumentujte) závislost chyby a
+  výpočetního času algoritmu na zvolené přesnosti zobrazení (pro několik různých
+  přesností), srovnání maximální naměřené chyby s teoreticky předpokládanou.
+  - Tj. zvolte několik požadovaných přesností ($\varepsilon$), v závislosti na
+    $\varepsilon$ měřte čas běhu a reálnou (maximální, případně i průměrnou)
+    chybu algoritmu
+- [ ] Zhodnocení naměřených výsledků.
 
 ### Bonusový bod
 
 Na bonusový bod musí práce obsahovat přínos navíc. Takové přínosy jsou
 například:
 
-- Zjištění, jak čas CPU souvisí s počtem vyhodnocených konfigurací na Vaší
-  platformě a jak je tato závislost stabilní při opakovaném měření téže
-  instance.
-- Nový (a experimentálně porovnaný) způsob prořezávání v metodě větví a hranic.
+- Srovnání různých dekompozic v dynamickém programování (podle váhy, podle
+  kapacity)
+- detailní experimentální analýza FPTAS algoritmu,
 - atd.
 
 ## Řešení
 
-První úkol předmětu NI-KOP jsem se rozhodl implementovat v jazyce Rust za pomoci
+Úkoly předmětu NI-KOP jsem se rozhodl implementovat v jazyce Rust za pomoci
 nástrojů na *literate programming* -- přístup k psaní zdrojového kódu, který
 upřednostňuje lidsky čitelný popis před seznamem příkazů pro počítač. Tento
 dokument obsahuje veškerý zdrojový kód nutný k reprodukci mojí práce. Výsledek
@@ -258,10 +293,8 @@ fn main() -> Result<()> {
     }?;
 
     loop {
-        match parse_line(stdin().lock())? {
-            Some(inst) => match alg(&inst) {
-                Solution { visited, .. } => println!("{}", visited),
-            },
+        match parse_line(stdin().lock())?.as_ref().map(alg) {
+            Some(Solution { visited, .. }) => println!("{}", visited),
             None => return Ok(())
         }
     }
@@ -312,7 +345,7 @@ impl <'a> PartialOrd for Solution<'a> {
 
 impl <'a> Ord for Solution<'a> {
     fn cmp(&self, other: &Self) -> cmp::Ordering {
-        self.partial_cmp(&other).unwrap()
+        self.partial_cmp(other).unwrap()
     }
 }
 
@@ -347,7 +380,7 @@ fn brute_force(&self) -> Solution {
         let (w, _c) = items[i];
         let next = |current, m| go(items, current, i + 1, m);
         let include = || {
-            let current = current.clone().with(i).incr_visited();
+            let current = current.with(i).incr_visited();
             next(current, m - w)
         };
         let exclude = || next(current.incr_visited(), m);
@@ -374,7 +407,7 @@ fn branch_and_bound(&self) -> Solution {
     let prices: Vec<u32> = {
         self.items.iter().rev()
         .scan(0, |sum, (_w, c)| {
-            *sum = *sum + c;
+            *sum += c;
             Some(*sum)
         })
         .collect::<Vec<_>>().into_iter().rev().collect()
@@ -389,7 +422,7 @@ fn branch_and_bound(&self) -> Solution {
         let (w, _c) = items[i];
         let next = |current, best, m| go(state, current, best, i + 1, m);
         let include = || {
-            let current = current.clone().with(i);
+            let current = current.with(i);
             let count = max(current.visited, best.visited);
             next(current.incr_visited(), max(current, best).set_visited(count + 1), m - w)
         };
@@ -425,9 +458,8 @@ jen (konstruktivní) cenu, nikoliv celé řešení v podobě objektu struktury
 ``` {.rust #solver-dp}
 fn dynamic_programming(&self) -> u32 {
     let (m, b, items) = (self.m, self.b, &self.items);
-    let mut next = Vec::with_capacity(m as usize + 1);
-    next.resize(m as usize + 1, 0);
-    let mut last = Vec::new();
+    let mut next = vec![0; m as usize + 1];
+    let mut last = vec![];
 
     for i in 1..=items.len() {
         let (weight, cost) = items[i - 1];
@@ -478,10 +510,9 @@ Zpracování vstupu zajišťuje jednoduchý parser pracující řádek po řádk
 
 fn parse_line<T>(mut stream: T) -> Result<Option<Instance>> where T: std::io::BufRead {
     let mut input = String::new();
-    match stream.read_line(&mut input)? {
-        0 => return Ok(None),
-        _ => ()
-    };
+    if stream.read_line(&mut input)? == 0 {
+        return Ok(None)
+    }
 
     let mut  numbers = input.split_whitespace();
     let id = numbers.parse_next()?;
@@ -534,7 +565,7 @@ trait Boilerplate {
 impl Boilerplate for std::str::SplitWhitespace<'_> {
     fn parse_next<T: FromStr>(&mut self) -> Result<T>
       where <T as FromStr>::Err: std::error::Error + Send + Sync + 'static {
-        let str = self.next().ok_or(anyhow!("unexpected end of input"))?;
+        let str = self.next().ok_or_else(|| anyhow!("unexpected end of input"))?;
         str.parse::<T>()
            .with_context(|| format!("cannot parse {}", str))
     }

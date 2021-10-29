@@ -40,10 +40,8 @@ fn main() -> Result<()> {
     }?;
 
     loop {
-        match parse_line(stdin().lock())? {
-            Some(inst) => match alg(&inst) {
-                Solution { visited, .. } => println!("{}", visited),
-            },
+        match parse_line(stdin().lock())?.as_ref().map(alg) {
+            Some(Solution { visited, .. }) => println!("{}", visited),
             None => return Ok(())
         }
     }
@@ -59,7 +57,7 @@ trait Boilerplate {
 impl Boilerplate for std::str::SplitWhitespace<'_> {
     fn parse_next<T: FromStr>(&mut self) -> Result<T>
       where <T as FromStr>::Err: std::error::Error + Send + Sync + 'static {
-        let str = self.next().ok_or(anyhow!("unexpected end of input"))?;
+        let str = self.next().ok_or_else(|| anyhow!("unexpected end of input"))?;
         str.parse::<T>()
            .with_context(|| format!("cannot parse {}", str))
     }
@@ -68,10 +66,9 @@ impl Boilerplate for std::str::SplitWhitespace<'_> {
 
 fn parse_line<T>(mut stream: T) -> Result<Option<Instance>> where T: std::io::BufRead {
     let mut input = String::new();
-    match stream.read_line(&mut input)? {
-        0 => return Ok(None),
-        _ => ()
-    };
+    if stream.read_line(&mut input)? == 0 {
+        return Ok(None)
+    }
 
     let mut  numbers = input.split_whitespace();
     let id = numbers.parse_next()?;
@@ -109,7 +106,7 @@ impl <'a> PartialOrd for Solution<'a> {
 
 impl <'a> Ord for Solution<'a> {
     fn cmp(&self, other: &Self) -> cmp::Ordering {
-        self.partial_cmp(&other).unwrap()
+        self.partial_cmp(other).unwrap()
     }
 }
 
@@ -139,9 +136,8 @@ impl Instance {
     // ~\~ begin <<lit/main.md|solver-dp>>[0]
     fn dynamic_programming(&self) -> u32 {
         let (m, b, items) = (self.m, self.b, &self.items);
-        let mut next = Vec::with_capacity(m as usize + 1);
-        next.resize(m as usize + 1, 0);
-        let mut last = Vec::new();
+        let mut next = vec![0; m as usize + 1];
+        let mut last = vec![];
 
         for i in 1..=items.len() {
             let (weight, cost) = items[i - 1];
@@ -167,7 +163,7 @@ impl Instance {
         let prices: Vec<u32> = {
             self.items.iter().rev()
             .scan(0, |sum, (_w, c)| {
-                *sum = *sum + c;
+                *sum += c;
                 Some(*sum)
             })
             .collect::<Vec<_>>().into_iter().rev().collect()
@@ -182,7 +178,7 @@ impl Instance {
             let (w, _c) = items[i];
             let next = |current, best, m| go(state, current, best, i + 1, m);
             let include = || {
-                let current = current.clone().with(i);
+                let current = current.with(i);
                 let count = max(current.visited, best.visited);
                 next(current.incr_visited(), max(current, best).set_visited(count + 1), m - w)
             };
@@ -213,7 +209,7 @@ impl Instance {
             let (w, _c) = items[i];
             let next = |current, m| go(items, current, i + 1, m);
             let include = || {
-                let current = current.clone().with(i).incr_visited();
+                let current = current.with(i).incr_visited();
                 next(current, m - w)
             };
             let exclude = || next(current.incr_visited(), m);
