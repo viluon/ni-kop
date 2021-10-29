@@ -5,7 +5,7 @@
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <meta name="author" content="Ondřej Kvapil" />
-  <title>NI-KOP – úkol 1</title>
+  <title>NI-KOP – úkol 2</title>
   <style type="text/css">
       code{white-space: pre-wrap;}
       span.smallcaps{font-variant: small-caps;}
@@ -97,7 +97,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
   </button>
-  <a href="#" class="ml-5 mr-auto navbar-brand">NI-KOP – úkol 1<br><span style="font-size: smaller">
+  <a href="#" class="ml-5 mr-auto navbar-brand">NI-KOP – úkol 2<br><span style="font-size: smaller">
         by <i>Ondřej Kvapil</i></span></a>
 <div class="collapse navbar-collapse" id="navbarSupportedContent">
 <ul>
@@ -124,29 +124,57 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <h1 id="kombinatorická-optimalizace-problém-batohu">Kombinatorická optimalizace: problém batohu</h1>
 <h2 id="zadání">Zadání</h2>
 <ul>
-<li>Experimentálně vyhodnoťte závislost výpočetní složitosti na velikosti instance u následujících algoritmů rozhodovací verze 0/1 problému batohu:
+<li>Na sadách instancí (NK, ZKC, ZKW) experimentálně vyhodnoťte závislost výpočetního času a u všech heuristických algoritmů také relativní chyby (průměrné i maximální) na velikosti instance následujících algoritmů pro
 <ul>
-<li>hrubá síla</li>
-<li>metoda větví a hranic (B&amp;B)</li>
+<li>konstruktivní verzi problému batohu:</li>
+<li>Metoda větví a hranic.</li>
+<li>Metoda dynamického programování (dekompozice podle kapacity nebo podle cen),</li>
+<li>Jednoduchá greedy heuristika</li>
+<li>Modifikace této heuristiky (redux), která uvažuje také řešení se sólo nejdražší věcí</li>
+<li>FPTAS algoritmem, tj. s použitím modifikovaného dynamického programování s dekompozicí podle ceny (při použití dekompozice podle kapacity není algoritmus FPTAS)</li>
 </ul></li>
-<li>Otázky, které má experiment zodpovědět:
+<li>Experiment má odpovědět na tyto otázky:
 <ul>
-<li>Vyhovují nejhorší případy očekávané závislosti?</li>
-<li>Závisí střední hodnota výpočetní závislosti na sadě instancí? Jestliže ano, proč?</li>
+<li>Odpovídají obě závislosti (kvality a času) předpokladům?</li>
+<li>Je některá heuristická metoda systematicky lepší (tzv. dominance) v některém kritériu?</li>
+<li>Jak se liší obtížnost jednotlivých sad z hlediska jednotlivých metod?</li>
+<li>Jaká je závislost maximální chyby (<span class="math inline">\(\varepsilon\)</span>) a času FPTAS algoritmu na zvolené přesnosti? Odpovídá předpokladům?</li>
 </ul></li>
 </ul>
 <h3 id="pokyny">Pokyny</h3>
-<p>Oba algoritmy naprogramujte. Výpočetní složitost (čas) je nejspolehlivější a nejjednodušší měřit počtem navštívených konfigurací, to jest vyhodnocených sestav věcí v batohu. Na obou sadách pozorujte závislost výpočetního času na <span class="math inline">\(n\)</span>, pro <span class="math inline">\(n\)</span> v rozsahu, jaký je Vaše výpočetní platforma schopna zvládnout, a to jak maximální, tak průměrný čas. Pro alespoň jednu hodnotu <span class="math inline">\(n\)</span> (volte instance velikosti alespoň 10) zjistěte četnosti jednotlivých hodnot (histogram) a pokuste se jej vysvětlit. Ohledně metody větví a hranic – uvědomte si, že se jedná o rozhodovací problém a podle toho ořezávejte. Nápověda: i když je to rozhodovací problém, lze použít ořezávání podle ceny. Jak? Implementované způsoby ořezávání popište ve zprávě.</p>
-<p>Sady NR a ZR vyhodnocujte zvlášť a proveďte jejich srovnání (stačí diskuze).</p>
+<p>Algoritmy naprogramujte, využijte části programů z minulé úlohy.</p>
+<p>Metodu větví a hranic použijte tak, aby omezujícím faktorem byla hodnota optimalizačního kritéria. Tj. použijte ořezávání shora (překročení kapacity batohu) i zdola (stávající řešení nemůže být lepší než nejlepší dosud nalezené).</p>
+<p>Pozor! Pokud implementujete FPTAS pomocí zanedbávání bitů, musíte pro daný počet zanedbaných bitů vypočítat max. chybu (<span class="math inline">\(\varepsilon\)</span>). V experimentálních výsledcích by počet zanedbaných bitů neměl figurovat, neb neříká nic konkrétního o přesnosti. Pozor, tato max. chyba je jiná pro každou instanci, nezávisí pouze na velikosti instance, ale také na max. ceně.</p>
+<p>Pozor! V některých instancích se objevují věci, které svojí hmotností překračují kapacitu batohu. Samozřejmě se jedná o platné instance. Nicméně tyto věci komplikují přepočet cen u FPTAS. Zvažte sami, jak se s tím vypořádat. Řešení je snadné.</p>
+<p>Pozn.: u této úlohy je opravdu lepší měřit skutečný CPU čas, namísto počtu konfigurací, jak tomu bylo u předchozího úkolu. Srovnávají se zde principiálně velice odlišné algoritmy, najít jiný relevantní způsob měření složitosti by bylo obtížné (ne-li nemožné).</p>
+<h3 id="zpráva-bude-obsahovat">Zpráva bude obsahovat</h3>
+<ul class="task-list">
+<li><input type="checkbox" disabled="" />
+Popis implementovaných metod.</li>
+<li><input type="checkbox" disabled="" />
+Srovnání výpočetních časů metody větví a hranic, dynamického programování a heuristiky cena/váha (stačí jedna). Grafy vítány.<ul>
+<li>Tj. závislosti výpočetních časů na velikosti instance</li>
+</ul></li>
+<li><input type="checkbox" disabled="" />
+Porovnání relativních chyb (průměrných a maximálních) obou heuristik.<ul>
+<li>Tj. závislosti rel. chyby na velikosti instance</li>
+</ul></li>
+<li><input type="checkbox" disabled="" />
+U FPTAS algoritmu pozorujte (naměřte, zdokumentujte) závislost chyby a výpočetního času algoritmu na zvolené přesnosti zobrazení (pro několik různých přesností), srovnání maximální naměřené chyby s teoreticky předpokládanou.<ul>
+<li>Tj. zvolte několik požadovaných přesností (<span class="math inline">\(\varepsilon\)</span>), v závislosti na <span class="math inline">\(\varepsilon\)</span> měřte čas běhu a reálnou (maximální, případně i průměrnou) chybu algoritmu</li>
+</ul></li>
+<li><input type="checkbox" disabled="" />
+Zhodnocení naměřených výsledků.</li>
+</ul>
 <h3 id="bonusový-bod">Bonusový bod</h3>
 <p>Na bonusový bod musí práce obsahovat přínos navíc. Takové přínosy jsou například:</p>
 <ul>
-<li>Zjištění, jak čas CPU souvisí s počtem vyhodnocených konfigurací na Vaší platformě a jak je tato závislost stabilní při opakovaném měření téže instance.</li>
-<li>Nový (a experimentálně porovnaný) způsob prořezávání v metodě větví a hranic.</li>
+<li>Srovnání různých dekompozic v dynamickém programování (podle váhy, podle kapacity)</li>
+<li>detailní experimentální analýza FPTAS algoritmu,</li>
 <li>atd.</li>
 </ul>
 <h2 id="řešení">Řešení</h2>
-<p>První úkol předmětu NI-KOP jsem se rozhodl implementovat v jazyce Rust za pomoci nástrojů na <em>literate programming</em> – přístup k psaní zdrojového kódu, který upřednostňuje lidsky čitelný popis před seznamem příkazů pro počítač. Tento dokument obsahuje veškerý zdrojový kód nutný k reprodukci mojí práce. Výsledek je dostupný online jako statická <a href="http://viluon.me/ni-kop/">webová stránka</a> a <a href="http://viluon.me/ni-kop/report.pdf">ke stažení v PDF</a>.</p>
+<p>Úkoly předmětu NI-KOP jsem se rozhodl implementovat v jazyce Rust za pomoci nástrojů na <em>literate programming</em> – přístup k psaní zdrojového kódu, který upřednostňuje lidsky čitelný popis před seznamem příkazů pro počítač. Tento dokument obsahuje veškerý zdrojový kód nutný k reprodukci mojí práce. Výsledek je dostupný online jako statická <a href="http://viluon.me/ni-kop/">webová stránka</a> a <a href="http://viluon.me/ni-kop/report.pdf">ke stažení v PDF</a>.</p>
 <h2 id="instrukce-k-sestavení-programu">Instrukce k sestavení programu</h2>
 <p>Program využívá standardních nástrojů jazyka Rust. O sestavení stačí požádat <code>cargo</code>.</p>
 <div class="doctest" data-status="SUCCESS">
@@ -162,35 +190,35 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <div class="doctestResult">
 <div class="programOutput">
 <pre class="ansi2html-content"><span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00"> Downloading</span> crates ...
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> getrandom v0.2.3
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> wyz v0.4.0
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> env_logger v0.8.4
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> tap v1.0.1
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> log v0.4.14
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> funty v1.2.0
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> anyhow v1.0.44
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> rand_core v0.6.3
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> bitvec v0.22.3
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> aho-corasick v0.7.18
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> radium v0.6.2
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> quickcheck_macros v1.0.0
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> quickcheck v1.0.3
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> rand v0.8.4
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> quickcheck_macros v1.0.0
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> log v0.4.14
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> wyz v0.4.0
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> syn v1.0.80
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> funty v1.2.0
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> libc v0.2.103
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> bitvec v0.22.3
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> tap v1.0.1
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> env_logger v0.8.4
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> anyhow v1.0.44
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> proc-macro2 v1.0.29
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> memchr v2.4.1
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> libc v0.2.103
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> cfg-if v1.0.0
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> proc-macro2 v1.0.29
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> log v0.4.14
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> unicode-xid v0.2.2
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> log v0.4.14
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> syn v1.0.80
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> regex-syntax v0.6.25
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> radium v0.6.2
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> anyhow v1.0.44
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> tap v1.0.1
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> anyhow v1.0.44
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> funty v1.2.0
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> wyz v0.4.0
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> aho-corasick v0.7.18
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> getrandom v0.2.3
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> aho-corasick v0.7.18
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> quote v1.0.10
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> bitvec v0.22.3
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> rand_core v0.6.3
@@ -201,23 +229,23 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> quickcheck v1.0.3
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> solver v0.1.0 (/__w/ni-kop/ni-kop/2-heuristic-knapsack/solver)
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #aa5500">warning</span><span style="font-weight: bold">: unused variable: `b`</span>
-   <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">--&gt; </span>src/main.rs:141:17
+   <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">--&gt; </span>src/main.rs:138:17
     <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">|</span>
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">141</span> <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">| </span>        let (m, b, items) = (self.m, self.b, &amp;self.items);
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">138</span> <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">| </span>        let (m, b, items) = (self.m, self.b, &amp;self.items);
     <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">| </span>                <span style="font-weight: bold"></span><span style="font-weight: bold; color: #aa5500">^</span> <span style="font-weight: bold"></span><span style="font-weight: bold; color: #aa5500">help: if this is intentional, prefix it with an underscore: `_b`</span>
     <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">|</span>
     <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">= </span><span style="font-weight: bold">note</span>: `#[warn(unused_variables)]` on by default
 
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #aa5500">warning</span><span style="font-weight: bold">: associated function is never used: `dynamic_programming`</span>
-   <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">--&gt; </span>src/main.rs:140:8
+   <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">--&gt; </span>src/main.rs:137:8
     <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">|</span>
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">140</span> <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">| </span>    fn dynamic_programming(&amp;self) -&gt; u32 {
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">137</span> <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">| </span>    fn dynamic_programming(&amp;self) -&gt; u32 {
     <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">| </span>       <span style="font-weight: bold"></span><span style="font-weight: bold; color: #aa5500">^^^^^^^^^^^^^^^^^^^</span>
     <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">|</span>
     <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">= </span><span style="font-weight: bold">note</span>: `#[warn(dead_code)]` on by default
 
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #aa5500">warning</span><span style="font-weight: bold">:</span> `solver` (bin "solver") generated 2 warnings
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">    Finished</span> release [optimized + debuginfo] target(s) in 38.43s
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">    Finished</span> release [optimized + debuginfo] target(s) in 27.60s
 </pre>
 </div>
 </div>
@@ -248,268 +276,273 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 </div>
 <div class="doctestResult">
 <div class="programOutput">
-<pre class="ansi2html-content">Linux f94c5234b3eb 5.8.0-1042-azure #45~20.04.1-Ubuntu SMP Wed Sep 15 14:24:15 UTC 2021 x86_64 GNU/Linux
+<pre class="ansi2html-content">Linux 00955c6b2c16 5.8.0-1042-azure #45~20.04.1-Ubuntu SMP Wed Sep 15 14:24:15 UTC 2021 x86_64 GNU/Linux
 
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">                   .#################.          </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">Name:</span>       <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">Intel Xeon E5-2673 v</span>
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">                   .#################.          </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">Name:</span>       <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">Intel Xeon Platinum </span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">              .####                   ####.     </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">Hypervisor:</span> <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">Microsoft Hyper-V</span>
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">          .##                             ###   </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">uArch:</span>      <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">Broadwell</span>
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">          .##                             ###   </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">uArch:</span>      <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">Cascade Lake</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">       ##                          :##     ###  </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">Technology:</span> <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">14nm</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">    #                ##            :##      ##  </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">Max Freq:</span>   <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">Unknown</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">  ##   ##  ######.   ####  ######  :##      ##  </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">Cores:</span>      <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">2 cores</span>
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7"> ##    ##  ##:  ##:  ##   ##   ### :##     ###  </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">AVX:</span>        <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">AVX,AVX2</span>
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7"> ##    ##  ##:  ##:  ##   ##   ### :##     ###  </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">AVX:</span>        <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">AVX,AVX2,AVX512</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">##     ##  ##:  ##:  ##  :######## :##    ##    </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">FMA:</span>        <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">FMA3</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">##     ##  ##:  ##:  ##   ##.   .  :## ####     </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">L1i Size:</span>   <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">32KB (64KB Total)</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">##      #  ##:  ##:  ####  #####:   ##          </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">L1d Size:</span>   <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">32KB (64KB Total)</span>
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7"> ##                                             </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">L2 Size:</span>    <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">256KB (512KB Total)</span>
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">  ###.                         ..o####.         </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">L3 Size:</span>    <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">50MB</span>
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7"> ##                                             </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">L2 Size:</span>    <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">1MB (2MB Total)</span>
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">  ###.                         ..o####.         </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">L3 Size:</span>    <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">35.75MB</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">   ######oo...         ..oo#######              </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">Peak Perf.:</span> <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">Unknown</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">          o###############o                     </span>
 
-<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">1</span>: cargo run --release -- bf \
+<span style="font-weight: bold">Benchmark </span><span style="font-weight: bold">1</span>: cargo run --release -- bf \
            &lt; ds/NR4_inst.dat \
            &gt; ../docs/measurements/bf-N4.txt
-  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">122.5 ms</span> ± <span style="color: #00aa00">  9.0 ms</span>    [User: <span style="color: #0000aa">103.9 ms</span>, 
-System: <span style="color: #0000aa">18.5 ms</span>]
-  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">108.1 ms</span> … <span style="color: #E850A8">145.2 ms</span>    <span style="font-weight: lighter">23 runs</span>
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">102.6 ms</span> ± <span style="color: #00aa00">  2.1 ms</span>    [User: <span style="color: #0000aa">84.9 ms</span>, 
+System: <span style="color: #0000aa">17.1 ms</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa"> 99.8 ms</span> … <span style="color: #E850A8">110.3 ms</span>    <span style="font-weight: lighter">28 runs</span>
  
-<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">2</span>: cargo run --release -- bf \
+<span style="font-weight: bold">Benchmark </span><span style="font-weight: bold">2</span>: cargo run --release -- bf \
            &lt; ds/NR10_inst.dat \
            &gt; ../docs/measurements/bf-N10.txt
-  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">122.0 ms</span> ± <span style="color: #00aa00">  5.2 ms</span>    [User: <span style="color: #0000aa">103.6 ms</span>, 
-System: <span style="color: #0000aa">18.3 ms</span>]
-  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">113.5 ms</span> … <span style="color: #E850A8">132.4 ms</span>    <span style="font-weight: lighter">23 runs</span>
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">106.2 ms</span> ± <span style="color: #00aa00">  1.7 ms</span>    [User: <span style="color: #0000aa">91.4 ms</span>, 
+System: <span style="color: #0000aa">14.8 ms</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">104.2 ms</span> … <span style="color: #E850A8">111.1 ms</span>    <span style="font-weight: lighter">28 runs</span>
  
-<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">3</span>: cargo run --release -- bf \
+<span style="font-weight: bold">Benchmark </span><span style="font-weight: bold">3</span>: cargo run --release -- bf \
            &lt; ds/NR15_inst.dat \
            &gt; ../docs/measurements/bf-N15.txt
-  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">266.2 ms</span> ± <span style="color: #00aa00"> 17.4 ms</span>    [User: <span style="color: #0000aa">242.1 ms</span>, 
-System: <span style="color: #0000aa">20.2 ms</span>]
-  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">250.2 ms</span> … <span style="color: #E850A8">314.7 ms</span>    <span style="font-weight: lighter">11 runs</span>
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">225.3 ms</span> ± <span style="color: #00aa00">  3.7 ms</span>    [User: <span style="color: #0000aa">211.4 ms</span>, 
+System: <span style="color: #0000aa">13.4 ms</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">221.4 ms</span> … <span style="color: #E850A8">232.8 ms</span>    <span style="font-weight: lighter">13 runs</span>
  
-<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">4</span>: cargo run --release -- bf \
+<span style="font-weight: bold">Benchmark </span><span style="font-weight: bold">4</span>: cargo run --release -- bf \
            &lt; ds/NR20_inst.dat \
            &gt; ../docs/measurements/bf-N20.txt
-  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00"> 4.916 s</span> ± <span style="color: #00aa00"> 0.121 s</span>    [User: <span style="color: #0000aa">4.890 s</span>, 
-System: <span style="color: #0000aa">0.025 s</span>]
-  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa"> 4.796 s</span> … <span style="color: #E850A8"> 5.084 s</span>    <span style="font-weight: lighter">4 runs</span>
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00"> 4.451 s</span> ± <span style="color: #00aa00"> 0.120 s</span>    [User: <span style="color: #0000aa">4.439 s</span>, 
+System: <span style="color: #0000aa">0.010 s</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa"> 4.380 s</span> … <span style="color: #E850A8"> 4.630 s</span>    <span style="font-weight: lighter">4 runs</span>
  
-<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">5</span>: cargo run --release -- bf \
+<span style="font-weight: bold">Benchmark </span><span style="font-weight: bold">5</span>: cargo run --release -- bf \
            &lt; ds/NR22_inst.dat \
            &gt; ../docs/measurements/bf-N22.txt
-  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">17.445 s</span> ± <span style="color: #00aa00"> 0.295 s</span>    [User: <span style="color: #0000aa">17.415 s</span>, 
-System: <span style="color: #0000aa">0.028 s</span>]
-  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">17.094 s</span> … <span style="color: #E850A8">17.814 s</span>    <span style="font-weight: lighter">4 runs</span>
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">15.007 s</span> ± <span style="color: #00aa00"> 0.572 s</span>    [User: <span style="color: #0000aa">14.979 s</span>, 
+System: <span style="color: #0000aa">0.020 s</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">14.712 s</span> … <span style="color: #E850A8">15.864 s</span>    <span style="font-weight: lighter">4 runs</span>
  
-<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">6</span>: cargo run --release -- bf \
+  <span style="color: #aa5500">Warning</span>: Statistical outliers were detected. Consider re-running this benchmark on a quiet PC without any 
+interferences from other programs. It might help to use the '--warmup' or '--prepare' options.
+ 
+<span style="font-weight: bold">Benchmark </span><span style="font-weight: bold">6</span>: cargo run --release -- bf \
            &lt; ds/NR25_inst.dat \
            &gt; ../docs/measurements/bf-N25.txt
-  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">149.008 s</span> ± <span style="color: #00aa00"> 3.258 s</span>    [User: <span style="color: #0000aa">148.920 s</span>, 
-System: <span style="color: #0000aa">0.060 s</span>]
-  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">144.675 s</span> … <span style="color: #E850A8">152.304 s</span>    <span style="font-weight: lighter">4 runs</span>
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">134.777 s</span> ± <span style="color: #00aa00">15.141 s</span>    [User: <span style="color: #0000aa">134.725 s</span>, 
+System: <span style="color: #0000aa">0.037 s</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">124.466 s</span> … <span style="color: #E850A8">156.565 s</span>    <span style="font-weight: lighter">4 runs</span>
  
-<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">7</span>: cargo run --release -- bf \
+<span style="font-weight: bold">Benchmark </span><span style="font-weight: bold">7</span>: cargo run --release -- bf \
            &lt; ds/ZR4_inst.dat \
            &gt; ../docs/measurements/bf-Z4.txt
-  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">116.6 ms</span> ± <span style="color: #00aa00">  4.8 ms</span>    [User: <span style="color: #0000aa">98.0 ms</span>, 
-System: <span style="color: #0000aa">18.6 ms</span>]
-  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">108.0 ms</span> … <span style="color: #E850A8">128.1 ms</span>    <span style="font-weight: lighter">24 runs</span>
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">104.4 ms</span> ± <span style="color: #00aa00">  2.4 ms</span>    [User: <span style="color: #0000aa">84.2 ms</span>, 
+System: <span style="color: #0000aa">19.8 ms</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">101.5 ms</span> … <span style="color: #E850A8">114.0 ms</span>    <span style="font-weight: lighter">28 runs</span>
  
-<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">8</span>: cargo run --release -- bf \
+<span style="font-weight: bold">Benchmark </span><span style="font-weight: bold">8</span>: cargo run --release -- bf \
            &lt; ds/ZR10_inst.dat \
            &gt; ../docs/measurements/bf-Z10.txt
-  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">126.0 ms</span> ± <span style="color: #00aa00">  6.1 ms</span>    [User: <span style="color: #0000aa">104.8 ms</span>, 
-System: <span style="color: #0000aa">21.2 ms</span>]
-  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">117.4 ms</span> … <span style="color: #E850A8">139.3 ms</span>    <span style="font-weight: lighter">22 runs</span>
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00"> 98.5 ms</span> ± <span style="color: #00aa00">  3.7 ms</span>    [User: <span style="color: #0000aa">83.1 ms</span>, 
+System: <span style="color: #0000aa">15.2 ms</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa"> 95.4 ms</span> … <span style="color: #E850A8">109.9 ms</span>    <span style="font-weight: lighter">27 runs</span>
  
-<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">9</span>: cargo run --release -- bf \
+<span style="font-weight: bold">Benchmark </span><span style="font-weight: bold">9</span>: cargo run --release -- bf \
            &lt; ds/ZR15_inst.dat \
            &gt; ../docs/measurements/bf-Z15.txt
-  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">341.3 ms</span> ± <span style="color: #00aa00"> 12.0 ms</span>    [User: <span style="color: #0000aa">320.9 ms</span>, 
-System: <span style="color: #0000aa">20.3 ms</span>]
-  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">333.4 ms</span> … <span style="color: #E850A8">369.2 ms</span>    <span style="font-weight: lighter">8 runs</span>
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">263.6 ms</span> ± <span style="color: #00aa00">  4.9 ms</span>    [User: <span style="color: #0000aa">246.8 ms</span>, 
+System: <span style="color: #0000aa">16.8 ms</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">260.0 ms</span> … <span style="color: #E850A8">274.9 ms</span>    <span style="font-weight: lighter">11 runs</span>
  
-  <span style="color: #aa5500">Warning</span>: Statistical outliers were detected. Consider re-running this benchmark on a quiet PC without any 
-interferences from other programs. It might help to use the '--warmup' or '--prepare' options.
- 
-<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">10</span>: cargo run --release -- bf \
+<span style="font-weight: bold">Benchmark </span><span style="font-weight: bold">10</span>: cargo run --release -- bf \
            &lt; ds/ZR20_inst.dat \
            &gt; ../docs/measurements/bf-Z20.txt
-  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00"> 7.522 s</span> ± <span style="color: #00aa00"> 0.079 s</span>    [User: <span style="color: #0000aa">7.499 s</span>, 
-System: <span style="color: #0000aa">0.022 s</span>]
-  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa"> 7.409 s</span> … <span style="color: #E850A8"> 7.591 s</span>    <span style="font-weight: lighter">4 runs</span>
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00"> 5.866 s</span> ± <span style="color: #00aa00"> 0.008 s</span>    [User: <span style="color: #0000aa">5.844 s</span>, 
+System: <span style="color: #0000aa">0.021 s</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa"> 5.857 s</span> … <span style="color: #E850A8"> 5.875 s</span>    <span style="font-weight: lighter">4 runs</span>
  
-<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">11</span>: cargo run --release -- bf \
+<span style="font-weight: bold">Benchmark </span><span style="font-weight: bold">11</span>: cargo run --release -- bf \
            &lt; ds/ZR22_inst.dat \
            &gt; ../docs/measurements/bf-Z22.txt
-  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">31.292 s</span> ± <span style="color: #00aa00"> 0.807 s</span>    [User: <span style="color: #0000aa">31.218 s</span>, 
-System: <span style="color: #0000aa">0.055 s</span>]
-  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">30.356 s</span> … <span style="color: #E850A8">31.997 s</span>    <span style="font-weight: lighter">4 runs</span>
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">29.252 s</span> ± <span style="color: #00aa00">10.133 s</span>    [User: <span style="color: #0000aa">29.203 s</span>, 
+System: <span style="color: #0000aa">0.037 s</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">22.794 s</span> … <span style="color: #E850A8">44.357 s</span>    <span style="font-weight: lighter">4 runs</span>
  
-<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">12</span>: cargo run --release -- bf \
+<span style="font-weight: bold">Benchmark </span><span style="font-weight: bold">12</span>: cargo run --release -- bf \
            &lt; ds/ZR25_inst.dat \
            &gt; ../docs/measurements/bf-Z25.txt
-  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">249.874 s</span> ± <span style="color: #00aa00">11.989 s</span>    [User: <span style="color: #0000aa">249.742 s</span>, 
-System: <span style="color: #0000aa">0.090 s</span>]
-  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">242.933 s</span> … <span style="color: #E850A8">267.792 s</span>    <span style="font-weight: lighter">4 runs</span>
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">211.508 s</span> ± <span style="color: #00aa00"> 8.518 s</span>    [User: <span style="color: #0000aa">211.448 s</span>, 
+System: <span style="color: #0000aa">0.032 s</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">204.125 s</span> … <span style="color: #E850A8">218.904 s</span>    <span style="font-weight: lighter">4 runs</span>
+ 
+<span style="font-weight: bold">Benchmark </span><span style="font-weight: bold">13</span>: cargo run --release -- bb \
+           &lt; ds/NR4_inst.dat \
+           &gt; ../docs/measurements/bb-N4.txt
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00"> 91.2 ms</span> ± <span style="color: #00aa00">  2.9 ms</span>    [User: <span style="color: #0000aa">76.6 ms</span>, 
+System: <span style="color: #0000aa">14.2 ms</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa"> 88.5 ms</span> … <span style="color: #E850A8">104.0 ms</span>    <span style="font-weight: lighter">32 runs</span>
  
   <span style="color: #aa5500">Warning</span>: Statistical outliers were detected. Consider re-running this benchmark on a quiet PC without any 
 interferences from other programs. It might help to use the '--warmup' or '--prepare' options.
  
-<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">13</span>: cargo run --release -- bb \
-           &lt; ds/NR4_inst.dat \
-           &gt; ../docs/measurements/bb-N4.txt
-  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">120.9 ms</span> ± <span style="color: #00aa00">  3.4 ms</span>    [User: <span style="color: #0000aa">101.9 ms</span>, 
-System: <span style="color: #0000aa">19.1 ms</span>]
-  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">111.4 ms</span> … <span style="color: #E850A8">127.3 ms</span>    <span style="font-weight: lighter">24 runs</span>
- 
-<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">14</span>: cargo run --release -- bb \
+<span style="font-weight: bold">Benchmark </span><span style="font-weight: bold">14</span>: cargo run --release -- bb \
            &lt; ds/NR10_inst.dat \
            &gt; ../docs/measurements/bb-N10.txt
-  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">117.1 ms</span> ± <span style="color: #00aa00">  4.1 ms</span>    [User: <span style="color: #0000aa">98.2 ms</span>, 
-System: <span style="color: #0000aa">19.0 ms</span>]
-  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">108.0 ms</span> … <span style="color: #E850A8">123.4 ms</span>    <span style="font-weight: lighter">25 runs</span>
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00"> 94.5 ms</span> ± <span style="color: #00aa00">  5.0 ms</span>    [User: <span style="color: #0000aa">79.6 ms</span>, 
+System: <span style="color: #0000aa">14.7 ms</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa"> 89.8 ms</span> … <span style="color: #E850A8">104.9 ms</span>    <span style="font-weight: lighter">33 runs</span>
  
-<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">15</span>: cargo run --release -- bb \
+<span style="font-weight: bold">Benchmark </span><span style="font-weight: bold">15</span>: cargo run --release -- bb \
            &lt; ds/NR15_inst.dat \
            &gt; ../docs/measurements/bb-N15.txt
-  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">135.2 ms</span> ± <span style="color: #00aa00">  5.1 ms</span>    [User: <span style="color: #0000aa">116.4 ms</span>, 
-System: <span style="color: #0000aa">18.9 ms</span>]
-  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">127.7 ms</span> … <span style="color: #E850A8">147.3 ms</span>    <span style="font-weight: lighter">22 runs</span>
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">104.5 ms</span> ± <span style="color: #00aa00">  1.2 ms</span>    [User: <span style="color: #0000aa">90.3 ms</span>, 
+System: <span style="color: #0000aa">14.2 ms</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">102.5 ms</span> … <span style="color: #E850A8">107.1 ms</span>    <span style="font-weight: lighter">28 runs</span>
  
-<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">16</span>: cargo run --release -- bb \
+<span style="font-weight: bold">Benchmark </span><span style="font-weight: bold">16</span>: cargo run --release -- bb \
            &lt; ds/NR20_inst.dat \
            &gt; ../docs/measurements/bb-N20.txt
-  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">523.7 ms</span> ± <span style="color: #00aa00"> 17.1 ms</span>    [User: <span style="color: #0000aa">497.2 ms</span>, 
-System: <span style="color: #0000aa">26.4 ms</span>]
-  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">503.0 ms</span> … <span style="color: #E850A8">544.3 ms</span>    <span style="font-weight: lighter">5 runs</span>
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">389.0 ms</span> ± <span style="color: #00aa00">  7.6 ms</span>    [User: <span style="color: #0000aa">372.6 ms</span>, 
+System: <span style="color: #0000aa">16.1 ms</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">384.2 ms</span> … <span style="color: #E850A8">405.9 ms</span>    <span style="font-weight: lighter">7 runs</span>
  
-<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">17</span>: cargo run --release -- bb \
+<span style="font-weight: bold">Benchmark </span><span style="font-weight: bold">17</span>: cargo run --release -- bb \
            &lt; ds/NR22_inst.dat \
            &gt; ../docs/measurements/bb-N22.txt
-  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00"> 1.678 s</span> ± <span style="color: #00aa00"> 0.045 s</span>    [User: <span style="color: #0000aa">1.655 s</span>, 
-System: <span style="color: #0000aa">0.023 s</span>]
-  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa"> 1.624 s</span> … <span style="color: #E850A8"> 1.725 s</span>    <span style="font-weight: lighter">4 runs</span>
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00"> 1.265 s</span> ± <span style="color: #00aa00"> 0.017 s</span>    [User: <span style="color: #0000aa">1.246 s</span>, 
+System: <span style="color: #0000aa">0.019 s</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa"> 1.253 s</span> … <span style="color: #E850A8"> 1.289 s</span>    <span style="font-weight: lighter">4 runs</span>
  
-<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">18</span>: cargo run --release -- bb \
+<span style="font-weight: bold">Benchmark </span><span style="font-weight: bold">18</span>: cargo run --release -- bb \
            &lt; ds/NR25_inst.dat \
            &gt; ../docs/measurements/bb-N25.txt
-  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">10.308 s</span> ± <span style="color: #00aa00"> 0.252 s</span>    [User: <span style="color: #0000aa">10.275 s</span>, 
-System: <span style="color: #0000aa">0.029 s</span>]
-  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">10.047 s</span> … <span style="color: #E850A8">10.642 s</span>    <span style="font-weight: lighter">4 runs</span>
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00"> 7.563 s</span> ± <span style="color: #00aa00"> 0.058 s</span>    [User: <span style="color: #0000aa">7.544 s</span>, 
+System: <span style="color: #0000aa">0.017 s</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa"> 7.524 s</span> … <span style="color: #E850A8"> 7.647 s</span>    <span style="font-weight: lighter">4 runs</span>
  
-<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">19</span>: cargo run --release -- bb \
+<span style="font-weight: bold">Benchmark </span><span style="font-weight: bold">19</span>: cargo run --release -- bb \
            &lt; ds/ZR4_inst.dat \
            &gt; ../docs/measurements/bb-Z4.txt
-  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">126.2 ms</span> ± <span style="color: #00aa00">  4.3 ms</span>    [User: <span style="color: #0000aa">104.6 ms</span>, 
-System: <span style="color: #0000aa">21.7 ms</span>]
-  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">117.0 ms</span> … <span style="color: #E850A8">135.8 ms</span>    <span style="font-weight: lighter">21 runs</span>
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00"> 91.1 ms</span> ± <span style="color: #00aa00">  1.3 ms</span>    [User: <span style="color: #0000aa">75.7 ms</span>, 
+System: <span style="color: #0000aa">15.4 ms</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa"> 89.4 ms</span> … <span style="color: #E850A8"> 95.6 ms</span>    <span style="font-weight: lighter">32 runs</span>
  
-<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">20</span>: cargo run --release -- bb \
+<span style="font-weight: bold">Benchmark </span><span style="font-weight: bold">20</span>: cargo run --release -- bb \
            &lt; ds/ZR10_inst.dat \
            &gt; ../docs/measurements/bb-Z10.txt
-  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">124.6 ms</span> ± <span style="color: #00aa00">  5.8 ms</span>    [User: <span style="color: #0000aa">105.1 ms</span>, 
-System: <span style="color: #0000aa">19.6 ms</span>]
-  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">112.6 ms</span> … <span style="color: #E850A8">134.6 ms</span>    <span style="font-weight: lighter">22 runs</span>
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00"> 94.2 ms</span> ± <span style="color: #00aa00">  1.4 ms</span>    [User: <span style="color: #0000aa">78.5 ms</span>, 
+System: <span style="color: #0000aa">15.8 ms</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa"> 91.9 ms</span> … <span style="color: #E850A8"> 97.6 ms</span>    <span style="font-weight: lighter">31 runs</span>
  
-<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">21</span>: cargo run --release -- bb \
+<span style="font-weight: bold">Benchmark </span><span style="font-weight: bold">21</span>: cargo run --release -- bb \
            &lt; ds/ZR15_inst.dat \
            &gt; ../docs/measurements/bb-Z15.txt
-  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">205.8 ms</span> ± <span style="color: #00aa00">  9.5 ms</span>    [User: <span style="color: #0000aa">184.1 ms</span>, 
-System: <span style="color: #0000aa">21.6 ms</span>]
-  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">189.6 ms</span> … <span style="color: #E850A8">228.7 ms</span>    <span style="font-weight: lighter">15 runs</span>
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">154.6 ms</span> ± <span style="color: #00aa00">  3.1 ms</span>    [User: <span style="color: #0000aa">136.3 ms</span>, 
+System: <span style="color: #0000aa">17.9 ms</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">151.5 ms</span> … <span style="color: #E850A8">162.3 ms</span>    <span style="font-weight: lighter">18 runs</span>
  
-<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">22</span>: cargo run --release -- bb \
+<span style="font-weight: bold">Benchmark </span><span style="font-weight: bold">22</span>: cargo run --release -- bb \
            &lt; ds/ZR20_inst.dat \
            &gt; ../docs/measurements/bb-Z20.txt
-  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00"> 2.140 s</span> ± <span style="color: #00aa00"> 0.077 s</span>    [User: <span style="color: #0000aa">2.122 s</span>, 
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00"> 1.596 s</span> ± <span style="color: #00aa00"> 0.001 s</span>    [User: <span style="color: #0000aa">1.578 s</span>, 
 System: <span style="color: #0000aa">0.018 s</span>]
-  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa"> 2.070 s</span> … <span style="color: #E850A8"> 2.251 s</span>    <span style="font-weight: lighter">4 runs</span>
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa"> 1.595 s</span> … <span style="color: #E850A8"> 1.596 s</span>    <span style="font-weight: lighter">4 runs</span>
  
-<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">23</span>: cargo run --release -- bb \
+<span style="font-weight: bold">Benchmark </span><span style="font-weight: bold">23</span>: cargo run --release -- bb \
            &lt; ds/ZR22_inst.dat \
            &gt; ../docs/measurements/bb-Z22.txt
-  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00"> 7.085 s</span> ± <span style="color: #00aa00"> 0.283 s</span>    [User: <span style="color: #0000aa">7.060 s</span>, 
-System: <span style="color: #0000aa">0.025 s</span>]
-  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa"> 6.812 s</span> … <span style="color: #E850A8"> 7.483 s</span>    <span style="font-weight: lighter">4 runs</span>
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00"> 5.342 s</span> ± <span style="color: #00aa00"> 0.113 s</span>    [User: <span style="color: #0000aa">5.327 s</span>, 
+System: <span style="color: #0000aa">0.015 s</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa"> 5.280 s</span> … <span style="color: #E850A8"> 5.511 s</span>    <span style="font-weight: lighter">4 runs</span>
  
-<span style="font-weight: bold">Benchmark #</span><span style="font-weight: bold">24</span>: cargo run --release -- bb \
+  <span style="color: #aa5500">Warning</span>: The first benchmarking run for this command was significantly slower than the rest (5.511 s). This 
+could be caused by (filesystem) caches that were not filled until after the first run. You should consider using the 
+'--warmup' option to fill those caches before the actual benchmark. Alternatively, use the '--prepare' option to clear 
+the caches before each timing run.
+ 
+<span style="font-weight: bold">Benchmark </span><span style="font-weight: bold">24</span>: cargo run --release -- bb \
            &lt; ds/ZR25_inst.dat \
            &gt; ../docs/measurements/bb-Z25.txt
-  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">51.716 s</span> ± <span style="color: #00aa00"> 2.141 s</span>    [User: <span style="color: #0000aa">51.636 s</span>, 
-System: <span style="color: #0000aa">0.056 s</span>]
-  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">49.982 s</span> … <span style="color: #E850A8">54.789 s</span>    <span style="font-weight: lighter">4 runs</span>
+  Time (<span style="font-weight: bold; color: #00aa00">mean</span> ± <span style="color: #00aa00">σ</span>):     <span style="font-weight: bold; color: #00aa00">37.373 s</span> ± <span style="color: #00aa00"> 0.761 s</span>    [User: <span style="color: #0000aa">37.334 s</span>, 
+System: <span style="color: #0000aa">0.029 s</span>]
+  Range (<span style="color: #00aaaa">min</span> … <span style="color: #E850A8">max</span>):   <span style="color: #00aaaa">36.775 s</span> … <span style="color: #E850A8">38.401 s</span>    <span style="font-weight: lighter">4 runs</span>
  
 <span style="font-weight: bold">Summary</span>
-  '<span style="color: #00aaaa">cargo run --release -- bf \
+  '<span style="color: #00aaaa">cargo run --release -- bb \
            &lt; ds/ZR4_inst.dat \
-           &gt; ../docs/measurements/bf-Z4.txt</span>' ran
-<span style="font-weight: bold; color: #00aa00">    1.00</span> ± <span style="color: #00aa00">0.05</span> times faster than '<span style="color: #E850A8">cargo run --release -- bb \
-           &lt; ds/NR10_inst.dat \
-           &gt; ../docs/measurements/bb-N10.txt</span>'
-<span style="font-weight: bold; color: #00aa00">    1.04</span> ± <span style="color: #00aa00">0.05</span> times faster than '<span style="color: #E850A8">cargo run --release -- bb \
+           &gt; ../docs/measurements/bb-Z4.txt</span>' ran
+<span style="font-weight: bold; color: #00aa00">    1.00</span> ± <span style="color: #00aa00">0.04</span> times faster than '<span style="color: #E850A8">cargo run --release -- bb \
            &lt; ds/NR4_inst.dat \
            &gt; ../docs/measurements/bb-N4.txt</span>'
-<span style="font-weight: bold; color: #00aa00">    1.05</span> ± <span style="color: #00aa00">0.06</span> times faster than '<span style="color: #E850A8">cargo run --release -- bf \
-           &lt; ds/NR10_inst.dat \
-           &gt; ../docs/measurements/bf-N10.txt</span>'
-<span style="font-weight: bold; color: #00aa00">    1.05</span> ± <span style="color: #00aa00">0.09</span> times faster than '<span style="color: #E850A8">cargo run --release -- bf \
-           &lt; ds/NR4_inst.dat \
-           &gt; ../docs/measurements/bf-N4.txt</span>'
-<span style="font-weight: bold; color: #00aa00">    1.07</span> ± <span style="color: #00aa00">0.07</span> times faster than '<span style="color: #E850A8">cargo run --release -- bb \
+<span style="font-weight: bold; color: #00aa00">    1.03</span> ± <span style="color: #00aa00">0.02</span> times faster than '<span style="color: #E850A8">cargo run --release -- bb \
            &lt; ds/ZR10_inst.dat \
            &gt; ../docs/measurements/bb-Z10.txt</span>'
-<span style="font-weight: bold; color: #00aa00">    1.08</span> ± <span style="color: #00aa00">0.07</span> times faster than '<span style="color: #E850A8">cargo run --release -- bf \
+<span style="font-weight: bold; color: #00aa00">    1.04</span> ± <span style="color: #00aa00">0.06</span> times faster than '<span style="color: #E850A8">cargo run --release -- bb \
+           &lt; ds/NR10_inst.dat \
+           &gt; ../docs/measurements/bb-N10.txt</span>'
+<span style="font-weight: bold; color: #00aa00">    1.08</span> ± <span style="color: #00aa00">0.04</span> times faster than '<span style="color: #E850A8">cargo run --release -- bf \
            &lt; ds/ZR10_inst.dat \
            &gt; ../docs/measurements/bf-Z10.txt</span>'
-<span style="font-weight: bold; color: #00aa00">    1.08</span> ± <span style="color: #00aa00">0.06</span> times faster than '<span style="color: #E850A8">cargo run --release -- bb \
+<span style="font-weight: bold; color: #00aa00">    1.13</span> ± <span style="color: #00aa00">0.03</span> times faster than '<span style="color: #E850A8">cargo run --release -- bf \
+           &lt; ds/NR4_inst.dat \
+           &gt; ../docs/measurements/bf-N4.txt</span>'
+<span style="font-weight: bold; color: #00aa00">    1.15</span> ± <span style="color: #00aa00">0.03</span> times faster than '<span style="color: #E850A8">cargo run --release -- bf \
            &lt; ds/ZR4_inst.dat \
-           &gt; ../docs/measurements/bb-Z4.txt</span>'
-<span style="font-weight: bold; color: #00aa00">    1.16</span> ± <span style="color: #00aa00">0.06</span> times faster than '<span style="color: #E850A8">cargo run --release -- bb \
+           &gt; ../docs/measurements/bf-Z4.txt</span>'
+<span style="font-weight: bold; color: #00aa00">    1.15</span> ± <span style="color: #00aa00">0.02</span> times faster than '<span style="color: #E850A8">cargo run --release -- bb \
            &lt; ds/NR15_inst.dat \
            &gt; ../docs/measurements/bb-N15.txt</span>'
-<span style="font-weight: bold; color: #00aa00">    1.76</span> ± <span style="color: #00aa00">0.11</span> times faster than '<span style="color: #E850A8">cargo run --release -- bb \
+<span style="font-weight: bold; color: #00aa00">    1.17</span> ± <span style="color: #00aa00">0.03</span> times faster than '<span style="color: #E850A8">cargo run --release -- bf \
+           &lt; ds/NR10_inst.dat \
+           &gt; ../docs/measurements/bf-N10.txt</span>'
+<span style="font-weight: bold; color: #00aa00">    1.70</span> ± <span style="color: #00aa00">0.04</span> times faster than '<span style="color: #E850A8">cargo run --release -- bb \
            &lt; ds/ZR15_inst.dat \
            &gt; ../docs/measurements/bb-Z15.txt</span>'
-<span style="font-weight: bold; color: #00aa00">    2.28</span> ± <span style="color: #00aa00">0.18</span> times faster than '<span style="color: #E850A8">cargo run --release -- bf \
+<span style="font-weight: bold; color: #00aa00">    2.47</span> ± <span style="color: #00aa00">0.05</span> times faster than '<span style="color: #E850A8">cargo run --release -- bf \
            &lt; ds/NR15_inst.dat \
            &gt; ../docs/measurements/bf-N15.txt</span>'
-<span style="font-weight: bold; color: #00aa00">    2.93</span> ± <span style="color: #00aa00">0.16</span> times faster than '<span style="color: #E850A8">cargo run --release -- bf \
+<span style="font-weight: bold; color: #00aa00">    2.89</span> ± <span style="color: #00aa00">0.07</span> times faster than '<span style="color: #E850A8">cargo run --release -- bf \
            &lt; ds/ZR15_inst.dat \
            &gt; ../docs/measurements/bf-Z15.txt</span>'
-<span style="font-weight: bold; color: #00aa00">    4.49</span> ± <span style="color: #00aa00">0.23</span> times faster than '<span style="color: #E850A8">cargo run --release -- bb \
+<span style="font-weight: bold; color: #00aa00">    4.27</span> ± <span style="color: #00aa00">0.10</span> times faster than '<span style="color: #E850A8">cargo run --release -- bb \
            &lt; ds/NR20_inst.dat \
            &gt; ../docs/measurements/bb-N20.txt</span>'
-<span style="font-weight: bold; color: #00aa00">   14.39</span> ± <span style="color: #00aa00">0.70</span> times faster than '<span style="color: #E850A8">cargo run --release -- bb \
+<span style="font-weight: bold; color: #00aa00">   13.88</span> ± <span style="color: #00aa00">0.27</span> times faster than '<span style="color: #E850A8">cargo run --release -- bb \
            &lt; ds/NR22_inst.dat \
            &gt; ../docs/measurements/bb-N22.txt</span>'
-<span style="font-weight: bold; color: #00aa00">   18.35</span> ± <span style="color: #00aa00">1.00</span> times faster than '<span style="color: #E850A8">cargo run --release -- bb \
+<span style="font-weight: bold; color: #00aa00">   17.52</span> ± <span style="color: #00aa00">0.25</span> times faster than '<span style="color: #E850A8">cargo run --release -- bb \
            &lt; ds/ZR20_inst.dat \
            &gt; ../docs/measurements/bb-Z20.txt</span>'
-<span style="font-weight: bold; color: #00aa00">   42.14</span> ± <span style="color: #00aa00">2.01</span> times faster than '<span style="color: #E850A8">cargo run --release -- bf \
+<span style="font-weight: bold; color: #00aa00">   48.86</span> ± <span style="color: #00aa00">1.50</span> times faster than '<span style="color: #E850A8">cargo run --release -- bf \
            &lt; ds/NR20_inst.dat \
            &gt; ../docs/measurements/bf-N20.txt</span>'
-<span style="font-weight: bold; color: #00aa00">   60.75</span> ± <span style="color: #00aa00">3.47</span> times faster than '<span style="color: #E850A8">cargo run --release -- bb \
+<span style="font-weight: bold; color: #00aa00">   58.64</span> ± <span style="color: #00aa00">1.50</span> times faster than '<span style="color: #E850A8">cargo run --release -- bb \
            &lt; ds/ZR22_inst.dat \
            &gt; ../docs/measurements/bb-Z22.txt</span>'
-<span style="font-weight: bold; color: #00aa00">   64.49</span> ± <span style="color: #00aa00">2.71</span> times faster than '<span style="color: #E850A8">cargo run --release -- bf \
+<span style="font-weight: bold; color: #00aa00">   64.39</span> ± <span style="color: #00aa00">0.93</span> times faster than '<span style="color: #E850A8">cargo run --release -- bf \
            &lt; ds/ZR20_inst.dat \
            &gt; ../docs/measurements/bf-Z20.txt</span>'
-<span style="font-weight: bold; color: #00aa00">   88.38</span> ± <span style="color: #00aa00">4.20</span> times faster than '<span style="color: #E850A8">cargo run --release -- bb \
+<span style="font-weight: bold; color: #00aa00">   83.02</span> ± <span style="color: #00aa00">1.35</span> times faster than '<span style="color: #E850A8">cargo run --release -- bb \
            &lt; ds/NR25_inst.dat \
            &gt; ../docs/measurements/bb-N25.txt</span>'
-<span style="font-weight: bold; color: #00aa00">  149.57</span> ± <span style="color: #00aa00">6.60</span> times faster than '<span style="color: #E850A8">cargo run --release -- bf \
+<span style="font-weight: bold; color: #00aa00">  164.73</span> ± <span style="color: #00aa00">6.71</span> times faster than '<span style="color: #E850A8">cargo run --release -- bf \
            &lt; ds/NR22_inst.dat \
            &gt; ../docs/measurements/bf-N22.txt</span>'
-<span style="font-weight: bold; color: #00aa00">  268.29</span> ± <span style="color: #00aa00">12.94</span> times faster than '<span style="color: #E850A8">cargo run --release -- bf \
+<span style="font-weight: bold; color: #00aa00">  321.10</span> ± <span style="color: #00aa00">111.33</span> times faster than '<span style="color: #E850A8">cargo run --release -- bf \
            &lt; ds/ZR22_inst.dat \
            &gt; ../docs/measurements/bf-Z22.txt</span>'
-<span style="font-weight: bold; color: #00aa00">  443.39</span> ± <span style="color: #00aa00">25.76</span> times faster than '<span style="color: #E850A8">cargo run --release -- bb \
+<span style="font-weight: bold; color: #00aa00">  410.25</span> ± <span style="color: #00aa00">10.23</span> times faster than '<span style="color: #E850A8">cargo run --release -- bb \
            &lt; ds/ZR25_inst.dat \
            &gt; ../docs/measurements/bb-Z25.txt</span>'
-<span style="font-weight: bold; color: #00aa00"> 1277.54</span> ± <span style="color: #00aa00">59.09</span> times faster than '<span style="color: #E850A8">cargo run --release -- bf \
+<span style="font-weight: bold; color: #00aa00"> 1479.48</span> ± <span style="color: #00aa00">167.56</span> times faster than '<span style="color: #E850A8">cargo run --release -- bf \
            &lt; ds/NR25_inst.dat \
            &gt; ../docs/measurements/bf-N25.txt</span>'
-<span style="font-weight: bold; color: #00aa00"> 2142.34</span> ± <span style="color: #00aa00">134.87</span> times faster than '<span style="color: #E850A8">cargo run --release -- bf \
+<span style="font-weight: bold; color: #00aa00"> 2321.77</span> ± <span style="color: #00aa00">99.28</span> times faster than '<span style="color: #E850A8">cargo run --release -- bf \
            &lt; ds/ZR25_inst.dat \
            &gt; ../docs/measurements/bf-Z25.txt</span>'
 </pre>
@@ -577,241 +610,241 @@ System: <span style="color: #0000aa">0.056 s</span>]
 <td>bf</td>
 <td>N</td>
 <td>4</td>
-<td><strong>122</strong>.5 ms</td>
-<td><strong>8</strong>.99 ms</td>
-<td><strong>108</strong>.07 ms</td>
-<td><strong>121</strong>.1 ms</td>
-<td><strong>145</strong>.2 ms</td>
+<td><strong>102</strong>.63 ms</td>
+<td><strong>2</strong>.14 ms</td>
+<td><strong>99</strong>.8 ms</td>
+<td><strong>102</strong>.17 ms</td>
+<td><strong>110</strong>.33 ms</td>
 </tr>
 <tr class="even">
 <td>bf</td>
 <td>N</td>
 <td>10</td>
-<td><strong>122</strong>.05 ms</td>
-<td><strong>5</strong>.2 ms</td>
-<td><strong>113</strong>.49 ms</td>
-<td><strong>121</strong>.15 ms</td>
-<td><strong>132</strong>.35 ms</td>
+<td><strong>106</strong>.18 ms</td>
+<td><strong>1</strong>.74 ms</td>
+<td><strong>104</strong>.21 ms</td>
+<td><strong>105</strong>.7 ms</td>
+<td><strong>111</strong>.13 ms</td>
 </tr>
 <tr class="odd">
 <td>bf</td>
 <td>N</td>
 <td>15</td>
-<td><strong>266</strong>.19 ms</td>
-<td><strong>17</strong>.36 ms</td>
-<td><strong>250</strong>.19 ms</td>
-<td><strong>262</strong>.73 ms</td>
-<td><strong>314</strong>.69 ms</td>
+<td><strong>225</strong>.31 ms</td>
+<td><strong>3</strong>.74 ms</td>
+<td><strong>221</strong>.43 ms</td>
+<td><strong>223</strong>.11 ms</td>
+<td><strong>232</strong>.81 ms</td>
 </tr>
 <tr class="even">
 <td>bf</td>
 <td>N</td>
 <td>20</td>
-<td><strong>4915</strong>.51 ms</td>
-<td><strong>121</strong>.2 ms</td>
-<td><strong>4796</strong>.08 ms</td>
-<td><strong>4890</strong>.91 ms</td>
-<td><strong>5084</strong>.15 ms</td>
+<td><strong>4451</strong>.14 ms</td>
+<td><strong>120</strong>.46 ms</td>
+<td><strong>4379</strong>.95 ms</td>
+<td><strong>4397</strong>.11 ms</td>
+<td><strong>4630</strong>.41 ms</td>
 </tr>
 <tr class="odd">
 <td>bf</td>
 <td>N</td>
 <td>22</td>
-<td><strong>17444</strong>.82 ms</td>
-<td><strong>294</strong>.97 ms</td>
-<td><strong>17093</strong>.71 ms</td>
-<td><strong>17435</strong>.6 ms</td>
-<td><strong>17814</strong>.36 ms</td>
+<td><strong>15006</strong>.52 ms</td>
+<td><strong>571</strong>.57 ms</td>
+<td><strong>14712</strong>.19 ms</td>
+<td><strong>14725</strong>.03 ms</td>
+<td><strong>15863</strong>.81 ms</td>
 </tr>
 <tr class="even">
 <td>bf</td>
 <td>N</td>
 <td>25</td>
-<td><strong>149007</strong>.78 ms</td>
-<td><strong>3258</strong>.01 ms</td>
-<td><strong>144674</strong>.94 ms</td>
-<td><strong>149525</strong>.91 ms</td>
-<td><strong>152304</strong>.35 ms</td>
+<td><strong>134776</strong>.9 ms</td>
+<td><strong>15140</strong>.56 ms</td>
+<td><strong>124465</strong>.59 ms</td>
+<td><strong>129038</strong>.38 ms</td>
+<td><strong>156565</strong>.27 ms</td>
 </tr>
 <tr class="odd">
 <td>bf</td>
 <td>Z</td>
 <td>4</td>
-<td><strong>116</strong>.64 ms</td>
-<td><strong>4</strong>.75 ms</td>
-<td><strong>107</strong>.96 ms</td>
-<td><strong>116</strong>.59 ms</td>
-<td><strong>128</strong>.13 ms</td>
+<td><strong>104</strong>.38 ms</td>
+<td><strong>2</strong>.44 ms</td>
+<td><strong>101</strong>.54 ms</td>
+<td><strong>104</strong>.03 ms</td>
+<td><strong>113</strong>.98 ms</td>
 </tr>
 <tr class="even">
 <td>bf</td>
 <td>Z</td>
 <td>10</td>
-<td><strong>126</strong>.01 ms</td>
-<td><strong>6</strong>.14 ms</td>
-<td><strong>117</strong>.36 ms</td>
-<td><strong>124</strong>.3 ms</td>
-<td><strong>139</strong>.34 ms</td>
+<td><strong>98</strong>.5 ms</td>
+<td><strong>3</strong>.68 ms</td>
+<td><strong>95</strong>.36 ms</td>
+<td><strong>97</strong>.71 ms</td>
+<td><strong>109</strong>.88 ms</td>
 </tr>
 <tr class="odd">
 <td>bf</td>
 <td>Z</td>
 <td>15</td>
-<td><strong>341</strong>.27 ms</td>
-<td><strong>11</strong>.96 ms</td>
-<td><strong>333</strong>.4 ms</td>
-<td><strong>335</strong>.47 ms</td>
-<td><strong>369</strong>.24 ms</td>
+<td><strong>263</strong>.6 ms</td>
+<td><strong>4</strong>.86 ms</td>
+<td><strong>260</strong>.04 ms</td>
+<td><strong>261</strong>.78 ms</td>
+<td><strong>274</strong>.85 ms</td>
 </tr>
 <tr class="even">
 <td>bf</td>
 <td>Z</td>
 <td>20</td>
-<td><strong>7521</strong>.76 ms</td>
-<td><strong>78</strong>.65 ms</td>
-<td><strong>7409</strong>.41 ms</td>
-<td><strong>7543</strong>.22 ms</td>
-<td><strong>7591</strong>.21 ms</td>
+<td><strong>5865</strong>.8 ms</td>
+<td><strong>8</strong>.06 ms</td>
+<td><strong>5857</strong>.27 ms</td>
+<td><strong>5865</strong>.32 ms</td>
+<td><strong>5875</strong>.3 ms</td>
 </tr>
 <tr class="odd">
 <td>bf</td>
 <td>Z</td>
 <td>22</td>
-<td><strong>31291</strong>.73 ms</td>
-<td><strong>806</strong>.76 ms</td>
-<td><strong>30356</strong>.06 ms</td>
-<td><strong>31406</strong>.69 ms</td>
-<td><strong>31997</strong>.47 ms</td>
+<td><strong>29251</strong>.71 ms</td>
+<td><strong>10133</strong>.34 ms</td>
+<td><strong>22793</strong>.9 ms</td>
+<td><strong>24927</strong>.96 ms</td>
+<td><strong>44357</strong>.03 ms</td>
 </tr>
 <tr class="even">
 <td>bf</td>
 <td>Z</td>
 <td>25</td>
-<td><strong>249874</strong>.17 ms</td>
-<td><strong>11989</strong>.46 ms</td>
-<td><strong>242933</strong>.49 ms</td>
-<td><strong>244385</strong>.73 ms</td>
-<td><strong>267791</strong>.71 ms</td>
+<td><strong>211507</strong>.97 ms</td>
+<td><strong>8518</strong>.15 ms</td>
+<td><strong>204125</strong>.43 ms</td>
+<td><strong>211501</strong>.11 ms</td>
+<td><strong>218904</strong>.21 ms</td>
 </tr>
 <tr class="odd">
 <td>bb</td>
 <td>N</td>
 <td>4</td>
-<td><strong>120</strong>.91 ms</td>
-<td><strong>3</strong>.37 ms</td>
-<td><strong>111</strong>.45 ms</td>
-<td><strong>121</strong>.28 ms</td>
-<td><strong>127</strong>.32 ms</td>
+<td><strong>91</strong>.18 ms</td>
+<td><strong>2</strong>.93 ms</td>
+<td><strong>88</strong>.46 ms</td>
+<td><strong>90</strong>.38 ms</td>
+<td><strong>103</strong>.99 ms</td>
 </tr>
 <tr class="even">
 <td>bb</td>
 <td>N</td>
 <td>10</td>
-<td><strong>117</strong>.07 ms</td>
-<td><strong>4</strong>.13 ms</td>
-<td><strong>108</strong>.03 ms</td>
-<td><strong>117</strong>.27 ms</td>
-<td><strong>123</strong>.43 ms</td>
+<td><strong>94</strong>.48 ms</td>
+<td><strong>4</strong>.97 ms</td>
+<td><strong>89</strong>.8 ms</td>
+<td><strong>92</strong>.04 ms</td>
+<td><strong>104</strong>.87 ms</td>
 </tr>
 <tr class="odd">
 <td>bb</td>
 <td>N</td>
 <td>15</td>
-<td><strong>135</strong>.24 ms</td>
-<td><strong>5</strong>.07 ms</td>
-<td><strong>127</strong>.71 ms</td>
-<td><strong>134</strong>.87 ms</td>
-<td><strong>147</strong>.33 ms</td>
+<td><strong>104</strong>.54 ms</td>
+<td><strong>1</strong>.16 ms</td>
+<td><strong>102</strong>.54 ms</td>
+<td><strong>104</strong>.47 ms</td>
+<td><strong>107</strong>.06 ms</td>
 </tr>
 <tr class="even">
 <td>bb</td>
 <td>N</td>
 <td>20</td>
-<td><strong>523</strong>.69 ms</td>
-<td><strong>17</strong>.12 ms</td>
-<td><strong>502</strong>.97 ms</td>
-<td><strong>526</strong>.48 ms</td>
-<td><strong>544</strong>.32 ms</td>
+<td><strong>388</strong>.98 ms</td>
+<td><strong>7</strong>.61 ms</td>
+<td><strong>384</strong>.22 ms</td>
+<td><strong>387</strong>.09 ms</td>
+<td><strong>405</strong>.91 ms</td>
 </tr>
 <tr class="odd">
 <td>bb</td>
 <td>N</td>
 <td>22</td>
-<td><strong>1678</strong>.38 ms</td>
-<td><strong>44</strong>.97 ms</td>
-<td><strong>1624</strong>.46 ms</td>
-<td><strong>1682</strong>.03 ms</td>
-<td><strong>1725</strong>.03 ms</td>
+<td><strong>1264</strong>.78 ms</td>
+<td><strong>16</strong>.52 ms</td>
+<td><strong>1253</strong>.28 ms</td>
+<td><strong>1258</strong>.36 ms</td>
+<td><strong>1289</strong>.13 ms</td>
 </tr>
 <tr class="even">
 <td>bb</td>
 <td>N</td>
 <td>25</td>
-<td><strong>10308</strong>.03 ms</td>
-<td><strong>251</strong>.8 ms</td>
-<td><strong>10047</strong>.27 ms</td>
-<td><strong>10271</strong>.61 ms</td>
-<td><strong>10641</strong>.64 ms</td>
+<td><strong>7562</strong>.55 ms</td>
+<td><strong>57</strong>.7 ms</td>
+<td><strong>7523</strong>.88 ms</td>
+<td><strong>7539</strong>.71 ms</td>
+<td><strong>7646</strong>.91 ms</td>
 </tr>
 <tr class="odd">
 <td>bb</td>
 <td>Z</td>
 <td>4</td>
-<td><strong>126</strong>.21 ms</td>
-<td><strong>4</strong>.28 ms</td>
-<td><strong>116</strong>.98 ms</td>
-<td><strong>125</strong>.61 ms</td>
-<td><strong>135</strong>.77 ms</td>
+<td><strong>91</strong>.1 ms</td>
+<td><strong>1</strong>.31 ms</td>
+<td><strong>89</strong>.41 ms</td>
+<td><strong>90</strong>.85 ms</td>
+<td><strong>95</strong>.6 ms</td>
 </tr>
 <tr class="even">
 <td>bb</td>
 <td>Z</td>
 <td>10</td>
-<td><strong>124</strong>.63 ms</td>
-<td><strong>5</strong>.75 ms</td>
-<td><strong>112</strong>.65 ms</td>
-<td><strong>124</strong>.02 ms</td>
-<td><strong>134</strong>.58 ms</td>
+<td><strong>94</strong>.17 ms</td>
+<td><strong>1</strong>.45 ms</td>
+<td><strong>91</strong>.91 ms</td>
+<td><strong>93</strong>.88 ms</td>
+<td><strong>97</strong>.63 ms</td>
 </tr>
 <tr class="odd">
 <td>bb</td>
 <td>Z</td>
 <td>15</td>
-<td><strong>205</strong>.81 ms</td>
-<td><strong>9</strong>.47 ms</td>
-<td><strong>189</strong>.61 ms</td>
-<td><strong>207</strong>.57 ms</td>
-<td><strong>228</strong>.66 ms</td>
+<td><strong>154</strong>.63 ms</td>
+<td><strong>3</strong>.13 ms</td>
+<td><strong>151</strong>.52 ms</td>
+<td><strong>153</strong>.1 ms</td>
+<td><strong>162</strong>.26 ms</td>
 </tr>
 <tr class="even">
 <td>bb</td>
 <td>Z</td>
 <td>20</td>
-<td><strong>2140</strong>.16 ms</td>
-<td><strong>77</strong>.39 ms</td>
-<td><strong>2069</strong>.79 ms</td>
-<td><strong>2120</strong>.14 ms</td>
-<td><strong>2250</strong>.57 ms</td>
+<td><strong>1595</strong>.75 ms</td>
+<td><strong>0</strong>.7 ms</td>
+<td><strong>1594</strong>.97 ms</td>
+<td><strong>1595</strong>.8 ms</td>
+<td><strong>1596</strong>.44 ms</td>
 </tr>
 <tr class="odd">
 <td>bb</td>
 <td>Z</td>
 <td>22</td>
-<td><strong>7085</strong>.45 ms</td>
-<td><strong>283</strong>.02 ms</td>
-<td><strong>6812</strong>.48 ms</td>
-<td><strong>7023</strong>.35 ms</td>
-<td><strong>7482</strong>.65 ms</td>
+<td><strong>5341</strong>.89 ms</td>
+<td><strong>112</strong>.87 ms</td>
+<td><strong>5279</strong>.97 ms</td>
+<td><strong>5288</strong>.26 ms</td>
+<td><strong>5511</strong>.08 ms</td>
 </tr>
 <tr class="even">
 <td>bb</td>
 <td>Z</td>
 <td>25</td>
-<td><strong>51715</strong>.74 ms</td>
-<td><strong>2141</strong>.06 ms</td>
-<td><strong>49982</strong>.33 ms</td>
-<td><strong>51045</strong>.93 ms</td>
-<td><strong>54788</strong>.77 ms</td>
+<td><strong>37373</strong>.11 ms</td>
+<td><strong>761</strong>.48 ms</td>
+<td><strong>36775</strong>.09 ms</td>
+<td><strong>37158</strong>.28 ms</td>
+<td><strong>38400</strong>.79 ms</td>
 </tr>
 </tbody>
 </table>
@@ -962,28 +995,26 @@ System: <span style="color: #0000aa">0.056 s</span>]
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">}?;</span></span>
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">loop</span> <span class="op">{</span></span>
-<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>        <span class="kw">match</span> parse_line(stdin()<span class="op">.</span>lock())<span class="op">?</span> <span class="op">{</span></span>
-<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>            <span class="cn">Some</span>(inst) <span class="op">=&gt;</span> <span class="kw">match</span> alg(<span class="op">&amp;</span>inst) <span class="op">{</span></span>
-<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>                Solution <span class="op">{</span> visited<span class="op">,</span> <span class="op">..</span> <span class="op">}</span> <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">&quot;{}&quot;</span><span class="op">,</span> visited)<span class="op">,</span></span>
-<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>            <span class="op">},</span></span>
-<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>            <span class="cn">None</span> <span class="op">=&gt;</span> <span class="kw">return</span> <span class="cn">Ok</span>(())</span>
-<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>        <span class="kw">match</span> parse_line(stdin()<span class="op">.</span>lock())<span class="op">?.</span>as_ref()<span class="op">.</span>map(alg) <span class="op">{</span></span>
+<span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>            <span class="cn">Some</span>(Solution <span class="op">{</span> visited<span class="op">,</span> <span class="op">..</span> <span class="op">}</span>) <span class="op">=&gt;</span> <span class="pp">println!</span>(<span class="st">&quot;{}&quot;</span><span class="op">,</span> visited)<span class="op">,</span></span>
+<span id="cb2-13"><a href="#cb2-13" aria-hidden="true" tabindex="-1"></a>            <span class="cn">None</span> <span class="op">=&gt;</span> <span class="kw">return</span> <span class="cn">Ok</span>(())</span>
+<span id="cb2-14"><a href="#cb2-14" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb2-15"><a href="#cb2-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb2-16"><a href="#cb2-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-17"><a href="#cb2-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-18"><a href="#cb2-18" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>parser<span class="op">&gt;&gt;</span></span>
 <span id="cb2-19"><a href="#cb2-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>parser<span class="op">&gt;&gt;</span></span>
+<span id="cb2-20"><a href="#cb2-20" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>solution<span class="op">-</span>definition<span class="op">&gt;&gt;</span></span>
 <span id="cb2-21"><a href="#cb2-21" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>solution<span class="op">-</span>definition<span class="op">&gt;&gt;</span></span>
-<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Instance <span class="op">{</span></span>
-<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    <span class="op">&lt;&lt;</span>solver<span class="op">-</span>dp<span class="op">&gt;&gt;</span></span>
+<span id="cb2-22"><a href="#cb2-22" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Instance <span class="op">{</span></span>
+<span id="cb2-23"><a href="#cb2-23" aria-hidden="true" tabindex="-1"></a>    <span class="op">&lt;&lt;</span>solver<span class="op">-</span>dp<span class="op">&gt;&gt;</span></span>
+<span id="cb2-24"><a href="#cb2-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-25"><a href="#cb2-25" aria-hidden="true" tabindex="-1"></a>    <span class="op">&lt;&lt;</span>solver<span class="op">-</span>bb<span class="op">&gt;&gt;</span></span>
 <span id="cb2-26"><a href="#cb2-26" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>    <span class="op">&lt;&lt;</span>solver<span class="op">-</span>bb<span class="op">&gt;&gt;</span></span>
-<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a>    <span class="op">&lt;&lt;</span>solver<span class="op">-</span>bf<span class="op">&gt;&gt;</span></span>
-<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb2-31"><a href="#cb2-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb2-32"><a href="#cb2-32" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>tests<span class="op">&gt;&gt;</span></span></code></pre></div>
+<span id="cb2-27"><a href="#cb2-27" aria-hidden="true" tabindex="-1"></a>    <span class="op">&lt;&lt;</span>solver<span class="op">-</span>bf<span class="op">&gt;&gt;</span></span>
+<span id="cb2-28"><a href="#cb2-28" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb2-29"><a href="#cb2-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-30"><a href="#cb2-30" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>tests<span class="op">&gt;&gt;</span></span></code></pre></div>
 </div>
 <p>Řešení v podobě datové struktury <code>Solution</code> má kromě reference na instanci problému především bit array udávající množinu předmětů v pomyslném batohu. Zároveň nese informaci o počtu navštívených konfigurací při jeho výpočtu.</p>
 <div class="annotated-code">
@@ -1011,7 +1042,7 @@ System: <span style="color: #0000aa">0.056 s</span>]
 <span id="solution-helpers-11"><a href="#solution-helpers-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="solution-helpers-12"><a href="#solution-helpers-12" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> <span class="op">&lt;</span><span class="ot">&#39;a</span><span class="op">&gt;</span> <span class="bu">Ord</span> <span class="kw">for</span> Solution<span class="op">&lt;</span><span class="ot">&#39;a</span><span class="op">&gt;</span> <span class="op">{</span></span>
 <span id="solution-helpers-13"><a href="#solution-helpers-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> cmp(<span class="op">&amp;</span><span class="kw">self</span><span class="op">,</span> other<span class="op">:</span> <span class="op">&amp;</span><span class="dt">Self</span>) <span class="op">-&gt;</span> <span class="pp">cmp::</span>Ordering <span class="op">{</span></span>
-<span id="solution-helpers-14"><a href="#solution-helpers-14" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>partial_cmp(<span class="op">&amp;</span>other)<span class="op">.</span>unwrap()</span>
+<span id="solution-helpers-14"><a href="#solution-helpers-14" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>partial_cmp(other)<span class="op">.</span>unwrap()</span>
 <span id="solution-helpers-15"><a href="#solution-helpers-15" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
 <span id="solution-helpers-16"><a href="#solution-helpers-16" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="solution-helpers-17"><a href="#solution-helpers-17" aria-hidden="true" tabindex="-1"></a></span>
@@ -1046,7 +1077,7 @@ System: <span style="color: #0000aa">0.056 s</span>]
 <span id="solver-bf-5"><a href="#solver-bf-5" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> (w<span class="op">,</span> _c) <span class="op">=</span> items[i]<span class="op">;</span></span>
 <span id="solver-bf-6"><a href="#solver-bf-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> next <span class="op">=</span> <span class="op">|</span>current<span class="op">,</span> m<span class="op">|</span> go(items<span class="op">,</span> current<span class="op">,</span> i <span class="op">+</span> <span class="dv">1</span><span class="op">,</span> m)<span class="op">;</span></span>
 <span id="solver-bf-7"><a href="#solver-bf-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> include <span class="op">=</span> <span class="op">||</span> <span class="op">{</span></span>
-<span id="solver-bf-8"><a href="#solver-bf-8" aria-hidden="true" tabindex="-1"></a>            <span class="kw">let</span> current <span class="op">=</span> current<span class="op">.</span>clone()<span class="op">.</span>with(i)<span class="op">.</span>incr_visited()<span class="op">;</span></span>
+<span id="solver-bf-8"><a href="#solver-bf-8" aria-hidden="true" tabindex="-1"></a>            <span class="kw">let</span> current <span class="op">=</span> current<span class="op">.</span>with(i)<span class="op">.</span>incr_visited()<span class="op">;</span></span>
 <span id="solver-bf-9"><a href="#solver-bf-9" aria-hidden="true" tabindex="-1"></a>            next(current<span class="op">,</span> m <span class="op">-</span> w)</span>
 <span id="solver-bf-10"><a href="#solver-bf-10" aria-hidden="true" tabindex="-1"></a>        <span class="op">};</span></span>
 <span id="solver-bf-11"><a href="#solver-bf-11" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> exclude <span class="op">=</span> <span class="op">||</span> next(current<span class="op">.</span>incr_visited()<span class="op">,</span> m)<span class="op">;</span></span>
@@ -1073,7 +1104,7 @@ System: <span style="color: #0000aa">0.056 s</span>]
 <span id="solver-bb-3"><a href="#solver-bb-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> prices<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span><span class="dt">u32</span><span class="op">&gt;</span> <span class="op">=</span> <span class="op">{</span></span>
 <span id="solver-bb-4"><a href="#solver-bb-4" aria-hidden="true" tabindex="-1"></a>        <span class="kw">self</span><span class="op">.</span>items<span class="op">.</span>iter()<span class="op">.</span>rev()</span>
 <span id="solver-bb-5"><a href="#solver-bb-5" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span>scan(<span class="dv">0</span><span class="op">,</span> <span class="op">|</span>sum<span class="op">,</span> (_w<span class="op">,</span> c)<span class="op">|</span> <span class="op">{</span></span>
-<span id="solver-bb-6"><a href="#solver-bb-6" aria-hidden="true" tabindex="-1"></a>            <span class="op">*</span>sum <span class="op">=</span> <span class="op">*</span>sum <span class="op">+</span> c<span class="op">;</span></span>
+<span id="solver-bb-6"><a href="#solver-bb-6" aria-hidden="true" tabindex="-1"></a>            <span class="op">*</span>sum <span class="op">+=</span> c<span class="op">;</span></span>
 <span id="solver-bb-7"><a href="#solver-bb-7" aria-hidden="true" tabindex="-1"></a>            <span class="cn">Some</span>(<span class="op">*</span>sum)</span>
 <span id="solver-bb-8"><a href="#solver-bb-8" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span>)</span>
 <span id="solver-bb-9"><a href="#solver-bb-9" aria-hidden="true" tabindex="-1"></a>        <span class="op">.</span><span class="pp">collect::</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span>_<span class="op">&gt;&gt;</span>()<span class="op">.</span>into_iter()<span class="op">.</span>rev()<span class="op">.</span>collect()</span>
@@ -1088,7 +1119,7 @@ System: <span style="color: #0000aa">0.056 s</span>]
 <span id="solver-bb-18"><a href="#solver-bb-18" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> (w<span class="op">,</span> _c) <span class="op">=</span> items[i]<span class="op">;</span></span>
 <span id="solver-bb-19"><a href="#solver-bb-19" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> next <span class="op">=</span> <span class="op">|</span>current<span class="op">,</span> best<span class="op">,</span> m<span class="op">|</span> go(state<span class="op">,</span> current<span class="op">,</span> best<span class="op">,</span> i <span class="op">+</span> <span class="dv">1</span><span class="op">,</span> m)<span class="op">;</span></span>
 <span id="solver-bb-20"><a href="#solver-bb-20" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> include <span class="op">=</span> <span class="op">||</span> <span class="op">{</span></span>
-<span id="solver-bb-21"><a href="#solver-bb-21" aria-hidden="true" tabindex="-1"></a>            <span class="kw">let</span> current <span class="op">=</span> current<span class="op">.</span>clone()<span class="op">.</span>with(i)<span class="op">;</span></span>
+<span id="solver-bb-21"><a href="#solver-bb-21" aria-hidden="true" tabindex="-1"></a>            <span class="kw">let</span> current <span class="op">=</span> current<span class="op">.</span>with(i)<span class="op">;</span></span>
 <span id="solver-bb-22"><a href="#solver-bb-22" aria-hidden="true" tabindex="-1"></a>            <span class="kw">let</span> count <span class="op">=</span> max(current<span class="op">.</span>visited<span class="op">,</span> best<span class="op">.</span>visited)<span class="op">;</span></span>
 <span id="solver-bb-23"><a href="#solver-bb-23" aria-hidden="true" tabindex="-1"></a>            next(current<span class="op">.</span>incr_visited()<span class="op">,</span> max(current<span class="op">,</span> best)<span class="op">.</span>set_visited(count <span class="op">+</span> <span class="dv">1</span>)<span class="op">,</span> m <span class="op">-</span> w)</span>
 <span id="solver-bb-24"><a href="#solver-bb-24" aria-hidden="true" tabindex="-1"></a>        <span class="op">};</span></span>
@@ -1116,26 +1147,25 @@ System: <span style="color: #0000aa">0.056 s</span>]
 <p><span><em>«solver-dp»=</em></span></p>
 <div class="sourceCode" id="solver-dp"><pre class="sourceCode rust"><code class="sourceCode rust"><span id="solver-dp-1"><a href="#solver-dp-1" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> dynamic_programming(<span class="op">&amp;</span><span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">u32</span> <span class="op">{</span></span>
 <span id="solver-dp-2"><a href="#solver-dp-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> (m<span class="op">,</span> b<span class="op">,</span> items) <span class="op">=</span> (<span class="kw">self</span><span class="op">.</span>m<span class="op">,</span> <span class="kw">self</span><span class="op">.</span>b<span class="op">,</span> <span class="op">&amp;</span><span class="kw">self</span><span class="op">.</span>items)<span class="op">;</span></span>
-<span id="solver-dp-3"><a href="#solver-dp-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> next <span class="op">=</span> <span class="dt">Vec</span><span class="pp">::</span>with_capacity(m <span class="kw">as</span> <span class="dt">usize</span> <span class="op">+</span> <span class="dv">1</span>)<span class="op">;</span></span>
-<span id="solver-dp-4"><a href="#solver-dp-4" aria-hidden="true" tabindex="-1"></a>    next<span class="op">.</span>resize(m <span class="kw">as</span> <span class="dt">usize</span> <span class="op">+</span> <span class="dv">1</span><span class="op">,</span> <span class="dv">0</span>)<span class="op">;</span></span>
-<span id="solver-dp-5"><a href="#solver-dp-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> last <span class="op">=</span> <span class="dt">Vec</span><span class="pp">::</span>new()<span class="op">;</span></span>
-<span id="solver-dp-6"><a href="#solver-dp-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="solver-dp-7"><a href="#solver-dp-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">for</span> i <span class="kw">in</span> <span class="dv">1</span><span class="op">..=</span>items<span class="op">.</span>len() <span class="op">{</span></span>
-<span id="solver-dp-8"><a href="#solver-dp-8" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> (weight<span class="op">,</span> cost) <span class="op">=</span> items[i <span class="op">-</span> <span class="dv">1</span>]<span class="op">;</span></span>
-<span id="solver-dp-9"><a href="#solver-dp-9" aria-hidden="true" tabindex="-1"></a>        last<span class="op">.</span>clone_from(<span class="op">&amp;</span>next)<span class="op">;</span></span>
-<span id="solver-dp-10"><a href="#solver-dp-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="solver-dp-11"><a href="#solver-dp-11" aria-hidden="true" tabindex="-1"></a>        <span class="kw">for</span> cap <span class="kw">in</span> <span class="dv">0</span><span class="op">..=</span>m <span class="kw">as</span> <span class="dt">usize</span> <span class="op">{</span></span>
-<span id="solver-dp-12"><a href="#solver-dp-12" aria-hidden="true" tabindex="-1"></a>            next[cap] <span class="op">=</span> <span class="kw">if</span> (cap <span class="kw">as</span> <span class="dt">u32</span>) <span class="op">&lt;</span> weight <span class="op">{</span></span>
-<span id="solver-dp-13"><a href="#solver-dp-13" aria-hidden="true" tabindex="-1"></a>                    last[cap]</span>
-<span id="solver-dp-14"><a href="#solver-dp-14" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
-<span id="solver-dp-15"><a href="#solver-dp-15" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">let</span> rem_weight <span class="op">=</span> max(<span class="dv">0</span><span class="op">,</span> cap <span class="kw">as</span> <span class="dt">isize</span> <span class="op">-</span> weight <span class="kw">as</span> <span class="dt">isize</span>) <span class="kw">as</span> <span class="dt">usize</span><span class="op">;</span></span>
-<span id="solver-dp-16"><a href="#solver-dp-16" aria-hidden="true" tabindex="-1"></a>                    max(last[cap]<span class="op">,</span> last[rem_weight] <span class="op">+</span> cost)</span>
-<span id="solver-dp-17"><a href="#solver-dp-17" aria-hidden="true" tabindex="-1"></a>                <span class="op">};</span></span>
-<span id="solver-dp-18"><a href="#solver-dp-18" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="solver-dp-19"><a href="#solver-dp-19" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="solver-dp-20"><a href="#solver-dp-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="solver-dp-21"><a href="#solver-dp-21" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>next<span class="op">.</span>last()<span class="op">.</span>unwrap() <span class="co">//&gt;= b</span></span>
-<span id="solver-dp-22"><a href="#solver-dp-22" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<span id="solver-dp-3"><a href="#solver-dp-3" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> next <span class="op">=</span> <span class="pp">vec!</span>[<span class="dv">0</span><span class="op">;</span> m <span class="kw">as</span> <span class="dt">usize</span> <span class="op">+</span> <span class="dv">1</span>]<span class="op">;</span></span>
+<span id="solver-dp-4"><a href="#solver-dp-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> last <span class="op">=</span> <span class="pp">vec!</span>[]<span class="op">;</span></span>
+<span id="solver-dp-5"><a href="#solver-dp-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="solver-dp-6"><a href="#solver-dp-6" aria-hidden="true" tabindex="-1"></a>    <span class="kw">for</span> i <span class="kw">in</span> <span class="dv">1</span><span class="op">..=</span>items<span class="op">.</span>len() <span class="op">{</span></span>
+<span id="solver-dp-7"><a href="#solver-dp-7" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> (weight<span class="op">,</span> cost) <span class="op">=</span> items[i <span class="op">-</span> <span class="dv">1</span>]<span class="op">;</span></span>
+<span id="solver-dp-8"><a href="#solver-dp-8" aria-hidden="true" tabindex="-1"></a>        last<span class="op">.</span>clone_from(<span class="op">&amp;</span>next)<span class="op">;</span></span>
+<span id="solver-dp-9"><a href="#solver-dp-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="solver-dp-10"><a href="#solver-dp-10" aria-hidden="true" tabindex="-1"></a>        <span class="kw">for</span> cap <span class="kw">in</span> <span class="dv">0</span><span class="op">..=</span>m <span class="kw">as</span> <span class="dt">usize</span> <span class="op">{</span></span>
+<span id="solver-dp-11"><a href="#solver-dp-11" aria-hidden="true" tabindex="-1"></a>            next[cap] <span class="op">=</span> <span class="kw">if</span> (cap <span class="kw">as</span> <span class="dt">u32</span>) <span class="op">&lt;</span> weight <span class="op">{</span></span>
+<span id="solver-dp-12"><a href="#solver-dp-12" aria-hidden="true" tabindex="-1"></a>                    last[cap]</span>
+<span id="solver-dp-13"><a href="#solver-dp-13" aria-hidden="true" tabindex="-1"></a>                <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span></span>
+<span id="solver-dp-14"><a href="#solver-dp-14" aria-hidden="true" tabindex="-1"></a>                    <span class="kw">let</span> rem_weight <span class="op">=</span> max(<span class="dv">0</span><span class="op">,</span> cap <span class="kw">as</span> <span class="dt">isize</span> <span class="op">-</span> weight <span class="kw">as</span> <span class="dt">isize</span>) <span class="kw">as</span> <span class="dt">usize</span><span class="op">;</span></span>
+<span id="solver-dp-15"><a href="#solver-dp-15" aria-hidden="true" tabindex="-1"></a>                    max(last[cap]<span class="op">,</span> last[rem_weight] <span class="op">+</span> cost)</span>
+<span id="solver-dp-16"><a href="#solver-dp-16" aria-hidden="true" tabindex="-1"></a>                <span class="op">};</span></span>
+<span id="solver-dp-17"><a href="#solver-dp-17" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="solver-dp-18"><a href="#solver-dp-18" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="solver-dp-19"><a href="#solver-dp-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="solver-dp-20"><a href="#solver-dp-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">*</span>next<span class="op">.</span>last()<span class="op">.</span>unwrap() <span class="co">//&gt;= b</span></span>
+<span id="solver-dp-21"><a href="#solver-dp-21" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 </div>
 <h2 id="závěr">Závěr</h2>
 <p>Tento úvodní problém byl příležitostí připravit si technické zázemí pro nadcházející úkoly. Implementace, které odevzdávám, se značně spoléhají na bezpečí typového systému jazyka Rust. Čas ukáže, jestli to usnadní jejich další rozšiřování a obohacování. Zadání jsem se pokusil splnit v celém rozsahu, ale neměl jsem už čas implementovat ořezávání s pomocí fragmentální varianty problému batohu v metodě větví a hranic.</p>
@@ -1161,26 +1191,25 @@ System: <span style="color: #0000aa">0.056 s</span>]
 <span id="parser-2"><a href="#parser-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="parser-3"><a href="#parser-3" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> parse_line<span class="op">&lt;</span>T<span class="op">&gt;</span>(<span class="kw">mut</span> stream<span class="op">:</span> T) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">Option</span><span class="op">&lt;</span>Instance<span class="op">&gt;&gt;</span> <span class="kw">where</span> T<span class="op">:</span> <span class="pp">std::io::</span><span class="bu">BufRead</span> <span class="op">{</span></span>
 <span id="parser-4"><a href="#parser-4" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> input <span class="op">=</span> <span class="dt">String</span><span class="pp">::</span>new()<span class="op">;</span></span>
-<span id="parser-5"><a href="#parser-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">match</span> stream<span class="op">.</span>read_line(<span class="op">&amp;</span><span class="kw">mut</span> input)<span class="op">?</span> <span class="op">{</span></span>
-<span id="parser-6"><a href="#parser-6" aria-hidden="true" tabindex="-1"></a>        <span class="dv">0</span> <span class="op">=&gt;</span> <span class="kw">return</span> <span class="cn">Ok</span>(<span class="cn">None</span>)<span class="op">,</span></span>
-<span id="parser-7"><a href="#parser-7" aria-hidden="true" tabindex="-1"></a>        _ <span class="op">=&gt;</span> ()</span>
-<span id="parser-8"><a href="#parser-8" aria-hidden="true" tabindex="-1"></a>    <span class="op">};</span></span>
-<span id="parser-9"><a href="#parser-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="parser-10"><a href="#parser-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span>  numbers <span class="op">=</span> input<span class="op">.</span>split_whitespace()<span class="op">;</span></span>
-<span id="parser-11"><a href="#parser-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> id <span class="op">=</span> numbers<span class="op">.</span>parse_next()<span class="op">?;</span></span>
-<span id="parser-12"><a href="#parser-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span>  n <span class="op">=</span> numbers<span class="op">.</span>parse_next()<span class="op">?;</span></span>
-<span id="parser-13"><a href="#parser-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span>  m <span class="op">=</span> numbers<span class="op">.</span>parse_next()<span class="op">?;</span></span>
-<span id="parser-14"><a href="#parser-14" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span>  b <span class="op">=</span> numbers<span class="op">.</span>parse_next()<span class="op">?;</span></span>
-<span id="parser-15"><a href="#parser-15" aria-hidden="true" tabindex="-1"></a></span>
-<span id="parser-16"><a href="#parser-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> items<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>(<span class="dt">u32</span><span class="op">,</span> <span class="dt">u32</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="dt">Vec</span><span class="pp">::</span>with_capacity(n)<span class="op">;</span></span>
-<span id="parser-17"><a href="#parser-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">for</span> _ <span class="kw">in</span> <span class="dv">0</span><span class="op">..</span>n <span class="op">{</span></span>
-<span id="parser-18"><a href="#parser-18" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> w <span class="op">=</span> numbers<span class="op">.</span>parse_next()<span class="op">?;</span></span>
-<span id="parser-19"><a href="#parser-19" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> c <span class="op">=</span> numbers<span class="op">.</span>parse_next()<span class="op">?;</span></span>
-<span id="parser-20"><a href="#parser-20" aria-hidden="true" tabindex="-1"></a>        items<span class="op">.</span>push((w<span class="op">,</span> c))<span class="op">;</span></span>
-<span id="parser-21"><a href="#parser-21" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="parser-22"><a href="#parser-22" aria-hidden="true" tabindex="-1"></a></span>
-<span id="parser-23"><a href="#parser-23" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(<span class="cn">Some</span>(Instance <span class="op">{</span>id<span class="op">,</span> m<span class="op">,</span> b<span class="op">,</span> items<span class="op">}</span>))</span>
-<span id="parser-24"><a href="#parser-24" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
+<span id="parser-5"><a href="#parser-5" aria-hidden="true" tabindex="-1"></a>    <span class="kw">if</span> stream<span class="op">.</span>read_line(<span class="op">&amp;</span><span class="kw">mut</span> input)<span class="op">?</span> <span class="op">==</span> <span class="dv">0</span> <span class="op">{</span></span>
+<span id="parser-6"><a href="#parser-6" aria-hidden="true" tabindex="-1"></a>        <span class="kw">return</span> <span class="cn">Ok</span>(<span class="cn">None</span>)</span>
+<span id="parser-7"><a href="#parser-7" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="parser-8"><a href="#parser-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="parser-9"><a href="#parser-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span>  numbers <span class="op">=</span> input<span class="op">.</span>split_whitespace()<span class="op">;</span></span>
+<span id="parser-10"><a href="#parser-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> id <span class="op">=</span> numbers<span class="op">.</span>parse_next()<span class="op">?;</span></span>
+<span id="parser-11"><a href="#parser-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span>  n <span class="op">=</span> numbers<span class="op">.</span>parse_next()<span class="op">?;</span></span>
+<span id="parser-12"><a href="#parser-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span>  m <span class="op">=</span> numbers<span class="op">.</span>parse_next()<span class="op">?;</span></span>
+<span id="parser-13"><a href="#parser-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span>  b <span class="op">=</span> numbers<span class="op">.</span>parse_next()<span class="op">?;</span></span>
+<span id="parser-14"><a href="#parser-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="parser-15"><a href="#parser-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> items<span class="op">:</span> <span class="dt">Vec</span><span class="op">&lt;</span>(<span class="dt">u32</span><span class="op">,</span> <span class="dt">u32</span>)<span class="op">&gt;</span> <span class="op">=</span> <span class="dt">Vec</span><span class="pp">::</span>with_capacity(n)<span class="op">;</span></span>
+<span id="parser-16"><a href="#parser-16" aria-hidden="true" tabindex="-1"></a>    <span class="kw">for</span> _ <span class="kw">in</span> <span class="dv">0</span><span class="op">..</span>n <span class="op">{</span></span>
+<span id="parser-17"><a href="#parser-17" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> w <span class="op">=</span> numbers<span class="op">.</span>parse_next()<span class="op">?;</span></span>
+<span id="parser-18"><a href="#parser-18" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> c <span class="op">=</span> numbers<span class="op">.</span>parse_next()<span class="op">?;</span></span>
+<span id="parser-19"><a href="#parser-19" aria-hidden="true" tabindex="-1"></a>        items<span class="op">.</span>push((w<span class="op">,</span> c))<span class="op">;</span></span>
+<span id="parser-20"><a href="#parser-20" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="parser-21"><a href="#parser-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="parser-22"><a href="#parser-22" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(<span class="cn">Some</span>(Instance <span class="op">{</span>id<span class="op">,</span> m<span class="op">,</span> b<span class="op">,</span> items<span class="op">}</span>))</span>
+<span id="parser-23"><a href="#parser-23" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span></code></pre></div>
 </div>
 </div>
 <p>Výběr algoritmu je řízen argumentem předaným na příkazové řádce. Příslušnou funkci vrátíme jako hodnotu tohoto bloku:</p>
@@ -1217,7 +1246,7 @@ System: <span style="color: #0000aa">0.056 s</span>]
 <span id="boilerplate-6"><a href="#boilerplate-6" aria-hidden="true" tabindex="-1"></a><span class="kw">impl</span> Boilerplate <span class="kw">for</span> <span class="pp">std::</span><span class="dt">str</span><span class="pp">::</span>SplitWhitespace<span class="op">&lt;</span><span class="ot">&#39;_</span><span class="op">&gt;</span> <span class="op">{</span></span>
 <span id="boilerplate-7"><a href="#boilerplate-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">fn</span> parse_next<span class="op">&lt;</span>T<span class="op">:</span> <span class="bu">FromStr</span><span class="op">&gt;</span>(<span class="op">&amp;</span><span class="kw">mut</span> <span class="kw">self</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span>T<span class="op">&gt;</span></span>
 <span id="boilerplate-8"><a href="#boilerplate-8" aria-hidden="true" tabindex="-1"></a>      <span class="kw">where</span> <span class="op">&lt;</span>T <span class="kw">as</span> <span class="bu">FromStr</span><span class="op">&gt;</span><span class="pp">::</span><span class="cn">Err</span><span class="op">:</span> <span class="pp">std::error::</span><span class="bu">Error</span> <span class="op">+</span> <span class="bu">Send</span> <span class="op">+</span> <span class="bu">Sync</span> <span class="op">+</span> <span class="ot">&#39;static</span> <span class="op">{</span></span>
-<span id="boilerplate-9"><a href="#boilerplate-9" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="dt">str</span> <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>next()<span class="op">.</span>ok_or(<span class="pp">anyhow!</span>(<span class="st">&quot;unexpected end of input&quot;</span>))<span class="op">?;</span></span>
+<span id="boilerplate-9"><a href="#boilerplate-9" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="dt">str</span> <span class="op">=</span> <span class="kw">self</span><span class="op">.</span>next()<span class="op">.</span>ok_or_else(<span class="op">||</span> <span class="pp">anyhow!</span>(<span class="st">&quot;unexpected end of input&quot;</span>))<span class="op">?;</span></span>
 <span id="boilerplate-10"><a href="#boilerplate-10" aria-hidden="true" tabindex="-1"></a>        <span class="dt">str</span><span class="op">.</span><span class="pp">parse::</span><span class="op">&lt;</span>T<span class="op">&gt;</span>()</span>
 <span id="boilerplate-11"><a href="#boilerplate-11" aria-hidden="true" tabindex="-1"></a>           <span class="op">.</span>with_context(<span class="op">||</span> <span class="pp">format!</span>(<span class="st">&quot;cannot parse {}&quot;</span><span class="op">,</span> <span class="dt">str</span>))</span>
 <span id="boilerplate-12"><a href="#boilerplate-12" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
