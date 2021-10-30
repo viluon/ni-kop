@@ -26,7 +26,7 @@ fn main() -> Result<()> {
             match &args[1][..] {
                 "bf"    => ok(Instance::brute_force),
                 "bb"    => ok(Instance::branch_and_bound),
-                // "dp"    => ok(Instance::dynamic_programming),
+                "dp"    => ok(Instance::dynamic_programming),
                 invalid => Err(anyhow!("\"{}\" is not a known algorithm", invalid)),
             }
         } else {
@@ -128,13 +128,17 @@ impl <'a> Solution<'a> {
     fn incr_visited(self) -> Solution<'a> {
         self.set_visited(self.visited + 1)
     }
+
+    fn default(inst: &'a Instance) -> Solution<'a> {
+        Solution { weight: 0, cost: 0, cfg: Config::default(), visited: 0, inst: inst }
+    }
 }
 // ~\~ end
 // ~\~ end
 
 impl Instance {
     // ~\~ begin <<lit/main.md|solver-dp>>[0]
-    fn dynamic_programming(&self) -> u32 {
+    fn dynamic_programming_naive(&self) -> u32 {
         let (m, b, items) = (self.m, self.b, &self.items);
         let mut next = vec![0; m as usize + 1];
         let mut last = vec![];
@@ -150,6 +154,32 @@ impl Instance {
                         let rem_weight = max(0, cap as isize - weight as isize) as usize;
                         max(last[cap], last[rem_weight] + cost)
                     };
+            }
+        }
+
+        *next.last().unwrap() //>= b
+    }
+
+    fn dynamic_programming(&self) -> Solution {
+        let Instance {m, items, ..} = self;
+        let mut next = vec![Solution::default(self); *m as usize + 1];
+        let mut last = vec![];
+
+        for i in 1..=items.len() {
+            let (weight, _cost) = items[i - 1];
+            last.clone_from(&next);
+
+            for cap in 0 ..= *m as usize {
+                let s = if (cap as u32) < weight {
+                        last[cap]
+                    } else {
+                        let rem_weight = max(0, cap as isize - weight as isize) as usize;
+                        max(last[cap], last[rem_weight].with(i - 1))
+                    };
+                if s.cost > self.b {
+                    return s;
+                }
+                next[cap] = s;
             }
         }
 
@@ -196,7 +226,7 @@ impl Instance {
 
         // FIXME borrowck issues
         let state = State(&self.items, prices);
-        let empty = Solution { weight: 0, cost: 0, visited: 0, cfg: Default::default(), inst: self };
+        let empty = Solution::default(self);
         Solution { inst: self, ..go(&state, empty, empty, 0, self.m) }
     }
     // ~\~ end
@@ -240,7 +270,7 @@ mod tests {
         fn arbitrary(g: &mut Gen) -> Instance {
             Instance {
                 id:    i32::arbitrary(g),
-                m:     u32::arbitrary(g),
+                m:     u32::arbitrary(g).min(10_000),
                 b:     u32::arbitrary(g),
                 items: Vec::arbitrary(g)
                            .into_iter()
@@ -328,6 +358,11 @@ mod tests {
     #[quickcheck]
     fn qc_bb_is_really_correct(inst: Instance) {
         assert_eq!(inst.branch_and_bound().cost, inst.brute_force().cost);
+    }
+
+    #[quickcheck]
+    fn qc_dp_matches_bb(inst: Instance) {
+        assert!(inst.branch_and_bound().cost <= inst.dynamic_programming().cost);
     }
 }
 
