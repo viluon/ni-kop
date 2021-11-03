@@ -24,10 +24,13 @@ fn main() -> Result<()> {
         if args.len() == 2 {
             let ok = |x: fn(&Instance) -> Solution| Ok(x);
             match &args[1][..] {
-                "bf"    => ok(Instance::brute_force),
-                "bb"    => ok(Instance::branch_and_bound),
-                "dp"    => ok(Instance::dynamic_programming),
-                invalid => Err(anyhow!("\"{}\" is not a known algorithm", invalid)),
+                "bf"     => ok(Instance::brute_force),
+                "bb"     => ok(Instance::branch_and_bound),
+                "dp"     => ok(Instance::dynamic_programming),
+                "greedy" => ok(Instance::greedy),
+                "redux"  => ok(Instance::greedy_redux),
+                "fptas"  => ok(|inst| inst.fptas(0.5)),
+                invalid  => Err(anyhow!("\"{}\" is not a known algorithm", invalid)),
             }
         } else {
             println!(
@@ -187,6 +190,50 @@ impl Instance {
     }
     // ~\~ end
 
+    fn fptas(&self, ε: f64) -> Solution {
+        let Instance {m, items, ..} = self;
+        let _items = items.iter().map(|(w, c)| (w, (*c as f64 / ε).floor()));
+
+        // fully polynomial time approximation scheme for knapsack
+        todo!()
+    }
+
+    fn greedy(&self) -> Solution {
+        use ::permutation::*;
+        let Instance {m, items, ..} = self;
+        fn ratio((w, c): (u32, u32)) -> f64 { c as f64 / w as f64 }
+        let permutation = sort_by(
+            &(items)[..],
+            |a, b|
+                ratio(*a)
+                .partial_cmp(&ratio(*b))
+                .unwrap()
+                .reverse() // max value first
+        );
+        let ord = { #[inline] |i| permutation.apply_idx(i) };
+
+        let mut sol = Solution::default(self);
+        for i in (0..items.len()).map(ord) {
+            let (w, _c) = items[i];
+            if sol.weight + w <= *m {
+                sol = sol.with(i);
+            } else { break }
+        }
+
+        sol
+    }
+
+    fn greedy_redux(&self) -> Solution {
+        let greedy = self.greedy();
+        (0_usize..)
+            .zip(self.items.iter())
+            .filter(|(_, (w, _))| *w < self.m)
+            .max_by_key(|(_, (_, c))| c)
+            .map(|(highest_price_index, _)|
+                max(greedy, Solution::default(self).with(highest_price_index))
+            ).unwrap_or(greedy)
+    }
+
     // ~\~ begin <<lit/main.md|solver-bb>>[0]
     fn branch_and_bound(&self) -> Solution {
         struct State<'a>(&'a Vec<(u32, u32)>, Vec<u32>);
@@ -324,8 +371,12 @@ mod tests {
     fn stupid() {
         // let i = Instance { id: 0, m: 1, b: 0, items: vec![(1, 0), (1, 0)] };
         // i.branch_and_bound2().assert_valid(&i);
-        let i = Instance { id: 0, m: 1, b: 0, items: vec![(1, 1), (1, 2), (0, 1)] };
-        assert_eq!(i.branch_and_bound().cost, i.brute_force().cost)
+        let i = Instance { id: 0, m: 1, b: 3, items: vec![(1, 1), (1, 2), (0, 1)] };
+        let bb = i.branch_and_bound();
+        assert_eq!(bb.cost, i.dynamic_programming().cost);
+        assert_eq!(bb.cost, i.greedy_redux().cost);
+        assert_eq!(bb.cost, i.brute_force().cost);
+        assert_eq!(bb.cost, i.greedy().cost);
     }
 
     #[test]

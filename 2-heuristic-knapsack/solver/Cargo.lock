@@ -84,6 +84,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "308cc39be01b73d0d18f82a0e7b2a3df85245f84af96fdddc5d202d27e47b86a"
 
 [[package]]
+name = "permutation"
+version = "0.2.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d9978962f8a4b158e97447a6d09d2d75e206d2994eff056c894019f362b27142"
+
+[[package]]
 name = "proc-macro2"
 version = "1.0.29"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -170,6 +176,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "bitvec",
+ "permutation",
  "quickcheck",
  "quickcheck_macros",
 ]

@@ -10,6 +10,7 @@ anyhow = "1.0.44"
 bitvec = "0.22.3"
 quickcheck = "1"
 quickcheck_macros = "1"
+permutation = "0.2.5"
 
 [profile.release]
 debug = 1
