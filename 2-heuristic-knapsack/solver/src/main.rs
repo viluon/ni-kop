@@ -10,32 +10,36 @@ use bitvec::prelude::BitArr;
 extern crate quickcheck_macros;
 // ~\~ end
 
-// ~\~ begin <<lit/main.md|problem-instance-definition>>[0]
-#[derive(Debug, PartialEq, Eq, Clone)]
-struct Instance {
-    id: i32, m: u32, b: u32, items: Vec<(u32, u32)>
-}
-// ~\~ end
-
 fn main() -> Result<()> {
+    let algorithms = {
+        use std::collections::BTreeMap;
+        let cast = |x: fn(&Instance) -> Solution| x;
+        // the BTreeMap works as a trie, maintaining alphabetic order
+        BTreeMap::from([
+            ("bf",     cast(Instance::brute_force)),
+            ("bb",     cast(Instance::branch_and_bound)),
+            ("dp",     cast(Instance::dynamic_programming)),
+            ("fptas",  cast(|inst| inst.fptas(0.5))),
+            ("greedy", cast(Instance::greedy)),
+            ("redux",  cast(Instance::greedy_redux)),
+        ])
+    };
+
     let alg = {
         // ~\~ begin <<lit/main.md|select-algorithm>>[0]
         let args: Vec<String> = std::env::args().collect();
         if args.len() == 2 {
-            let ok = |x: fn(&Instance) -> Solution| Ok(x);
-            match &args[1][..] {
-                "bf"     => ok(Instance::brute_force),
-                "bb"     => ok(Instance::branch_and_bound),
-                "dp"     => ok(Instance::dynamic_programming),
-                "greedy" => ok(Instance::greedy),
-                "redux"  => ok(Instance::greedy_redux),
-                "fptas"  => ok(|inst| inst.fptas(0.5)),
-                invalid  => Err(anyhow!("\"{}\" is not a known algorithm", invalid)),
+            let alg = &args[1][..];
+            if let Some(f) = algorithms.get(alg) {
+                Ok(f)
+            } else {
+                Err(anyhow!("\"{}\" is not a known algorithm", alg))
             }
         } else {
             println!(
-                "Usage: {} <algorithm>, where <algorithm> is one of bf, bb, dp",
-                args[0]
+                "Usage: {} <algorithm>\n\twhere <algorithm> is one of {}",
+                args[0],
+                algorithms.keys().map(ToString::to_string).collect::<Vec<_>>().join(", ")
             );
             Err(anyhow!("Expected 1 argument, got {}", args.len() - 1))
         }
@@ -50,45 +54,17 @@ fn main() -> Result<()> {
     }
 }
 
-// ~\~ begin <<lit/main.md|parser>>[0]
-// ~\~ begin <<lit/main.md|boilerplate>>[0]
-trait Boilerplate {
-    fn parse_next<T: FromStr>(&mut self) -> Result<T>
-      where <T as FromStr>::Err: std::error::Error + Send + Sync + 'static;
-}
-
-impl Boilerplate for std::str::SplitWhitespace<'_> {
-    fn parse_next<T: FromStr>(&mut self) -> Result<T>
-      where <T as FromStr>::Err: std::error::Error + Send + Sync + 'static {
-        let str = self.next().ok_or_else(|| anyhow!("unexpected end of input"))?;
-        str.parse::<T>()
-           .with_context(|| format!("cannot parse {}", str))
-    }
+// ~\~ begin <<lit/main.md|problem-instance-definition>>[0]
+#[derive(Debug, PartialEq, Eq, Clone)]
+struct Instance {
+    id: i32, m: u32, b: u32, items: Vec<(u32, u32)>
 }
 // ~\~ end
 
-fn parse_line<T>(mut stream: T) -> Result<Option<Instance>> where T: std::io::BufRead {
-    let mut input = String::new();
-    if stream.read_line(&mut input)? == 0 {
-        return Ok(None)
-    }
-
-    let mut  numbers = input.split_whitespace();
-    let id = numbers.parse_next()?;
-    let  n = numbers.parse_next()?;
-    let  m = numbers.parse_next()?;
-    let  b = numbers.parse_next()?;
-
-    let mut items: Vec<(u32, u32)> = Vec::with_capacity(n);
-    for _ in 0..n {
-        let w = numbers.parse_next()?;
-        let c = numbers.parse_next()?;
-        items.push((w, c));
-    }
-
-    Ok(Some(Instance {id, m, b, items}))
+#[derive(Debug, PartialEq, Eq, Clone)]
+struct OptimalSolution {
+    id: i32, weight: u32, cost: u32, items: Config
 }
-// ~\~ end
 
 // ~\~ begin <<lit/main.md|solution-definition>>[0]
 type Config = BitArr!(for 64);
@@ -133,16 +109,56 @@ impl <'a> Solution<'a> {
     }
 
     fn default(inst: &'a Instance) -> Solution<'a> {
-        Solution { weight: 0, cost: 0, cfg: Config::default(), visited: 0, inst: inst }
+        Solution { weight: 0, cost: 0, cfg: Config::default(), visited: 0, inst }
     }
 }
 // ~\~ end
 // ~\~ end
 
+// ~\~ begin <<lit/main.md|parser>>[0]
+// ~\~ begin <<lit/main.md|boilerplate>>[0]
+trait Boilerplate {
+    fn parse_next<T: FromStr>(&mut self) -> Result<T>
+      where <T as FromStr>::Err: std::error::Error + Send + Sync + 'static;
+}
+
+impl Boilerplate for std::str::SplitWhitespace<'_> {
+    fn parse_next<T: FromStr>(&mut self) -> Result<T>
+      where <T as FromStr>::Err: std::error::Error + Send + Sync + 'static {
+        let str = self.next().ok_or_else(|| anyhow!("unexpected end of input"))?;
+        str.parse::<T>()
+           .with_context(|| format!("cannot parse {}", str))
+    }
+}
+// ~\~ end
+
+fn parse_line<T>(mut stream: T) -> Result<Option<Instance>> where T: std::io::BufRead {
+    let mut input = String::new();
+    if stream.read_line(&mut input)? == 0 {
+        return Ok(None)
+    }
+
+    let mut  numbers = input.split_whitespace();
+    let id = numbers.parse_next()?;
+    let  n = numbers.parse_next()?;
+    let  m = numbers.parse_next()?;
+    let  b = numbers.parse_next()?;
+
+    let mut items: Vec<(u32, u32)> = Vec::with_capacity(n);
+    for _ in 0..n {
+        let w = numbers.parse_next()?;
+        let c = numbers.parse_next()?;
+        items.push((w, c));
+    }
+
+    Ok(Some(Instance {id, m, b, items}))
+}
+// ~\~ end
+
 impl Instance {
     // ~\~ begin <<lit/main.md|solver-dp>>[0]
-    fn dynamic_programming_naive(&self) -> u32 {
-        let (m, b, items) = (self.m, self.b, &self.items);
+    fn _dynamic_programming_naive(&self) -> u32 {
+        let (m, _b, items) = (self.m, self.b, &self.items);
         let mut next = vec![0; m as usize + 1];
         let mut last = vec![];
 
@@ -227,7 +243,7 @@ impl Instance {
         let greedy = self.greedy();
         (0_usize..)
             .zip(self.items.iter())
-            .filter(|(_, (w, _))| *w < self.m)
+            .filter(|(_, (w, _))| *w <= self.m)
             .max_by_key(|(_, (_, c))| c)
             .map(|(highest_price_index, _)|
                 max(greedy, Solution::default(self).with(highest_price_index))
