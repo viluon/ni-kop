@@ -10,6 +10,7 @@ use bitvec::prelude::BitArr;
 extern crate quickcheck_macros;
 // ~\~ end
 
+// ~\~ begin <<lit/main.md|algorithm-map>>[0]
 fn get_algorithms() -> BTreeMap<&'static str, fn(&Instance) -> Solution> {
     let cast = |x: fn(&Instance) -> Solution| x;
     // the BTreeMap works as a trie, maintaining alphabetic order
@@ -22,6 +23,7 @@ fn get_algorithms() -> BTreeMap<&'static str, fn(&Instance) -> Solution> {
         ("redux",  cast(Instance::greedy_redux)),
     ])
 }
+// ~\~ end
 
 fn main() -> Result<()> {
     let algorithms = get_algorithms();
@@ -162,7 +164,7 @@ fn parse_solution_line<T>(mut stream: T) -> Result<Option<OptimalSolution>> wher
         return Ok(None)
     }
 
-    let mut  numbers = input.split_whitespace();
+    let mut    numbers = input.split_whitespace();
     let   id = numbers.parse_next()?;
     let    n = numbers.parse_next()?;
     let cost = numbers.parse_next()?;
@@ -236,6 +238,7 @@ impl Instance {
         todo!()
     }
 
+    // ~\~ begin <<lit/main.md|solver-greedy>>[0]
     fn greedy(&self) -> Solution {
         use ::permutation::*;
         let Instance {m, items, ..} = self;
@@ -260,7 +263,9 @@ impl Instance {
 
         sol
     }
+    // ~\~ end
 
+    // ~\~ begin <<lit/main.md|solver-greedy-redux>>[0]
     fn greedy_redux(&self) -> Solution {
         let greedy = self.greedy();
         (0_usize..)
@@ -271,6 +276,7 @@ impl Instance {
                 max(greedy, Solution::default(self).with(highest_price_index))
             ).unwrap_or(greedy)
     }
+    // ~\~ end
 
     // ~\~ begin <<lit/main.md|solver-bb>>[0]
     fn branch_and_bound(&self) -> Solution {
@@ -469,9 +475,9 @@ mod tests {
             let file = file?;
             println!("Testing {}", file.file_name().to_str().unwrap());
             // open the file
-            let mut stream = BufReader::new(File::open(file.path())?);
+            let mut r = BufReader::new(File::open(file.path())?);
             // solve each instance with all algorithms
-            while let Some(slns) = parse_line(&mut stream)?.as_ref().map(|x| solve(&algs, x)) {
+            while let Some(slns) = parse_line(&mut r)?.as_ref().map(|x| solve(&algs, x)) {
                 // verify correctness
                 slns.iter().for_each(|s| {
                     s.assert_valid(&s.inst);
