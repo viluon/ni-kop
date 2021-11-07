@@ -105,13 +105,13 @@ uname -a
 mkdir -p docs/measurements/
 cd solver
 hyperfine --export-json ../docs/bench.json \
-          --parameter-list n 4,10,15,20,22,25 \
-          --parameter-list set N,Z \
-          --parameter-list alg bf,bb \
+          --parameter-list n 4,10,15 \
+          --parameter-list set NK,ZKC,ZKW \
+          --parameter-list alg bb,dp,greedy,redux \
           --min-runs 4 \
           --style color \
           'cargo run --release -- {alg} \
-           < ds/{set}R{n}_inst.dat \
+           < ds/{set}{n}_inst.dat \
            > ../docs/measurements/{alg}-{set}{n}.txt' 2>&1 \
     | fold -w 120 -s
 ```
@@ -273,7 +273,7 @@ batohu.
 ``` {.rust #problem-instance-definition}
 #[derive(Debug, PartialEq, Eq, Clone)]
 struct Instance {
-    id: i32, m: u32, b: u32, items: Vec<(u32, u32)>
+    id: i32, m: u32, items: Vec<(u32, u32)>
 }
 ```
 
@@ -316,9 +316,9 @@ struct OptimalSolution {
 impl Instance {
     <<solver-dp>>
 
-    fn fptas(&self, ε: f64) -> Solution {
+    fn fptas(&self, eps: f64) -> Solution {
         let Instance {m: _, items, ..} = self;
-        let _items = items.iter().map(|(w, c)| (w, (*c as f64 / ε).floor()));
+        let _items = items.iter().map(|(w, c)| (w, (*c as f64 / eps).floor()));
 
         // fully polynomial time approximation scheme for knapsack
         todo!()
@@ -479,7 +479,7 @@ fn greedy_redux(&self) -> Solution {
 ``` {.rust #solver-bf}
 fn brute_force(&self) -> Solution {
     fn go<'a>(items: &'a [(u32, u32)], current: Solution<'a>, i: usize, m: u32) -> Solution<'a> {
-        if i >= items.len() || current.cost >= current.inst.b { return current }
+        if i >= items.len() { return current }
 
         let (w, _c) = items[i];
         let next = |current, m| go(items, current, i + 1, m);
@@ -491,10 +491,8 @@ fn brute_force(&self) -> Solution {
 
         if w <= m {
             let x = include();
-            if x.cost < x.inst.b {
-                let y = exclude();
-                max(x, y).set_visited(x.visited + y.visited)
-            } else { x }
+            let y = exclude();
+            max(x, y).set_visited(x.visited + y.visited)
         }
         else { exclude() }
     }
@@ -520,7 +518,7 @@ fn branch_and_bound(&self) -> Solution {
 
     fn go<'a>(state: &'a State, current: Solution<'a>, best: Solution<'a>, i: usize, m: u32) -> Solution<'a> {
         let State(items, prices) = state;
-        if i >= items.len() || current.cost >= current.inst.b || current.cost + prices[i] <= best.cost {
+        if i >= items.len() || current.cost + prices[i] <= best.cost {
             return current
         }
 
@@ -535,10 +533,8 @@ fn branch_and_bound(&self) -> Solution {
 
         if w <= m {
             let x = include();
-            if x.cost < x.inst.b {
-                let y = exclude(x);
-                Solution { visited: x.visited + y.visited, ..max(x, y) }
-            } else { x }
+            let y = exclude(x);
+            Solution { visited: x.visited + y.visited, ..max(x, y) }
         }
         else { exclude(best) }
     }
@@ -562,7 +558,7 @@ jen (konstruktivní) cenu, nikoliv celé řešení v podobě objektu struktury
 
 ``` {.rust #solver-dp}
 fn _dynamic_programming_naive(&self) -> u32 {
-    let (m, _b, items) = (self.m, self.b, &self.items);
+    let (m, items) = (self.m, &self.items);
     let mut next = vec![0; m as usize + 1];
     let mut last = vec![];
 
@@ -599,9 +595,6 @@ fn dynamic_programming(&self) -> Solution {
                     let rem_weight = max(0, cap as isize - weight as isize) as usize;
                     max(last[cap], last[rem_weight].with(i - 1))
                 };
-            if s.cost > self.b {
-                return s;
-            }
             next[cap] = s;
         }
     }
@@ -625,7 +618,7 @@ Dodatek obsahuje nezajímavé části implementace, jako je import symbolů z
 knihoven.
 
 ``` {.rust #imports .bootstrap-fold}
-use std::{collections::{BTreeMap, HashMap}, io::{stdin, BufRead}, str::FromStr, cmp, cmp::max};
+use std::{collections::BTreeMap, io::{stdin, BufRead}, str::FromStr, cmp, cmp::max};
 use anyhow::{Context, Result, anyhow};
 use bitvec::prelude::BitArr;
 
@@ -650,7 +643,6 @@ fn parse_line<T>(stream: &mut T) -> Result<Option<Instance>> where T: BufRead {
     let id = numbers.parse_next()?;
     let  n = numbers.parse_next()?;
     let  m = numbers.parse_next()?;
-    let  b = numbers.parse_next()?;
 
     let mut items: Vec<(u32, u32)> = Vec::with_capacity(n);
     for _ in 0..n {
@@ -659,7 +651,7 @@ fn parse_line<T>(stream: &mut T) -> Result<Option<Instance>> where T: BufRead {
         items.push((w, c));
     }
 
-    Ok(Some(Instance {id, m, b, items}))
+    Ok(Some(Instance {id, m, items}))
 }
 
 #[cfg(test)]
@@ -735,14 +727,13 @@ property-based testu s knihovnou
 mod tests {
     use super::*;
     use quickcheck::{Arbitrary, Gen};
-    use std::{fs::{read_dir, File}, io::BufReader};
+    use std::{fs::{read_dir, File}, io::BufReader, collections::HashMap};
 
     impl Arbitrary for Instance {
         fn arbitrary(g: &mut Gen) -> Instance {
             Instance {
                 id:    i32::arbitrary(g),
                 m:     u32::arbitrary(g).min(10_000),
-                b:     u32::arbitrary(g),
                 items: Vec::arbitrary(g)
                            .into_iter()
                            .take(10)
@@ -756,7 +747,6 @@ mod tests {
             let chain: Vec<Instance> = quickcheck::empty_shrinker()
                 .chain(self.id   .shrink().map(|id   | Instance {id,    ..(&data).clone()}))
                 .chain(self.m    .shrink().map(|m    | Instance {m,     ..(&data).clone()}))
-                .chain(self.b    .shrink().map(|b    | Instance {b,     ..(&data).clone()}))
                 .chain(self.items.shrink().map(|items| Instance {items, ..data}))
                 .collect();
             Box::new(chain.into_iter())
@@ -765,11 +755,8 @@ mod tests {
 
     impl <'a> Solution<'a> {
         fn assert_valid(&self, i: &Instance) {
-            let Instance { m, b, items, .. } = i;
+            let Instance { m, items, .. } = i;
             let Solution { weight: w, cost: c, cfg, .. } = self;
-
-            // println!("{} >= {}", c, b);
-            // assert!(c >= b);
 
             let (weight, cost) = items
                 .into_iter()
@@ -795,7 +782,7 @@ mod tests {
     fn stupid() {
         // let i = Instance { id: 0, m: 1, b: 0, items: vec![(1, 0), (1, 0)] };
         // i.branch_and_bound2().assert_valid(&i);
-        let i = Instance { id: 0, m: 1, b: 3, items: vec![(1, 1), (1, 2), (0, 1)] };
+        let i = Instance { id: 0, m: 1, items: vec![(1, 1), (1, 2), (0, 1)] };
         let bb = i.branch_and_bound();
         assert_eq!(bb.cost, i.dynamic_programming().cost);
         assert_eq!(bb.cost, i.greedy_redux().cost);
@@ -873,7 +860,6 @@ mod tests {
         let a = Instance {
             id: -10,
             m: 165,
-            b: 384,
             items: vec![ (86,  744)
                        , (214, 1373)
                        , (236, 1571)
@@ -888,7 +874,7 @@ mod tests {
         use std::fs::File;
         use std::io::BufReader;
         let inst = parse_line(
-            &mut BufReader::new(File::open("ds/NR15_inst.dat")?)
+            &mut BufReader::new(File::open("ds/NK15_inst.dat")?)
         )?.unwrap();
         println!("testing {:?}", inst);
         inst.branch_and_bound().assert_valid(&inst);

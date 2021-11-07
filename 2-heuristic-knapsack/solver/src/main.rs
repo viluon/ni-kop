@@ -1,7 +1,7 @@
 // ~\~ language=Rust filename=solver/src/main.rs
 // ~\~ begin <<lit/main.md|solver/src/main.rs>>[0]
 // ~\~ begin <<lit/main.md|imports>>[0]
-use std::{collections::{BTreeMap, HashMap}, io::{stdin, BufRead}, str::FromStr, cmp, cmp::max};
+use std::{collections::BTreeMap, io::{stdin, BufRead}, str::FromStr, cmp, cmp::max};
 use anyhow::{Context, Result, anyhow};
 use bitvec::prelude::BitArr;
 
@@ -60,7 +60,7 @@ fn main() -> Result<()> {
 // ~\~ begin <<lit/main.md|problem-instance-definition>>[0]
 #[derive(Debug, PartialEq, Eq, Clone)]
 struct Instance {
-    id: i32, m: u32, b: u32, items: Vec<(u32, u32)>
+    id: i32, m: u32, items: Vec<(u32, u32)>
 }
 // ~\~ end
 
@@ -145,7 +145,6 @@ fn parse_line<T>(stream: &mut T) -> Result<Option<Instance>> where T: BufRead {
     let id = numbers.parse_next()?;
     let  n = numbers.parse_next()?;
     let  m = numbers.parse_next()?;
-    let  b = numbers.parse_next()?;
 
     let mut items: Vec<(u32, u32)> = Vec::with_capacity(n);
     for _ in 0..n {
@@ -154,7 +153,7 @@ fn parse_line<T>(stream: &mut T) -> Result<Option<Instance>> where T: BufRead {
         items.push((w, c));
     }
 
-    Ok(Some(Instance {id, m, b, items}))
+    Ok(Some(Instance {id, m, items}))
 }
 
 #[cfg(test)]
@@ -182,7 +181,7 @@ fn parse_solution_line<T>(mut stream: T) -> Result<Option<OptimalSolution>> wher
 impl Instance {
     // ~\~ begin <<lit/main.md|solver-dp>>[0]
     fn _dynamic_programming_naive(&self) -> u32 {
-        let (m, _b, items) = (self.m, self.b, &self.items);
+        let (m, items) = (self.m, &self.items);
         let mut next = vec![0; m as usize + 1];
         let mut last = vec![];
 
@@ -219,9 +218,6 @@ impl Instance {
                         let rem_weight = max(0, cap as isize - weight as isize) as usize;
                         max(last[cap], last[rem_weight].with(i - 1))
                     };
-                if s.cost > self.b {
-                    return s;
-                }
                 next[cap] = s;
             }
         }
@@ -230,9 +226,9 @@ impl Instance {
     }
     // ~\~ end
 
-    fn fptas(&self, ε: f64) -> Solution {
+    fn fptas(&self, eps: f64) -> Solution {
         let Instance {m: _, items, ..} = self;
-        let _items = items.iter().map(|(w, c)| (w, (*c as f64 / ε).floor()));
+        let _items = items.iter().map(|(w, c)| (w, (*c as f64 / eps).floor()));
 
         // fully polynomial time approximation scheme for knapsack
         todo!()
@@ -292,7 +288,7 @@ impl Instance {
 
         fn go<'a>(state: &'a State, current: Solution<'a>, best: Solution<'a>, i: usize, m: u32) -> Solution<'a> {
             let State(items, prices) = state;
-            if i >= items.len() || current.cost >= current.inst.b || current.cost + prices[i] <= best.cost {
+            if i >= items.len() || current.cost + prices[i] <= best.cost {
                 return current
             }
 
@@ -307,10 +303,8 @@ impl Instance {
 
             if w <= m {
                 let x = include();
-                if x.cost < x.inst.b {
-                    let y = exclude(x);
-                    Solution { visited: x.visited + y.visited, ..max(x, y) }
-                } else { x }
+                let y = exclude(x);
+                Solution { visited: x.visited + y.visited, ..max(x, y) }
             }
             else { exclude(best) }
         }
@@ -325,7 +319,7 @@ impl Instance {
     // ~\~ begin <<lit/main.md|solver-bf>>[0]
     fn brute_force(&self) -> Solution {
         fn go<'a>(items: &'a [(u32, u32)], current: Solution<'a>, i: usize, m: u32) -> Solution<'a> {
-            if i >= items.len() || current.cost >= current.inst.b { return current }
+            if i >= items.len() { return current }
 
             let (w, _c) = items[i];
             let next = |current, m| go(items, current, i + 1, m);
@@ -337,10 +331,8 @@ impl Instance {
 
             if w <= m {
                 let x = include();
-                if x.cost < x.inst.b {
-                    let y = exclude();
-                    max(x, y).set_visited(x.visited + y.visited)
-                } else { x }
+                let y = exclude();
+                max(x, y).set_visited(x.visited + y.visited)
             }
             else { exclude() }
         }
@@ -356,14 +348,13 @@ impl Instance {
 mod tests {
     use super::*;
     use quickcheck::{Arbitrary, Gen};
-    use std::{fs::{read_dir, File}, io::BufReader};
+    use std::{fs::{read_dir, File}, io::BufReader, collections::HashMap};
 
     impl Arbitrary for Instance {
         fn arbitrary(g: &mut Gen) -> Instance {
             Instance {
                 id:    i32::arbitrary(g),
                 m:     u32::arbitrary(g).min(10_000),
-                b:     u32::arbitrary(g),
                 items: Vec::arbitrary(g)
                            .into_iter()
                            .take(10)
@@ -377,7 +368,6 @@ mod tests {
             let chain: Vec<Instance> = quickcheck::empty_shrinker()
                 .chain(self.id   .shrink().map(|id   | Instance {id,    ..(&data).clone()}))
                 .chain(self.m    .shrink().map(|m    | Instance {m,     ..(&data).clone()}))
-                .chain(self.b    .shrink().map(|b    | Instance {b,     ..(&data).clone()}))
                 .chain(self.items.shrink().map(|items| Instance {items, ..data}))
                 .collect();
             Box::new(chain.into_iter())
@@ -386,11 +376,8 @@ mod tests {
 
     impl <'a> Solution<'a> {
         fn assert_valid(&self, i: &Instance) {
-            let Instance { m, b, items, .. } = i;
+            let Instance { m, items, .. } = i;
             let Solution { weight: w, cost: c, cfg, .. } = self;
-
-            // println!("{} >= {}", c, b);
-            // assert!(c >= b);
 
             let (weight, cost) = items
                 .into_iter()
@@ -416,7 +403,7 @@ mod tests {
     fn stupid() {
         // let i = Instance { id: 0, m: 1, b: 0, items: vec![(1, 0), (1, 0)] };
         // i.branch_and_bound2().assert_valid(&i);
-        let i = Instance { id: 0, m: 1, b: 3, items: vec![(1, 1), (1, 2), (0, 1)] };
+        let i = Instance { id: 0, m: 1, items: vec![(1, 1), (1, 2), (0, 1)] };
         let bb = i.branch_and_bound();
         assert_eq!(bb.cost, i.dynamic_programming().cost);
         assert_eq!(bb.cost, i.greedy_redux().cost);
@@ -494,7 +481,6 @@ mod tests {
         let a = Instance {
             id: -10,
             m: 165,
-            b: 384,
             items: vec![ (86,  744)
                        , (214, 1373)
                        , (236, 1571)
@@ -509,7 +495,7 @@ mod tests {
         use std::fs::File;
         use std::io::BufReader;
         let inst = parse_line(
-            &mut BufReader::new(File::open("ds/NR15_inst.dat")?)
+            &mut BufReader::new(File::open("ds/NK15_inst.dat")?)
         )?.unwrap();
         println!("testing {:?}", inst);
         inst.branch_and_bound().assert_valid(&inst);
