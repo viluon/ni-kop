@@ -1,7 +1,7 @@
 // ~\~ language=Rust filename=solver/src/main.rs
 // ~\~ begin <<lit/main.md|solver/src/main.rs>>[0]
 // ~\~ begin <<lit/main.md|imports>>[0]
-use std::{io::stdin, str::FromStr, cmp, cmp::max};
+use std::{collections::{BTreeMap, HashMap}, io::{stdin, BufRead}, str::FromStr, cmp, cmp::max};
 use anyhow::{Context, Result, anyhow};
 use bitvec::prelude::BitArr;
 
@@ -10,20 +10,21 @@ use bitvec::prelude::BitArr;
 extern crate quickcheck_macros;
 // ~\~ end
 
+fn get_algorithms() -> BTreeMap<&'static str, fn(&Instance) -> Solution> {
+    let cast = |x: fn(&Instance) -> Solution| x;
+    // the BTreeMap works as a trie, maintaining alphabetic order
+    BTreeMap::from([
+        ("bf",     cast(Instance::brute_force)),
+        ("bb",     cast(Instance::branch_and_bound)),
+        ("dp",     cast(Instance::dynamic_programming)),
+        // ("fptas",  cast(|inst| inst.fptas(0.5))),
+        ("greedy", cast(Instance::greedy)),
+        ("redux",  cast(Instance::greedy_redux)),
+    ])
+}
+
 fn main() -> Result<()> {
-    let algorithms = {
-        use std::collections::BTreeMap;
-        let cast = |x: fn(&Instance) -> Solution| x;
-        // the BTreeMap works as a trie, maintaining alphabetic order
-        BTreeMap::from([
-            ("bf",     cast(Instance::brute_force)),
-            ("bb",     cast(Instance::branch_and_bound)),
-            ("dp",     cast(Instance::dynamic_programming)),
-            ("fptas",  cast(|inst| inst.fptas(0.5))),
-            ("greedy", cast(Instance::greedy)),
-            ("redux",  cast(Instance::greedy_redux)),
-        ])
-    };
+    let algorithms = get_algorithms();
 
     let alg = {
         // ~\~ begin <<lit/main.md|select-algorithm>>[0]
@@ -47,7 +48,7 @@ fn main() -> Result<()> {
     }?;
 
     loop {
-        match parse_line(stdin().lock())?.as_ref().map(alg) {
+        match parse_line(&mut stdin().lock())?.as_ref().map(alg) {
             Some(Solution { visited, .. }) => println!("{}", visited),
             None => return Ok(())
         }
@@ -63,7 +64,7 @@ struct Instance {
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 struct OptimalSolution {
-    id: i32, weight: u32, cost: u32, items: Config
+    id: i32, cost: u32, items: Config
 }
 
 // ~\~ begin <<lit/main.md|solution-definition>>[0]
@@ -132,7 +133,7 @@ impl Boilerplate for std::str::SplitWhitespace<'_> {
 }
 // ~\~ end
 
-fn parse_line<T>(mut stream: T) -> Result<Option<Instance>> where T: std::io::BufRead {
+fn parse_line<T>(stream: &mut T) -> Result<Option<Instance>> where T: BufRead {
     let mut input = String::new();
     if stream.read_line(&mut input)? == 0 {
         return Ok(None)
@@ -152,6 +153,27 @@ fn parse_line<T>(mut stream: T) -> Result<Option<Instance>> where T: std::io::Bu
     }
 
     Ok(Some(Instance {id, m, b, items}))
+}
+
+#[cfg(test)]
+fn parse_solution_line<T>(mut stream: T) -> Result<Option<OptimalSolution>> where T: BufRead {
+    let mut input = String::new();
+    if stream.read_line(&mut input)? == 0 {
+        return Ok(None)
+    }
+
+    let mut  numbers = input.split_whitespace();
+    let   id = numbers.parse_next()?;
+    let    n = numbers.parse_next()?;
+    let cost = numbers.parse_next()?;
+
+    let mut items = Config::default();
+    for i in 0..n {
+        let a: u8 = numbers.parse_next()?;
+        items.set(i, a == 1);
+    }
+
+    Ok(Some(OptimalSolution {id, cost, items}))
 }
 // ~\~ end
 
@@ -207,7 +229,7 @@ impl Instance {
     // ~\~ end
 
     fn fptas(&self, ε: f64) -> Solution {
-        let Instance {m, items, ..} = self;
+        let Instance {m: _, items, ..} = self;
         let _items = items.iter().map(|(w, c)| (w, (*c as f64 / ε).floor()));
 
         // fully polynomial time approximation scheme for knapsack
@@ -328,6 +350,7 @@ impl Instance {
 mod tests {
     use super::*;
     use quickcheck::{Arbitrary, Gen};
+    use std::{fs::{read_dir, File}, io::BufReader};
 
     impl Arbitrary for Instance {
         fn arbitrary(g: &mut Gen) -> Instance {
@@ -360,7 +383,7 @@ mod tests {
             let Instance { m, b, items, .. } = i;
             let Solution { weight: w, cost: c, cfg, .. } = self;
 
-            println!("{} >= {}", c, b);
+            // println!("{} >= {}", c, b);
             // assert!(c >= b);
 
             let (weight, cost) = items
@@ -372,13 +395,13 @@ mod tests {
                 .reduce(|(a0, b0), (a1, b1)| (a0 + a1, b0 + b1))
                 .unwrap_or_default();
 
-            println!("{} <= {}", weight, *m);
+            // println!("{} <= {}", weight, *m);
             assert!(weight <= *m);
 
-            println!("{} == {}", cost, *c);
+            // println!("{} == {}", cost, *c);
             assert_eq!(cost, *c);
 
-            println!("{} == {}", weight, *w);
+            // println!("{} == {}", weight, *w);
             assert_eq!(weight, *w);
         }
     }
@@ -393,6 +416,71 @@ mod tests {
         assert_eq!(bb.cost, i.greedy_redux().cost);
         assert_eq!(bb.cost, i.brute_force().cost);
         assert_eq!(bb.cost, i.greedy().cost);
+    }
+
+    fn load_solutions() -> Result<HashMap<(u32, i32), OptimalSolution>> {
+        let mut solutions = HashMap::new();
+
+        let files = read_dir("../data/constructive/")?
+            .filter(|res| res.as_ref().ok().filter(|f| {
+                let name = f.file_name().into_string().unwrap();
+                f.file_type().unwrap().is_file() &&
+                name.starts_with("NK") &&
+                name.ends_with("_sol.dat")
+            }).is_some());
+
+        for file in files {
+            let file = file?;
+            let n = file.file_name().into_string().unwrap()[2..].split('_').nth(0).unwrap().parse()?;
+            let mut stream = BufReader::new(File::open(file.path())?);
+            while let Some(opt) = parse_solution_line(&mut stream)? {
+                solutions.insert((n, opt.id), opt);
+            }
+        }
+
+        Ok(solutions)
+    }
+
+    #[test]
+    fn proper() -> Result<()> {
+        type Solver = for<'a> fn(&'a Instance) -> Solution<'a>;
+        let algs = get_algorithms();
+        let algs: Vec<&Solver> = algs.values().collect();
+        let opts = load_solutions()?;
+        println!("loaded {} optimal solutions", opts.len());
+
+        let solve: for<'a> fn(&Vec<_>, &'a _) -> Vec<Solution<'a>> =
+            |algs, inst|
+            algs.iter().map(|alg: &&Solver| alg(inst)).collect();
+        // find files in the 'ds' directory
+        let files = read_dir("./ds/")?
+            .filter(|res| res.as_ref().ok().filter(|f| {
+                let file_name = f.file_name();
+                let file_name = file_name.to_str().unwrap();
+                // keep only regular files
+                f.file_type().unwrap().is_file() &&
+                // ... whose names start with NK
+                file_name.starts_with("NR") &&
+                // ... and continue with an integer between 0 and 15
+                file_name[2..]
+                .split('_').nth(0).unwrap().parse::<u32>().ok()
+                .filter(|n| (0..12).contains(n)).is_some()}).is_some());
+        for file in files {
+            let file = file?;
+            println!("Testing {}", file.file_name().to_str().unwrap());
+            // open the file
+            let mut stream = BufReader::new(File::open(file.path())?);
+            // solve each instance with all algorithms
+            while let Some(slns) = parse_line(&mut stream)?.as_ref().map(|x| solve(&algs, x)) {
+                // verify correctness
+                slns.iter().for_each(|s| {
+                    s.assert_valid(&s.inst);
+                    let key = (s.inst.items.len() as u32, -s.inst.id);
+                    assert!(s.cost <= opts[&key].cost);
+                });
+            }
+        }
+        Ok(())
     }
 
     #[test]
@@ -415,7 +503,7 @@ mod tests {
         use std::fs::File;
         use std::io::BufReader;
         let inst = parse_line(
-            BufReader::new(File::open("ds/NR15_inst.dat")?)
+            &mut BufReader::new(File::open("ds/NR15_inst.dat")?)
         )?.unwrap();
         println!("testing {:?}", inst);
         inst.branch_and_bound().assert_valid(&inst);
