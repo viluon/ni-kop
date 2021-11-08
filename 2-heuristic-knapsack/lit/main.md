@@ -105,7 +105,7 @@ uname -a
 mkdir -p docs/measurements/
 cd solver
 hyperfine --export-json ../docs/bench.json \
-          --parameter-list n 4,10,15 \
+          --parameter-list n 4,10,15,20,22 \
           --parameter-list set NK,ZKC,ZKW \
           --parameter-list alg bb,dpc,dpw,fptas1,fptas2,greedy,redux \
           --min-runs 4 \
