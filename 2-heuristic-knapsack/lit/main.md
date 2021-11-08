@@ -738,7 +738,7 @@ property-based testu s knihovnou
 mod tests {
     use super::*;
     use quickcheck::{Arbitrary, Gen};
-    use std::{fs::{read_dir, File}, io::BufReader, collections::HashMap};
+    use std::{fs::{read_dir, ReadDir, DirEntry, File}, iter::Filter, io::BufReader, collections::HashMap};
 
     impl Arbitrary for Instance {
         fn arbitrary(g: &mut Gen) -> Instance {
@@ -835,20 +835,11 @@ mod tests {
         let solve: for<'a> fn(&Vec<_>, &'a _) -> Vec<Solution<'a>> =
             |algs, inst|
             algs.iter().map(|alg: &&Solver| alg(inst)).collect();
-        // find files in the 'ds' directory
-        let files = read_dir("./ds/")?
-            .filter(|res| res.as_ref().ok().filter(|f| {
-                let file_name = f.file_name();
-                let file_name = file_name.to_str().unwrap();
-                // keep only regular files
-                f.file_type().unwrap().is_file() &&
-                // ... whose names start with NK
-                file_name.starts_with("NR") &&
-                // ... and continue with an integer between 0 and 15
-                file_name[2..]
-                .split('_').nth(0).unwrap().parse::<u32>().ok()
-                .filter(|n| (0..12).contains(n)).is_some()}).is_some());
-        for file in files {
+
+        let mut files = list_input_files()?;
+        // make sure `files` is not empty
+        let first = files.next().ok_or(anyhow!("no instance files loaded"))?;
+        for file in vec![first].into_iter().chain(files) {
             let file = file?;
             println!("Testing {}", file.file_name().to_str().unwrap());
             // open the file
@@ -858,12 +849,31 @@ mod tests {
                 // verify correctness
                 slns.iter().for_each(|s| {
                     s.assert_valid(&s.inst);
-                    let key = (s.inst.items.len() as u32, -s.inst.id);
+                    let key = (s.inst.items.len() as u32, s.inst.id);
                     assert!(s.cost <= opts[&key].cost);
                 });
             }
         }
         Ok(())
+    }
+
+    type FilterClosure = fn(&std::result::Result<DirEntry, std::io::Error>) -> bool;
+    fn list_input_files() -> Result<Filter<ReadDir, FilterClosure>> {
+        let f: FilterClosure = |res| res.as_ref().ok().filter(|f| {
+            let file_name = f.file_name();
+            let file_name = file_name.to_str().unwrap();
+            // keep only regular files
+            f.file_type().unwrap().is_file() &&
+            // ... whose names start with NK,
+            file_name.starts_with("NK") &&
+            // ... continue with an integer between 0 and 15,
+            file_name[2..]
+            .split('_').nth(0).unwrap().parse::<u32>().ok()
+            .filter(|n| (0..15).contains(n)).is_some() &&
+            // ... and end with `_inst.dat` (for "instance").
+            file_name.ends_with("_inst.dat")
+        }).is_some();
+        Ok(read_dir("./ds/")?.filter(f))
     }
 
     #[test]

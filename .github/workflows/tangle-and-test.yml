@@ -41,7 +41,7 @@ jobs:
       - name: test
         run: |
           cd 2-heuristic-knapsack/solver/
-          QUICKCHECK_TESTS=10000 cargo test -- --show-output
+          RUST_BACKTRACE=1 QUICKCHECK_TESTS=10000 cargo test -- --show-output
       - name: deploy
         uses: JamesIves/github-pages-deploy-action@4.1.4
         with:
