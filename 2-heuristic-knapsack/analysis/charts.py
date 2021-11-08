@@ -34,7 +34,10 @@ bench[numeric_columns] = bench[numeric_columns].apply(lambda c:
 fig, ax = plt.subplots(figsize = (11, 6))
 labels = { "bf"    : "Hrubá síla"
          , "bb"    : "Branch & bound"
-         , "dp"    : "Dynamické programování"
+         , "dpw"   : "Dynamické programování - podle váhy"
+         , "dpc"   : "Dynamické programování - podle ceny"
+         , "fptas1": "FPTAS eps = 0.1"
+         , "fptas2": "FPTAS eps = 0.01"
          , "greedy": "Hladový přístup"
          , "redux" : "Hladový přístup - redux"
          }

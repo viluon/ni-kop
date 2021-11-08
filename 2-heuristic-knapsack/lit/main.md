@@ -107,7 +107,7 @@ cd solver
 hyperfine --export-json ../docs/bench.json \
           --parameter-list n 4,10,15 \
           --parameter-list set NK,ZKC,ZKW \
-          --parameter-list alg bb,dp,greedy,redux \
+          --parameter-list alg bb,dpc,dpw,fptas1,fptas2,greedy,redux \
           --min-runs 4 \
           --style color \
           'cargo run --release -- {alg} \
@@ -185,7 +185,10 @@ bench[numeric_columns] = bench[numeric_columns].apply(lambda c:
 fig, ax = plt.subplots(figsize = (11, 6))
 labels = { "bf"    : "Hrubá síla"
          , "bb"    : "Branch & bound"
-         , "dp"    : "Dynamické programování"
+         , "dpw"   : "Dynamické programování - podle váhy"
+         , "dpc"   : "Dynamické programování - podle ceny"
+         , "fptas1": "FPTAS eps = 0.1"
+         , "fptas2": "FPTAS eps = 0.01"
          , "greedy": "Hladový přístup"
          , "redux" : "Hladový přístup - redux"
          }
@@ -240,13 +243,13 @@ for alg in df.alg.unique():
     plt.close()
 ```
 
-![Sada NR: Hrubá síla pro $n = 15$](assets/histogram-bf-N15.svg)
+![Sada NR: Redux pro $n = 15$](assets/histogram-redux-NK15.svg)
 
-![Sada NR: Metoda větví a hranic pro $n = 15$](assets/histogram-bb-N15.svg)
+![Sada NR: Metoda větví a hranic pro $n = 15$](assets/histogram-bb-NK15.svg)
 
-![Sada ZR: Hrubá síla pro $n = 15$](assets/histogram-bf-Z15.svg)
+![Sada ZR: Redux pro $n = 15$](assets/histogram-redux-ZKW15.svg)
 
-![Sada ZR: Metoda větví a hranic pro $n = 15$](assets/histogram-bb-Z15.svg)
+![Sada ZR: Metoda větví a hranic pro $n = 15$](assets/histogram-bb-ZKW15.svg)
 
 ### Analýza
 
@@ -311,15 +314,11 @@ fn main() -> Result<()> {
 <<parser>>
 
 impl Instance {
-    <<solver-dp>>
+    <<solver-dpw>>
 
-    fn fptas(&self, eps: f64) -> Solution {
-        let Instance {m: _, items, ..} = self;
-        let _items = items.iter().map(|(w, c)| (w, (*c as f64 / eps).floor()));
+    <<solver-dpc>>
 
-        // fully polynomial time approximation scheme for knapsack
-        todo!()
-    }
+    <<solver-fptas>>
 
     <<solver-greedy>>
 
@@ -344,7 +343,7 @@ type Config = BitArr!(for 64);
 struct Solution<'a> { weight: u32, cost: u32, cfg: Config, inst: &'a Instance }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-struct OptimalSolution { id: i32, cost: u32, items: Config }
+struct OptimalSolution { id: i32, cost: u32, cfg: Config }
 
 <<solution-helpers>>
 ```
@@ -402,8 +401,10 @@ fn get_algorithms() -> BTreeMap<&'static str, fn(&Instance) -> Solution> {
     BTreeMap::from([
         ("bf",     cast(Instance::brute_force)),
         ("bb",     cast(Instance::branch_and_bound)),
-        ("dp",     cast(Instance::dynamic_programming)),
-        // ("fptas",  cast(|inst| inst.fptas(0.5))),
+        ("dpc",    cast(Instance::dynamic_programming_c)),
+        ("dpw",    cast(Instance::dynamic_programming_w)),
+        ("fptas1", cast(|inst| inst.fptas(10f64.powi(-1)))),
+        ("fptas2", cast(|inst| inst.fptas(10f64.powi(-2)))),
         ("greedy", cast(Instance::greedy)),
         ("redux",  cast(Instance::greedy_redux)),
     ])
@@ -469,7 +470,7 @@ fn greedy_redux(&self) -> Solution {
 
 #### Hrubá síla
 
-``` {.rust #solver-bf}
+``` {.rust .bootstrap-fold #solver-bf}
 fn brute_force(&self) -> Solution {
     fn go<'a>(items: &'a [(u32, u32)], current: Solution<'a>, i: usize, m: u32) -> Solution<'a> {
         if i >= items.len() { return current }
@@ -536,38 +537,11 @@ fn branch_and_bound(&self) -> Solution {
 
 #### Dynamické programování
 
-Kromě dvou zkoumaných algoritmů jsem implementoval ještě třetí, který je ovšem
-založen na dynamickém programování. Jeho časová složitost je $\Theta(nM)$, kde
-$M$ je kapacita batohu. Vzhledem k parametrům vstupních dat v tomto úkolu zvládá
-i ZR40 vstupy extrémně rychle (všech 500 instancí pod 300 ms), s velkými
-hodnotami $M$ by si ovšem neporadil. V tuto chvíli nelze použít, protože počítá
-jen (konstruktivní) cenu, nikoliv celé řešení v podobě objektu struktury
-`Solution` jako je tomu u ostatních dvou.
+Jako první jsem naimplementoval dynamické programování s rozkladem podle váhy,
+jehož časová složitost je $\Theta(nM)$, kde $M$ je kapacita batohu.
 
-``` {.rust #solver-dp}
-fn _dynamic_programming_naive(&self) -> u32 {
-    let (m, items) = (self.m, &self.items);
-    let mut next = vec![0; m as usize + 1];
-    let mut last = vec![];
-
-    for i in 1..=items.len() {
-        let (weight, cost) = items[i - 1];
-        last.clone_from(&next);
-
-        for cap in 0..=m as usize {
-            next[cap] = if (cap as u32) < weight {
-                    last[cap]
-                } else {
-                    let rem_weight = max(0, cap as isize - weight as isize) as usize;
-                    max(last[cap], last[rem_weight] + cost)
-                };
-        }
-    }
-
-    *next.last().unwrap() //>= b
-}
-
-fn dynamic_programming(&self) -> Solution {
+``` {.rust #solver-dpw}
+fn dynamic_programming_w(&self) -> Solution {
     let Instance {m, items, ..} = self;
     let mut next = vec![Solution::default(self); *m as usize + 1];
     let mut last = vec![];
@@ -591,6 +565,55 @@ fn dynamic_programming(&self) -> Solution {
 }
 ```
 
+Následně jsem pro FPTAS implementoval i dynamické programování s rozkladem podle
+ceny, které je přímočarou adaptací algoritmu výše.
+
+``` {.rust #solver-dpc}
+fn dynamic_programming_c(&self) -> Solution {
+    let Instance {items, ..} = self;
+    let max_profit = items.iter().map(|(_, c)| *c).max().unwrap() as usize;
+    let mut next = vec![Solution::default(self); max_profit * items.len() + 1];
+    let mut last = vec![];
+
+    for i in 1..=items.len() {
+        let (_weight, cost) = items[i - 1];
+        last.clone_from(&next);
+
+        for cap in 0 ..= max_profit {
+            let s = if (cap as u32) < cost {
+                    last[cap]
+                } else {
+                    let rem_cost = max(0, cap as isize - cost as isize) as usize;
+                    max(last[cap], last[rem_cost].with(i - 1))
+                };
+            next[cap] = s;
+        }
+    }
+
+    *next.last().unwrap()
+}
+```
+
+#### FPTAS
+
+FPTAS algoritmus přeškáluje ceny předmětů a následně spustí dynamické
+programování s rozkladem podle ceny na upravenou instanci problému. V řešení
+stačí opravit referenci výchozí instance (`inst: self`), indexy předmětů se
+škálováním nemění.
+
+``` {.rust #solver-fptas}
+fn fptas(&self, eps: f64) -> Solution {
+    let Instance {m: _, items, ..} = self;
+    let max_profit = items.iter().map(|(_, c)| *c).max().unwrap();
+    let scaling_factor = eps * max_profit as f64 / items.len() as f64;
+    let items = items.iter().map(|(w, c)|
+        (*w, (*c as f64 / scaling_factor).floor() as u32
+    )).collect();
+
+    Solution { inst: self, ..Instance { items, ..*self }.dynamic_programming_c() }
+}
+```
+
 ## Závěr
 
 Tento úvodní problém byl příležitostí připravit si technické zázemí pro
@@ -606,7 +629,7 @@ Dodatek obsahuje nezajímavé části implementace, jako je import symbolů z
 knihoven.
 
 ``` {.rust #imports .bootstrap-fold}
-use std::{collections::BTreeMap, io::{stdin, BufRead}, str::FromStr, cmp, cmp::max};
+use std::{cmp, cmp::max, collections::BTreeMap, io::{stdin, BufRead}, str::FromStr};
 use anyhow::{Context, Result, anyhow};
 use bitvec::prelude::BitArr;
 
@@ -660,7 +683,7 @@ fn parse_solution_line<T>(mut stream: T) -> Result<Option<OptimalSolution>> wher
         items.set(i, a == 1);
     }
 
-    Ok(Some(OptimalSolution {id, cost, items}))
+    Ok(Some(OptimalSolution {id, cost, cfg: items}))
 }
 ```
 
@@ -772,7 +795,7 @@ mod tests {
         // i.branch_and_bound2().assert_valid(&i);
         let i = Instance { id: 0, m: 1, items: vec![(1, 1), (1, 2), (0, 1)] };
         let bb = i.branch_and_bound();
-        assert_eq!(bb.cost, i.dynamic_programming().cost);
+        assert_eq!(bb.cost, i.dynamic_programming_w().cost);
         assert_eq!(bb.cost, i.greedy_redux().cost);
         assert_eq!(bb.cost, i.brute_force().cost);
         assert_eq!(bb.cost, i.greedy().cost);
@@ -876,7 +899,7 @@ mod tests {
 
     #[quickcheck]
     fn qc_dp_matches_bb(inst: Instance) {
-        assert!(inst.branch_and_bound().cost <= inst.dynamic_programming().cost);
+        assert!(inst.branch_and_bound().cost <= inst.dynamic_programming_w().cost);
     }
 }
 

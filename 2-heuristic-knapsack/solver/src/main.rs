@@ -1,7 +1,7 @@
 // ~\~ language=Rust filename=solver/src/main.rs
 // ~\~ begin <<lit/main.md|solver/src/main.rs>>[0]
 // ~\~ begin <<lit/main.md|imports>>[0]
-use std::{collections::BTreeMap, io::{stdin, BufRead}, str::FromStr, cmp, cmp::max};
+use std::{cmp, cmp::max, collections::BTreeMap, io::{stdin, BufRead}, str::FromStr};
 use anyhow::{Context, Result, anyhow};
 use bitvec::prelude::BitArr;
 
@@ -17,8 +17,10 @@ fn get_algorithms() -> BTreeMap<&'static str, fn(&Instance) -> Solution> {
     BTreeMap::from([
         ("bf",     cast(Instance::brute_force)),
         ("bb",     cast(Instance::branch_and_bound)),
-        ("dp",     cast(Instance::dynamic_programming)),
-        // ("fptas",  cast(|inst| inst.fptas(0.5))),
+        ("dpc",    cast(Instance::dynamic_programming_c)),
+        ("dpw",    cast(Instance::dynamic_programming_w)),
+        ("fptas1", cast(|inst| inst.fptas(10f64.powi(-1)))),
+        ("fptas2", cast(|inst| inst.fptas(10f64.powi(-2)))),
         ("greedy", cast(Instance::greedy)),
         ("redux",  cast(Instance::greedy_redux)),
     ])
@@ -71,7 +73,7 @@ type Config = BitArr!(for 64);
 struct Solution<'a> { weight: u32, cost: u32, cfg: Config, inst: &'a Instance }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-struct OptimalSolution { id: i32, cost: u32, items: Config }
+struct OptimalSolution { id: i32, cost: u32, cfg: Config }
 
 // ~\~ begin <<lit/main.md|solution-helpers>>[0]
 impl <'a> PartialOrd for Solution<'a> {
@@ -165,35 +167,13 @@ fn parse_solution_line<T>(mut stream: T) -> Result<Option<OptimalSolution>> wher
         items.set(i, a == 1);
     }
 
-    Ok(Some(OptimalSolution {id, cost, items}))
+    Ok(Some(OptimalSolution {id, cost, cfg: items}))
 }
 // ~\~ end
 
 impl Instance {
-    // ~\~ begin <<lit/main.md|solver-dp>>[0]
-    fn _dynamic_programming_naive(&self) -> u32 {
-        let (m, items) = (self.m, &self.items);
-        let mut next = vec![0; m as usize + 1];
-        let mut last = vec![];
-
-        for i in 1..=items.len() {
-            let (weight, cost) = items[i - 1];
-            last.clone_from(&next);
-
-            for cap in 0..=m as usize {
-                next[cap] = if (cap as u32) < weight {
-                        last[cap]
-                    } else {
-                        let rem_weight = max(0, cap as isize - weight as isize) as usize;
-                        max(last[cap], last[rem_weight] + cost)
-                    };
-            }
-        }
-
-        *next.last().unwrap() //>= b
-    }
-
-    fn dynamic_programming(&self) -> Solution {
+    // ~\~ begin <<lit/main.md|solver-dpw>>[0]
+    fn dynamic_programming_w(&self) -> Solution {
         let Instance {m, items, ..} = self;
         let mut next = vec![Solution::default(self); *m as usize + 1];
         let mut last = vec![];
@@ -217,13 +197,44 @@ impl Instance {
     }
     // ~\~ end
 
+    // ~\~ begin <<lit/main.md|solver-dpc>>[0]
+    fn dynamic_programming_c(&self) -> Solution {
+        let Instance {items, ..} = self;
+        let max_profit = items.iter().map(|(_, c)| *c).max().unwrap() as usize;
+        let mut next = vec![Solution::default(self); max_profit * items.len() + 1];
+        let mut last = vec![];
+
+        for i in 1..=items.len() {
+            let (_weight, cost) = items[i - 1];
+            last.clone_from(&next);
+
+            for cap in 0 ..= max_profit {
+                let s = if (cap as u32) < cost {
+                        last[cap]
+                    } else {
+                        let rem_cost = max(0, cap as isize - cost as isize) as usize;
+                        max(last[cap], last[rem_cost].with(i - 1))
+                    };
+                next[cap] = s;
+            }
+        }
+
+        *next.last().unwrap()
+    }
+    // ~\~ end
+
+    // ~\~ begin <<lit/main.md|solver-fptas>>[0]
     fn fptas(&self, eps: f64) -> Solution {
         let Instance {m: _, items, ..} = self;
-        let _items = items.iter().map(|(w, c)| (w, (*c as f64 / eps).floor()));
+        let max_profit = items.iter().map(|(_, c)| *c).max().unwrap();
+        let scaling_factor = eps * max_profit as f64 / items.len() as f64;
+        let items = items.iter().map(|(w, c)|
+            (*w, (*c as f64 / scaling_factor).floor() as u32
+        )).collect();
 
-        // fully polynomial time approximation scheme for knapsack
-        todo!()
+        Solution { inst: self, ..Instance { items, ..*self }.dynamic_programming_c() }
     }
+    // ~\~ end
 
     // ~\~ begin <<lit/main.md|solver-greedy>>[0]
     fn greedy(&self) -> Solution {
@@ -391,7 +402,7 @@ mod tests {
         // i.branch_and_bound2().assert_valid(&i);
         let i = Instance { id: 0, m: 1, items: vec![(1, 1), (1, 2), (0, 1)] };
         let bb = i.branch_and_bound();
-        assert_eq!(bb.cost, i.dynamic_programming().cost);
+        assert_eq!(bb.cost, i.dynamic_programming_w().cost);
         assert_eq!(bb.cost, i.greedy_redux().cost);
         assert_eq!(bb.cost, i.brute_force().cost);
         assert_eq!(bb.cost, i.greedy().cost);
@@ -495,7 +506,7 @@ mod tests {
 
     #[quickcheck]
     fn qc_dp_matches_bb(inst: Instance) {
-        assert!(inst.branch_and_bound().cost <= inst.dynamic_programming().cost);
+        assert!(inst.branch_and_bound().cost <= inst.dynamic_programming_w().cost);
     }
 }
 
