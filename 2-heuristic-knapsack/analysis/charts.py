@@ -32,9 +32,11 @@ bench[numeric_columns] = bench[numeric_columns].apply(lambda c:
 # ~\~ begin <<lit/main.md|performance-chart>>[0]
 # Create a figure and a set of subplots.
 fig, ax = plt.subplots(figsize = (11, 6))
-labels = { "bf": "Hrubá síla"
-         , "bb": "Branch & bound"
-         , "dp": "Dynamické programování"
+labels = { "bf"    : "Hrubá síla"
+         , "bb"    : "Branch & bound"
+         , "dp"    : "Dynamické programování"
+         , "greedy": "Hladový přístup"
+         , "redux" : "Hladový přístup - redux"
          }
 
 # Group the dataframe by alg and create a line for each group.
