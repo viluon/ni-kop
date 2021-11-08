@@ -51,7 +51,7 @@ fn main() -> Result<()> {
 
     loop {
         match parse_line(&mut stdin().lock())?.as_ref().map(alg) {
-            Some(Solution { visited, .. }) => println!("{}", visited),
+            Some(Solution { cost, .. }) => println!("{}", cost),
             None => return Ok(())
         }
     }
@@ -64,15 +64,14 @@ struct Instance {
 }
 // ~\~ end
 
-#[derive(Debug, PartialEq, Eq, Clone)]
-struct OptimalSolution {
-    id: i32, cost: u32, items: Config
-}
-
 // ~\~ begin <<lit/main.md|solution-definition>>[0]
 type Config = BitArr!(for 64);
+
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
-struct Solution<'a> { weight: u32, cost: u32, cfg: Config, visited: u64, inst: &'a Instance }
+struct Solution<'a> { weight: u32, cost: u32, cfg: Config, inst: &'a Instance }
+
+#[derive(Debug, PartialEq, Eq, Clone)]
+struct OptimalSolution { id: i32, cost: u32, items: Config }
 
 // ~\~ begin <<lit/main.md|solution-helpers>>[0]
 impl <'a> PartialOrd for Solution<'a> {
@@ -103,16 +102,8 @@ impl <'a> Solution<'a> {
         self
     }
 
-    fn set_visited(self, v: u64) -> Solution<'a> {
-        Solution { visited: v, ..self }
-    }
-
-    fn incr_visited(self) -> Solution<'a> {
-        self.set_visited(self.visited + 1)
-    }
-
     fn default(inst: &'a Instance) -> Solution<'a> {
-        Solution { weight: 0, cost: 0, cfg: Config::default(), visited: 0, inst }
+        Solution { weight: 0, cost: 0, cfg: Config::default(), inst }
     }
 }
 // ~\~ end
@@ -222,7 +213,7 @@ impl Instance {
             }
         }
 
-        *next.last().unwrap() //>= b
+        *next.last().unwrap()
     }
     // ~\~ end
 
@@ -296,15 +287,13 @@ impl Instance {
             let next = |current, best, m| go(state, current, best, i + 1, m);
             let include = || {
                 let current = current.with(i);
-                let count = max(current.visited, best.visited);
-                next(current.incr_visited(), max(current, best).set_visited(count + 1), m - w)
+                next(current, max(current, best), m - w)
             };
-            let exclude = |best: Solution<'a>| next(current.incr_visited(), best.incr_visited(), m);
+            let exclude = |best: Solution<'a>| next(current, best, m);
 
             if w <= m {
                 let x = include();
-                let y = exclude(x);
-                Solution { visited: x.visited + y.visited, ..max(x, y) }
+                max(x, exclude(x))
             }
             else { exclude(best) }
         }
@@ -324,21 +313,18 @@ impl Instance {
             let (w, _c) = items[i];
             let next = |current, m| go(items, current, i + 1, m);
             let include = || {
-                let current = current.with(i).incr_visited();
+                let current = current.with(i);
                 next(current, m - w)
             };
-            let exclude = || next(current.incr_visited(), m);
+            let exclude = || next(current, m);
 
             if w <= m {
-                let x = include();
-                let y = exclude();
-                max(x, y).set_visited(x.visited + y.visited)
+                max(include(), exclude())
             }
             else { exclude() }
         }
 
-        let empty = Solution { weight: 0, cost: 0, visited: 0, cfg: Default::default(), inst: self };
-        go(&self.items, empty, 0, self.m)
+        go(&self.items, Solution::default(self), 0, self.m)
     }
     // ~\~ end
 }
