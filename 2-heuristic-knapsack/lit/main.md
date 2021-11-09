@@ -574,10 +574,15 @@ Následně jsem (pro FPTAS) implementoval dynamické programování s rozkladem 
 ceny, které je adaptací algoritmu výše. Narozdíl od předchozího algoritmu je
 tady výchozí hodnotou v tabulce efektivně nekonečná váha, kterou se snažíme
 minimalizovat. K reprezentaci řešení s nekonečnou vahou používám přidruženou
-funkci `Solution::overweight`, která vrátí neplatné řešení s váhou $2^32 - 1$.
+funkci `Solution::overweight`, která vrátí neplatné řešení s váhou $2^{32} - 1$.
 Pokud na něj v průběhu výpočtu algoritmus narazí, předá jej dál jako
 `Solution::default` (vždy v nejlevějším sloupci DP tabulky, tedy `last[0]`), aby
 při přičtení váhy uvažovaného předmětu nedošlo k přetečení.
+
+O výběr řešení minimální váhy se stará funkce `max`, neboť implementace
+uspořádání pro typ `Solution` řadí nejprve vzestupně podle ceny a následně
+sestupně podle váhy. V tomto případě porovnáváme vždy dvě řešení stejných cen
+(a nebo je `last[cap]` neplatné řešení s nadváhou, které má cenu $0$).
 
 ``` {.rust #solver-dpc}
 fn dynamic_programming_c(&self) -> Solution {
