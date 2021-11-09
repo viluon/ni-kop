@@ -542,7 +542,8 @@ fn branch_and_bound(&self) -> Solution {
 #### Dynamické programování
 
 Jako první jsem naimplementoval dynamické programování s rozkladem podle váhy,
-jehož časová složitost je $\Theta(nM)$, kde $M$ je kapacita batohu.
+jehož časová složitost je $\Theta(nM)$, kde $M$ je kapacita batohu. Popsal jsem
+ho už v minulém úkolu.
 
 ``` {.rust #solver-dpw}
 fn dynamic_programming_w(&self) -> Solution {
@@ -550,8 +551,8 @@ fn dynamic_programming_w(&self) -> Solution {
     let mut next = vec![Solution::default(self); *m as usize + 1];
     let mut last = vec![];
 
-    for i in 1..=items.len() {
-        let (weight, _cost) = items[i - 1];
+    for i in 0..items.len() {
+        let (weight, _cost) = items[i];
         last.clone_from(&next);
 
         for cap in 0 ..= *m as usize {
@@ -559,7 +560,7 @@ fn dynamic_programming_w(&self) -> Solution {
                     last[cap]
                 } else {
                     let rem_weight = max(0, cap as isize - weight as isize) as usize;
-                    max(last[cap], last[rem_weight].with(i - 1))
+                    max(last[cap], last[rem_weight].with(i))
                 };
             next[cap] = s;
         }
@@ -569,15 +570,20 @@ fn dynamic_programming_w(&self) -> Solution {
 }
 ```
 
-Následně jsem pro FPTAS implementoval i dynamické programování s rozkladem podle
-ceny, které je přímočarou adaptací algoritmu výše.
+Následně jsem (pro FPTAS) implementoval dynamické programování s rozkladem podle
+ceny, které je adaptací algoritmu výše. Narozdíl od předchozího algoritmu je
+tady výchozí hodnotou v tabulce efektivně nekonečná váha, kterou se snažíme
+minimalizovat. K reprezentaci řešení s nekonečnou vahou používám přidruženou
+funkci `Solution::overweight`, která vrátí neplatné řešení s váhou $2^32 - 1$.
+Pokud na něj v průběhu výpočtu algoritmus narazí, předá jej dál jako
+`Solution::default` (vždy v nejlevějším sloupci DP tabulky, tedy `last[0]`), aby
+při přičtení váhy uvažovaného předmětu nedošlo k přetečení.
 
 ``` {.rust #solver-dpc}
 fn dynamic_programming_c(&self) -> Solution {
     let Instance {items, ..} = self;
     let max_profit = items.iter().map(|(_, c)| *c).max().unwrap() as usize;
-    let overweight = Solution::overweight(self);
-    let mut next = vec![overweight; max_profit * items.len() + 1];
+    let mut next = vec![Solution::overweight(self); max_profit * items.len() + 1];
     let mut last = vec![];
     next[0] = Solution::default(self);
 
@@ -586,32 +592,21 @@ fn dynamic_programming_c(&self) -> Solution {
         last.clone_from(&next);
 
         for cap in 1 ..= max_profit * items.len() {
-            // println!("{} {} {}", i, cap, cost);
             let s = if (cap as u32) < cost {
                     last[cap]
                 } else {
                     let rem_cost = (cap as isize - cost as isize) as usize;
-                    let lightest_for_cost = if last[rem_cost] == overweight {
-                        // println!("defaulting");
-                        last[0] // default, empty solution
+                    let lightest_for_cost = if last[rem_cost].weight == u32::MAX {
+                        last[0] // replace the overweight solution with the empty one
                     } else { last[rem_cost] };
 
-                    // FIXME: should be equivalent to
-                    //   max(last[cap], lightest_for_cost.with(i))
-                    // since the accessed solutions have identical costs
                     max(last[cap], lightest_for_cost.with(i))
                 };
             next[cap] = s;
         }
     }
 
-    for sln in next.iter().rev() {
-        if sln.weight <= self.m {
-            return *sln;
-        }
-    }
-
-    unreachable!()
+    *next.iter().filter(|sln| sln.weight <= self.m).last().unwrap()
 }
 ```
 
@@ -619,12 +614,12 @@ fn dynamic_programming_c(&self) -> Solution {
 
 FPTAS algoritmus přeškáluje ceny předmětů a následně spustí dynamické
 programování s rozkladem podle ceny na upravenou instanci problému. V řešení
-stačí opravit referenci výchozí instance (`inst: self`), indexy předmětů se
-škálováním nemění.
+stačí opravit referenci výchozí instance (`inst: self`) a přepočíst cenu podle
+vypočítané konfigurace, samotné indexy předmětů se škálováním nemění.
 
 ``` {.rust #solver-fptas}
 // TODO: are items heavier than the knapsack capacity a problem? if so, we
-// can just zero out those items
+// can just zero them out
 fn fptas(&self, eps: f64) -> Solution {
     let Instance {m: _, items, ..} = self;
     let max_profit = items.iter().map(|(_, c)| *c).max().unwrap();

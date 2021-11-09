@@ -182,8 +182,8 @@ impl Instance {
         let mut next = vec![Solution::default(self); *m as usize + 1];
         let mut last = vec![];
 
-        for i in 1..=items.len() {
-            let (weight, _cost) = items[i - 1];
+        for i in 0..items.len() {
+            let (weight, _cost) = items[i];
             last.clone_from(&next);
 
             for cap in 0 ..= *m as usize {
@@ -191,7 +191,7 @@ impl Instance {
                         last[cap]
                     } else {
                         let rem_weight = max(0, cap as isize - weight as isize) as usize;
-                        max(last[cap], last[rem_weight].with(i - 1))
+                        max(last[cap], last[rem_weight].with(i))
                     };
                 next[cap] = s;
             }
@@ -205,8 +205,7 @@ impl Instance {
     fn dynamic_programming_c(&self) -> Solution {
         let Instance {items, ..} = self;
         let max_profit = items.iter().map(|(_, c)| *c).max().unwrap() as usize;
-        let overweight = Solution::overweight(self);
-        let mut next = vec![overweight; max_profit * items.len() + 1];
+        let mut next = vec![Solution::overweight(self); max_profit * items.len() + 1];
         let mut last = vec![];
         next[0] = Solution::default(self);
 
@@ -215,38 +214,27 @@ impl Instance {
             last.clone_from(&next);
 
             for cap in 1 ..= max_profit * items.len() {
-                // println!("{} {} {}", i, cap, cost);
                 let s = if (cap as u32) < cost {
                         last[cap]
                     } else {
                         let rem_cost = (cap as isize - cost as isize) as usize;
-                        let lightest_for_cost = if last[rem_cost] == overweight {
-                            // println!("defaulting");
-                            last[0] // default, empty solution
+                        let lightest_for_cost = if last[rem_cost].weight == u32::MAX {
+                            last[0] // replace the overweight solution with the empty one
                         } else { last[rem_cost] };
 
-                        // FIXME: should be equivalent to
-                        //   max(last[cap], lightest_for_cost.with(i))
-                        // since the accessed solutions have identical costs
                         max(last[cap], lightest_for_cost.with(i))
                     };
                 next[cap] = s;
             }
         }
 
-        for sln in next.iter().rev() {
-            if sln.weight <= self.m {
-                return *sln;
-            }
-        }
-
-        unreachable!()
+        *next.iter().filter(|sln| sln.weight <= self.m).last().unwrap()
     }
     // ~\~ end
 
     // ~\~ begin <<lit/main.md|solver-fptas>>[0]
     // TODO: are items heavier than the knapsack capacity a problem? if so, we
-    // can just zero out those items
+    // can just zero them out
     fn fptas(&self, eps: f64) -> Solution {
         let Instance {m: _, items, ..} = self;
         let max_profit = items.iter().map(|(_, c)| *c).max().unwrap();
