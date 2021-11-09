@@ -105,7 +105,7 @@ uname -a
 mkdir -p docs/measurements/
 cd solver
 hyperfine --export-json ../docs/bench.json \
-          --parameter-list n 4,10,15,20,22 \
+          --parameter-list n 4,10,15 \
           --parameter-list set NK,ZKC,ZKW \
           --parameter-list alg bb,dpc,dpw,fptas1,fptas2,greedy,redux \
           --min-runs 4 \
@@ -384,6 +384,10 @@ impl <'a> Solution<'a> {
     fn default(inst: &'a Instance) -> Solution<'a> {
         Solution { weight: 0, cost: 0, cfg: Config::default(), inst }
     }
+
+    fn overweight(inst: &'a Instance) -> Solution<'a> {
+        Solution { weight: u32::MAX, cost: 0, cfg: Config::default(), inst }
+    }
 }
 ```
 
@@ -572,25 +576,42 @@ ceny, které je přímočarou adaptací algoritmu výše.
 fn dynamic_programming_c(&self) -> Solution {
     let Instance {items, ..} = self;
     let max_profit = items.iter().map(|(_, c)| *c).max().unwrap() as usize;
-    let mut next = vec![Solution::default(self); max_profit * items.len() + 1];
+    let overweight = Solution::overweight(self);
+    let mut next = vec![overweight; max_profit * items.len() + 1];
     let mut last = vec![];
+    next[0] = Solution::default(self);
 
-    for i in 1..=items.len() {
-        let (_weight, cost) = items[i - 1];
+    for i in 0..items.len() {
+        let (_weight, cost) = items[i];
         last.clone_from(&next);
 
-        for cap in 0 ..= max_profit {
+        for cap in 1 ..= max_profit * items.len() {
+            // println!("{} {} {}", i, cap, cost);
             let s = if (cap as u32) < cost {
                     last[cap]
                 } else {
-                    let rem_cost = max(0, cap as isize - cost as isize) as usize;
-                    max(last[cap], last[rem_cost].with(i - 1))
+                    let rem_cost = (cap as isize - cost as isize) as usize;
+                    let lightest_for_cost = if last[rem_cost] == overweight {
+                        // println!("defaulting");
+                        last[0] // default, empty solution
+                    } else { last[rem_cost] };
+
+                    // FIXME: should be equivalent to
+                    //   max(last[cap], lightest_for_cost.with(i))
+                    // since the accessed solutions have identical costs
+                    max(last[cap], lightest_for_cost.with(i))
                 };
             next[cap] = s;
         }
     }
 
-    *next.last().unwrap()
+    for sln in next.iter().rev() {
+        if sln.weight <= self.m {
+            return *sln;
+        }
+    }
+
+    unreachable!()
 }
 ```
 
@@ -602,15 +623,22 @@ stačí opravit referenci výchozí instance (`inst: self`), indexy předmětů 
 škálováním nemění.
 
 ``` {.rust #solver-fptas}
+// TODO: are items heavier than the knapsack capacity a problem? if so, we
+// can just zero out those items
 fn fptas(&self, eps: f64) -> Solution {
     let Instance {m: _, items, ..} = self;
     let max_profit = items.iter().map(|(_, c)| *c).max().unwrap();
     let scaling_factor = eps * max_profit as f64 / items.len() as f64;
-    let items = items.iter().map(|(w, c)|
+    let items: Vec<(u32, u32)> = items.iter().map(|(w, c)|
         (*w, (*c as f64 / scaling_factor).floor() as u32
     )).collect();
 
-    Solution { inst: self, ..Instance { items, ..*self }.dynamic_programming_c() }
+    let iso = Instance { items, ..*self };
+    let sln = iso.dynamic_programming_c();
+    let cost = (0usize..).zip(self.items.iter()).fold(0, |acc, (i, (_w, c))|
+        acc + sln.cfg[i] as u32 * c
+    );
+    Solution { inst: self, cost, ..sln }
 }
 ```
 
@@ -745,10 +773,11 @@ mod tests {
             Instance {
                 id:    i32::arbitrary(g),
                 m:     u32::arbitrary(g).min(10_000),
-                items: Vec::arbitrary(g)
+                items: vec![<(u32, u32)>::arbitrary(g)]
                            .into_iter()
+                           .chain(Vec::arbitrary(g).into_iter())
                            .take(10)
-                           .map(|(w, c): (u32, u32)| (w.min(10_000), c.min(10_000)))
+                           .map(|(w, c): (u32, u32)| (w.min(10_000), c % 10_000))
                            .collect(),
             }
         }
@@ -758,18 +787,19 @@ mod tests {
             let chain: Vec<Instance> = quickcheck::empty_shrinker()
                 .chain(self.id   .shrink().map(|id   | Instance {id,    ..(&data).clone()}))
                 .chain(self.m    .shrink().map(|m    | Instance {m,     ..(&data).clone()}))
-                .chain(self.items.shrink().map(|items| Instance {items, ..data}))
+                .chain(self.items.shrink().map(|items| Instance { items, ..(&data).clone() })
+                        .filter(|i| !i.items.is_empty()))
                 .collect();
             Box::new(chain.into_iter())
         }
     }
 
     impl <'a> Solution<'a> {
-        fn assert_valid(&self, i: &Instance) {
-            let Instance { m, items, .. } = i;
-            let Solution { weight: w, cost: c, cfg, .. } = self;
+        fn assert_valid(&self) {
+            let Solution { weight, cost, cfg, inst } = self;
+            let Instance { m, items, .. } = inst;
 
-            let (weight, cost) = items
+            let (computed_weight, computed_cost) = items
                 .into_iter()
                 .zip(cfg)
                 .map(|((w, c), b)| {
@@ -778,14 +808,9 @@ mod tests {
                 .reduce(|(a0, b0), (a1, b1)| (a0 + a1, b0 + b1))
                 .unwrap_or_default();
 
-            // println!("{} <= {}", weight, *m);
-            assert!(weight <= *m);
-
-            // println!("{} == {}", cost, *c);
-            assert_eq!(cost, *c);
-
-            // println!("{} == {}", weight, *w);
-            assert_eq!(weight, *w);
+            assert!(computed_weight <= *m);
+            assert_eq!(computed_cost, *cost);
+            assert_eq!(computed_weight, *weight);
         }
     }
 
@@ -796,6 +821,7 @@ mod tests {
         let i = Instance { id: 0, m: 1, items: vec![(1, 1), (1, 2), (0, 1)] };
         let bb = i.branch_and_bound();
         assert_eq!(bb.cost, i.dynamic_programming_w().cost);
+        assert_eq!(bb.cost, i.dynamic_programming_c().cost);
         assert_eq!(bb.cost, i.greedy_redux().cost);
         assert_eq!(bb.cost, i.brute_force().cost);
         assert_eq!(bb.cost, i.greedy().cost);
@@ -826,15 +852,15 @@ mod tests {
 
     #[test]
     fn proper() -> Result<()> {
-        type Solver = for<'a> fn(&'a Instance) -> Solution<'a>;
+        type Solver = (&'static str, for<'a> fn(&'a Instance) -> Solution<'a>);
         let algs = get_algorithms();
-        let algs: Vec<&Solver> = algs.values().collect();
+        let algs: Vec<Solver> = algs.iter().map(|(s, f)| (*s, *f)).collect();
         let opts = load_solutions()?;
         println!("loaded {} optimal solutions", opts.len());
 
-        let solve: for<'a> fn(&Vec<_>, &'a _) -> Vec<Solution<'a>> =
+        let solve: for<'a> fn(&Vec<_>, &'a _) -> Vec<(&'static str, Solution<'a>)> =
             |algs, inst|
-            algs.iter().map(|alg: &&Solver| alg(inst)).collect();
+            algs.iter().map(|(name, alg): &Solver| (*name, alg(inst))).collect();
 
         let mut files = list_input_files()?;
         // make sure `files` is not empty
@@ -847,11 +873,39 @@ mod tests {
             // solve each instance with all algorithms
             while let Some(slns) = parse_line(&mut r)?.as_ref().map(|x| solve(&algs, x)) {
                 // verify correctness
-                slns.iter().for_each(|s| {
-                    s.assert_valid(&s.inst);
+                slns.iter().for_each(|(alg, s)| {
+                    eprint!("\rid: {} alg: {}\t", s.inst.id, alg);
+                    s.assert_valid();
                     let key = (s.inst.items.len() as u32, s.inst.id);
                     assert!(s.cost <= opts[&key].cost);
                 });
+            }
+        }
+        Ok(())
+    }
+
+    #[test]
+    fn dpc_simple() {
+        let i = Instance { id: 0, m: 0, items: vec![(0, 1), (0, 1)] };
+        let s = i.dynamic_programming_c();
+        assert_eq!(s.cost, 2);
+        assert_eq!(s.weight, 0);
+        s.assert_valid();
+    }
+
+    #[test]
+    fn fptas_is_within_bounds() -> Result<()> {
+        let opts = load_solutions()?;
+        for eps in [0.1, 0.01] {
+            for file in list_input_files()? {
+                let file = file?;
+                let mut r = BufReader::new(File::open(file.path())?);
+                while let Some(sln) = parse_line(&mut r)?.as_ref().map(|x| x.fptas(eps)) {
+                    // make sure the solution from fptas is at least (1 - eps) * optimal cost
+                    let key = (sln.inst.items.len() as u32, sln.inst.id);
+                    println!("{} {} {}", sln.cost, opts[&key].cost, (1.0 - eps) * opts[&key].cost as f64);
+                    assert!(sln.cost as f64 >= opts[&key].cost as f64 * (1.0 - eps));
+                }
             }
         }
         Ok(())
@@ -869,7 +923,7 @@ mod tests {
             // ... continue with an integer between 0 and 15,
             file_name[2..]
             .split('_').nth(0).unwrap().parse::<u32>().ok()
-            .filter(|n| (0..15).contains(n)).is_some() &&
+            .filter(|n| (0..9).contains(n)).is_some() &&
             // ... and end with `_inst.dat` (for "instance").
             file_name.ends_with("_inst.dat")
         }).is_some();
@@ -887,7 +941,7 @@ mod tests {
                        , (239, 2388)
                        ],
         };
-        a.branch_and_bound().assert_valid(&a);
+        a.branch_and_bound().assert_valid();
     }
 
     #[test]
@@ -898,7 +952,7 @@ mod tests {
             &mut BufReader::new(File::open("ds/NK15_inst.dat")?)
         )?.unwrap();
         println!("testing {:?}", inst);
-        inst.branch_and_bound().assert_valid(&inst);
+        inst.branch_and_bound().assert_valid();
         Ok(())
     }
 
@@ -910,6 +964,11 @@ mod tests {
     #[quickcheck]
     fn qc_dp_matches_bb(inst: Instance) {
         assert!(inst.branch_and_bound().cost <= inst.dynamic_programming_w().cost);
+    }
+
+    #[quickcheck]
+    fn qc_dps_match(inst: Instance) {
+        assert_eq!(inst.dynamic_programming_w().cost, inst.dynamic_programming_c().cost);
     }
 }
 
