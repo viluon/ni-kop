@@ -1,7 +1,14 @@
 // ~\~ language=Rust filename=solver/src/main.rs
 // ~\~ begin <<lit/main.md|solver/src/main.rs>>[0]
 // ~\~ begin <<lit/main.md|imports>>[0]
-use std::{cmp, cmp::max, collections::{BTreeMap, HashMap}, io::{stdin, BufRead, BufReader}, fs::{read_dir, File}, str::FromStr};
+use std::{cmp, cmp::max,
+    ops::Range,
+    iter::Filter,
+    str::FromStr,
+    io::{BufRead, BufReader},
+    collections::{BTreeMap, HashMap},
+    fs::{read_dir, File, ReadDir, DirEntry},
+};
 use anyhow::{Context, Result, anyhow};
 use bitvec::prelude::BitArr;
 
@@ -11,7 +18,7 @@ extern crate quickcheck_macros;
 // ~\~ end
 
 // ~\~ begin <<lit/main.md|algorithm-map>>[0]
-fn get_algorithms() -> BTreeMap<&'static str, fn(&Instance) -> Solution> {
+pub fn get_algorithms() -> BTreeMap<&'static str, fn(&Instance) -> Solution> {
     let cast = |x: fn(&Instance) -> Solution| x;
     // the BTreeMap works as a trie, maintaining alphabetic order
     BTreeMap::from([
@@ -27,39 +34,11 @@ fn get_algorithms() -> BTreeMap<&'static str, fn(&Instance) -> Solution> {
 }
 // ~\~ end
 
-fn main() -> Result<()> {
-    let algorithms = get_algorithms();
-    let solutions = load_solutions()?;
-
-    let alg = *{
-        // ~\~ begin <<lit/main.md|select-algorithm>>[0]
-        let args: Vec<String> = std::env::args().collect();
-        if args.len() == 2 {
-            let alg = &args[1][..];
-            if let Some(f) = algorithms.get(alg) {
-                Ok(f)
-            } else {
-                Err(anyhow!("\"{}\" is not a known algorithm", alg))
-            }
-        } else {
-            println!(
-                "Usage: {} <algorithm>\n\twhere <algorithm> is one of {}",
-                args[0],
-                algorithms.keys().map(ToString::to_string).collect::<Vec<_>>().join(", ")
-            );
-            Err(anyhow!("Expected 1 argument, got {}", args.len() - 1))
-        }
-        // ~\~ end
-    }?;
-
-    for (cost, error) in solve_stream(alg, solutions, &mut stdin().lock())? {
-        println!("{} {}", cost, error);
-    }
-    Ok(())
-}
-
-fn solve_stream<'a, T>(alg: for <'b> fn(&'b Instance) -> Solution<'b>, solutions: HashMap<(u32, i32), OptimalSolution>, stream: &mut T)
--> Result<Vec<(u32, f64)>> where T: BufRead {
+pub fn solve_stream<'a, T>(
+    alg: for <'b> fn(&'b Instance) -> Solution<'b>,
+    solutions: HashMap<(u32, i32), OptimalSolution>,
+    stream: &mut T
+) -> Result<Vec<(u32, f64)>> where T: BufRead {
     let mut results = vec![];
     loop {
         match parse_line(stream)?.as_ref().map(|inst| (inst, alg(inst))) {
@@ -73,21 +52,40 @@ fn solve_stream<'a, T>(alg: for <'b> fn(&'b Instance) -> Solution<'b>, solutions
     }
 }
 
+use std::result::Result as IOResult;
+pub fn list_input_files(r: Range<u32>) -> Result<Vec<IOResult<DirEntry, std::io::Error>>> {
+    let f = |res: &IOResult<DirEntry, std::io::Error> | res.as_ref().ok().filter(|f| {
+        let file_name = f.file_name();
+        let file_name = file_name.to_str().unwrap();
+        // keep only regular files
+        f.file_type().unwrap().is_file() &&
+        // ... whose names start with NK,
+        file_name.starts_with("NK") &&
+        // ... continue with an integer between 0 and 15,
+        file_name[2..]
+        .split('_').nth(0).unwrap().parse::<u32>().ok()
+        .filter(|n| r.contains(n)).is_some() &&
+        // ... and end with `_inst.dat` (for "instance").
+        file_name.ends_with("_inst.dat")
+    }).is_some();
+    Ok(read_dir("./ds/")?.filter(f).collect())
+}
+
 // ~\~ begin <<lit/main.md|problem-instance-definition>>[0]
 #[derive(Debug, PartialEq, Eq, Clone)]
-struct Instance {
-    id: i32, m: u32, items: Vec<(u32, u32)>
+pub struct Instance {
+    pub id: i32, m: u32, pub items: Vec<(u32, u32)>
 }
 // ~\~ end
 
 // ~\~ begin <<lit/main.md|solution-definition>>[0]
-type Config = BitArr!(for 64);
+pub type Config = BitArr!(for 64);
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
-struct Solution<'a> { weight: u32, cost: u32, cfg: Config, inst: &'a Instance }
+pub struct Solution<'a> { weight: u32, pub cost: u32, cfg: Config, pub inst: &'a Instance }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-struct OptimalSolution { id: i32, cost: u32, cfg: Config }
+pub struct OptimalSolution { id: i32, pub cost: u32, cfg: Config }
 
 // ~\~ begin <<lit/main.md|solution-helpers>>[0]
 impl <'a> PartialOrd for Solution<'a> {
@@ -146,7 +144,7 @@ impl Boilerplate for std::str::SplitWhitespace<'_> {
 }
 // ~\~ end
 
-fn parse_line<T>(stream: &mut T) -> Result<Option<Instance>> where T: BufRead {
+pub fn parse_line<T>(stream: &mut T) -> Result<Option<Instance>> where T: BufRead {
     let mut input = String::new();
     if stream.read_line(&mut input)? == 0 {
         return Ok(None)
@@ -187,7 +185,7 @@ fn parse_solution_line<T>(mut stream: T) -> Result<Option<OptimalSolution>> wher
     Ok(Some(OptimalSolution {id, cost, cfg: items}))
 }
 
-fn load_solutions() -> Result<HashMap<(u32, i32), OptimalSolution>> {
+pub fn load_solutions() -> Result<HashMap<(u32, i32), OptimalSolution>> {
     let mut solutions = HashMap::new();
 
     let files = read_dir("../data/constructive/")?
@@ -397,7 +395,7 @@ impl Instance {
 mod tests {
     use super::*;
     use quickcheck::{Arbitrary, Gen};
-    use std::{fs::{ReadDir, DirEntry, File}, iter::Filter, io::BufReader};
+    use std::{fs::File, io::BufReader};
 
     impl Arbitrary for Instance {
         fn arbitrary(g: &mut Gen) -> Instance {
@@ -470,7 +468,7 @@ mod tests {
             |algs, inst|
             algs.iter().map(|(name, alg): &Solver| (*name, alg(inst))).collect();
 
-        let mut files = list_input_files()?;
+        let mut files = list_input_files(0..5)?.into_iter();
         // make sure `files` is not empty
         let first = files.next().ok_or(anyhow!("no instance files loaded"))?;
         for file in vec![first].into_iter().chain(files) {
@@ -505,7 +503,7 @@ mod tests {
     fn fptas_is_within_bounds() -> Result<()> {
         let opts = load_solutions()?;
         for eps in [0.1, 0.01] {
-            for file in list_input_files()? {
+            for file in list_input_files(0..5)? {
                 let file = file?;
                 let mut r = BufReader::new(File::open(file.path())?);
                 while let Some(sln) = parse_line(&mut r)?.as_ref().map(|x| x.fptas(eps)) {
@@ -517,25 +515,6 @@ mod tests {
             }
         }
         Ok(())
-    }
-
-    type FilterClosure = fn(&std::result::Result<DirEntry, std::io::Error>) -> bool;
-    fn list_input_files() -> Result<Filter<ReadDir, FilterClosure>> {
-        let f: FilterClosure = |res| res.as_ref().ok().filter(|f| {
-            let file_name = f.file_name();
-            let file_name = file_name.to_str().unwrap();
-            // keep only regular files
-            f.file_type().unwrap().is_file() &&
-            // ... whose names start with NK,
-            file_name.starts_with("NK") &&
-            // ... continue with an integer between 0 and 15,
-            file_name[2..]
-            .split('_').nth(0).unwrap().parse::<u32>().ok()
-            .filter(|n| (0..9).contains(n)).is_some() &&
-            // ... and end with `_inst.dat` (for "instance").
-            file_name.ends_with("_inst.dat")
-        }).is_some();
-        Ok(read_dir("./ds/")?.filter(f))
     }
 
     #[test]

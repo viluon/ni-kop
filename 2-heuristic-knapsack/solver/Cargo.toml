@@ -8,10 +8,12 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.44"
 bitvec = "0.22.3"
-criterion = "0.3"
 permutation = "0.2.5"
 quickcheck = "1"
 quickcheck_macros = "1"
+
+[dev-dependencies]
+criterion = "0.3"
 
 [profile.release]
 debug = 1
