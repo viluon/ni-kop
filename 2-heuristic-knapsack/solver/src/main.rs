@@ -1,7 +1,7 @@
 // ~\~ language=Rust filename=solver/src/main.rs
 // ~\~ begin <<lit/main.md|solver/src/main.rs>>[0]
 // ~\~ begin <<lit/main.md|imports>>[0]
-use std::{cmp, cmp::max, collections::BTreeMap, io::{stdin, BufRead}, str::FromStr};
+use std::{cmp, cmp::max, collections::{BTreeMap, HashMap}, io::{stdin, BufRead, BufReader}, fs::{read_dir, File}, str::FromStr};
 use anyhow::{Context, Result, anyhow};
 use bitvec::prelude::BitArr;
 
@@ -29,8 +29,9 @@ fn get_algorithms() -> BTreeMap<&'static str, fn(&Instance) -> Solution> {
 
 fn main() -> Result<()> {
     let algorithms = get_algorithms();
+    let solutions = load_solutions()?;
 
-    let alg = {
+    let alg = *{
         // ~\~ begin <<lit/main.md|select-algorithm>>[0]
         let args: Vec<String> = std::env::args().collect();
         if args.len() == 2 {
@@ -51,10 +52,23 @@ fn main() -> Result<()> {
         // ~\~ end
     }?;
 
+    for (cost, error) in solve_stream(alg, solutions, &mut stdin().lock())? {
+        println!("{} {}", cost, error);
+    }
+    Ok(())
+}
+
+fn solve_stream<'a, T>(alg: for <'b> fn(&'b Instance) -> Solution<'b>, solutions: HashMap<(u32, i32), OptimalSolution>, stream: &mut T)
+-> Result<Vec<(u32, f64)>> where T: BufRead {
+    let mut results = vec![];
     loop {
-        match parse_line(&mut stdin().lock())?.as_ref().map(alg) {
-            Some(Solution { cost, .. }) => println!("{}", cost),
-            None => return Ok(())
+        match parse_line(stream)?.as_ref().map(|inst| (inst, alg(inst))) {
+            Some((inst, sln)) => {
+                let optimal = &solutions[&(inst.items.len() as u32, inst.id)];
+                let error = 1.0 - sln.cost as f64 / optimal.cost as f64;
+                results.push((sln.cost, error))
+            },
+            None => return Ok(results)
         }
     }
 }
@@ -153,7 +167,6 @@ fn parse_line<T>(stream: &mut T) -> Result<Option<Instance>> where T: BufRead {
     Ok(Some(Instance {id, m, items}))
 }
 
-#[cfg(test)]
 fn parse_solution_line<T>(mut stream: T) -> Result<Option<OptimalSolution>> where T: BufRead {
     let mut input = String::new();
     if stream.read_line(&mut input)? == 0 {
@@ -172,6 +185,29 @@ fn parse_solution_line<T>(mut stream: T) -> Result<Option<OptimalSolution>> wher
     }
 
     Ok(Some(OptimalSolution {id, cost, cfg: items}))
+}
+
+fn load_solutions() -> Result<HashMap<(u32, i32), OptimalSolution>> {
+    let mut solutions = HashMap::new();
+
+    let files = read_dir("../data/constructive/")?
+        .filter(|res| res.as_ref().ok().filter(|f| {
+            let name = f.file_name().into_string().unwrap();
+            f.file_type().unwrap().is_file() &&
+            name.starts_with("NK") &&
+            name.ends_with("_sol.dat")
+        }).is_some());
+
+    for file in files {
+        let file = file?;
+        let n = file.file_name().into_string().unwrap()[2..].split('_').nth(0).unwrap().parse()?;
+        let mut stream = BufReader::new(File::open(file.path())?);
+        while let Some(opt) = parse_solution_line(&mut stream)? {
+            solutions.insert((n, opt.id), opt);
+        }
+    }
+
+    Ok(solutions)
 }
 // ~\~ end
 
@@ -361,7 +397,7 @@ impl Instance {
 mod tests {
     use super::*;
     use quickcheck::{Arbitrary, Gen};
-    use std::{fs::{read_dir, ReadDir, DirEntry, File}, iter::Filter, io::BufReader, collections::HashMap};
+    use std::{fs::{ReadDir, DirEntry, File}, iter::Filter, io::BufReader};
 
     impl Arbitrary for Instance {
         fn arbitrary(g: &mut Gen) -> Instance {
@@ -420,29 +456,6 @@ mod tests {
         assert_eq!(bb.cost, i.greedy_redux().cost);
         assert_eq!(bb.cost, i.brute_force().cost);
         assert_eq!(bb.cost, i.greedy().cost);
-    }
-
-    fn load_solutions() -> Result<HashMap<(u32, i32), OptimalSolution>> {
-        let mut solutions = HashMap::new();
-
-        let files = read_dir("../data/constructive/")?
-            .filter(|res| res.as_ref().ok().filter(|f| {
-                let name = f.file_name().into_string().unwrap();
-                f.file_type().unwrap().is_file() &&
-                name.starts_with("NK") &&
-                name.ends_with("_sol.dat")
-            }).is_some());
-
-        for file in files {
-            let file = file?;
-            let n = file.file_name().into_string().unwrap()[2..].split('_').nth(0).unwrap().parse()?;
-            let mut stream = BufReader::new(File::open(file.path())?);
-            while let Some(opt) = parse_solution_line(&mut stream)? {
-                solutions.insert((n, opt.id), opt);
-            }
-        }
-
-        Ok(solutions)
     }
 
     #[test]

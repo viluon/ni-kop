@@ -27,7 +27,12 @@ jobs:
           locale
 
           apt-get install -y --no-install-recommends \
-            librsvg2-bin lmodern rsync texlive-fonts-recommended texlive-xetex wget
+            librsvg2-bin \
+            lmodern \
+            rsync \
+            texlive-fonts-recommended \
+            texlive-xetex \
+            wget
 
           cd 2-heuristic-knapsack/
           wget -O cpufetch https://github.com/Dr-Noob/cpufetch/releases/download/v1.00/cpufetch_x86-64_linux
