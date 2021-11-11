@@ -473,13 +473,17 @@ permutaci předmětů na posloupnost indexů, které procházíme. Přesně to d
 fn greedy(&self) -> Solution {
     use ::permutation::*;
     let Instance {m, items, ..} = self;
-    fn ratio((w, c): (u32, u32)) -> f64 { c as f64 / w as f64 }
+    fn ratio((w, c): (u32, u32)) -> f64 {
+        let r = c as f64 / w as f64;
+        if r.is_nan() { f64::NEG_INFINITY } else { r }
+    }
     let permutation = sort_by(
         &(items)[..],
         |a, b|
             ratio(*a)
             .partial_cmp(&ratio(*b))
             .unwrap()
+            .reverse() // max item first
     );
     let ord = { #[inline] |i| permutation.apply_idx(i) };
 
@@ -1163,6 +1167,12 @@ mod tests {
     #[quickcheck]
     fn qc_dps_match(inst: Instance) {
         assert_eq!(inst.dynamic_programming_w().cost, inst.dynamic_programming_c().cost);
+    }
+
+    #[quickcheck]
+    fn qc_greedy_is_valid(inst: Instance) {
+        inst.greedy().assert_valid();
+        inst.greedy_redux().assert_valid();
     }
 }
 
