@@ -8,7 +8,7 @@ use anyhow::{Result, anyhow};
 
 fn main() -> Result<()> {
     let algorithms = get_algorithms();
-    let solutions = load_solutions()?;
+    let solutions = load_solutions("NK")?;
 
     let alg = *{
         // ~\~ begin <<lit/main.md|select-algorithm>>[0]

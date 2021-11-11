@@ -3,6 +3,10 @@ title: 'NI-KOP -- úkol 2'
 author: 'Ondřej Kvapil'
 ---
 
+**BEFORE SUBMISSION**:
+- fix `n` range in `bench.rs`
+- fix `cargo bench` command here
+
 # Kombinatorická optimalizace: problém batohu
 
 ## Zadání
@@ -108,7 +112,7 @@ uname -a
 ./cpufetch --logo-short --color ibm
 mkdir -p docs/measurements/
 cd solver
-cargo bench --color always
+# cargo bench --color always
 cp -r target/criterion ../docs/criterion
 ```
 
@@ -210,10 +214,10 @@ plt.legend()
 plt.savefig("docs/assets/max_errors.svg")
 ```
 
-Výkon každého algoritmu byl změřen na stovce různých zadání z jednoho datového
-setu alespoň desetkrát za sebou (přesný počet spuštění řídí knihovna v
-závislosti na výkonu algoritmu). Vyobrazený čas je proto stokrát vyšší, než
-skutečná doba řešení jedné instance problému dané velikosti.
+Výkon každého algoritmu byl změřen na stovce různých zadání z jedné datové sady
+alespoň desetkrát za sebou (přesný počet spuštění řídí knihovna v závislosti na
+výkonu algoritmu). Vyobrazený čas je proto stokrát vyšší, než skutečná doba
+řešení jedné instance problému dané velikosti.
 
 ![Závislost doby běhu na počtu předmětů.](assets/mean_runtimes.svg)
 
@@ -224,12 +228,22 @@ je, že maximální chyba je relativně hluboko pod požadovanou horní mezí.
 
 ### Analýza
 
-Detailní analýza algoritmu FPTAS je dostupná pro $\varepsilon = 0.1$ a
-$\varepsilon = 0.01$ v reportu [`fptas1`](criterion/fptas1/report/index.html),
-resp. [`fptas2`](criterion/fptas2/report/index.html).
+Detailní analýza algoritmu FPTAS je rozdělená podle sady instancí a parametru
+$\varepsilon$.
+
+ Sada | $\varepsilon$ | Report
+------|---------------|-------------------------------------------------------
+  NK  |    $0.1$      | [`NK-fptas1`](criterion/NK-fptas1/report/index.html)
+  NK  |    $0.01$     | [`NK-fptas2`](criterion/NK-fptas2/report/index.html)
+  ZKC |    $0.1$      | [`ZKC-fptas1`](criterion/ZKC-fptas1/report/index.html)
+  ZKC |    $0.01$     | [`ZKC-fptas2`](criterion/ZKC-fptas2/report/index.html)
+  ZKW |    $0.1$      | [`ZKW-fptas1`](criterion/ZKW-fptas1/report/index.html)
+  ZKW |    $0.01$     | [`ZKW-fptas2`](criterion/ZKW-fptas2/report/index.html)
 
 #### Odpovídají obě závislosti (kvality a času) předpokladům?
-TODO
+Ne. Čekal jsem, že FPTAS bude často mnohem blíže požadované hranici
+$\varepsilon$. Varianta `fptas1` ale většinou překoná i hranici pro `fptas2`,
+přitom je mnohem rychlejší.
 
 #### Je některá heuristická metoda systematicky lepší v některém kritériu?
 TODO

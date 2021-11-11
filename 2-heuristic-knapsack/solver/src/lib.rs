@@ -53,16 +53,16 @@ pub fn solve_stream<'a, T>(
 }
 
 use std::result::Result as IOResult;
-pub fn list_input_files(r: Range<u32>) -> Result<Vec<IOResult<DirEntry, std::io::Error>>> {
+pub fn list_input_files(set: &str, r: Range<u32>) -> Result<Vec<IOResult<DirEntry, std::io::Error>>> {
     let f = |res: &IOResult<DirEntry, std::io::Error> | res.as_ref().ok().filter(|f| {
         let file_name = f.file_name();
         let file_name = file_name.to_str().unwrap();
         // keep only regular files
         f.file_type().unwrap().is_file() &&
-        // ... whose names start with NK,
-        file_name.starts_with("NK") &&
+        // ... whose names start with the set name,
+        file_name.starts_with(set) &&
         // ... continue with an integer between 0 and 15,
-        file_name[2..]
+        file_name[set.len()..]
         .split('_').nth(0).unwrap().parse::<u32>().ok()
         .filter(|n| r.contains(n)).is_some() &&
         // ... and end with `_inst.dat` (for "instance").
@@ -185,20 +185,20 @@ fn parse_solution_line<T>(mut stream: T) -> Result<Option<OptimalSolution>> wher
     Ok(Some(OptimalSolution {id, cost, cfg: items}))
 }
 
-pub fn load_solutions() -> Result<HashMap<(u32, i32), OptimalSolution>> {
+pub fn load_solutions(set: &str) -> Result<HashMap<(u32, i32), OptimalSolution>> {
     let mut solutions = HashMap::new();
 
     let files = read_dir("../data/constructive/")?
         .filter(|res| res.as_ref().ok().filter(|f| {
             let name = f.file_name().into_string().unwrap();
             f.file_type().unwrap().is_file() &&
-            name.starts_with("NK") &&
+            name.starts_with(set) &&
             name.ends_with("_sol.dat")
         }).is_some());
 
     for file in files {
         let file = file?;
-        let n = file.file_name().into_string().unwrap()[2..].split('_').nth(0).unwrap().parse()?;
+        let n = file.file_name().into_string().unwrap()[set.len()..].split('_').nth(0).unwrap().parse()?;
         let mut stream = BufReader::new(File::open(file.path())?);
         while let Some(opt) = parse_solution_line(&mut stream)? {
             solutions.insert((n, opt.id), opt);
@@ -461,14 +461,14 @@ mod tests {
         type Solver = (&'static str, for<'a> fn(&'a Instance) -> Solution<'a>);
         let algs = get_algorithms();
         let algs: Vec<Solver> = algs.iter().map(|(s, f)| (*s, *f)).collect();
-        let opts = load_solutions()?;
+        let opts = load_solutions("NK")?;
         println!("loaded {} optimal solutions", opts.len());
 
         let solve: for<'a> fn(&Vec<_>, &'a _) -> Vec<(&'static str, Solution<'a>)> =
             |algs, inst|
             algs.iter().map(|(name, alg): &Solver| (*name, alg(inst))).collect();
 
-        let mut files = list_input_files(0..5)?.into_iter();
+        let mut files = list_input_files("NK", 0..5)?.into_iter();
         // make sure `files` is not empty
         let first = files.next().ok_or(anyhow!("no instance files loaded"))?;
         for file in vec![first].into_iter().chain(files) {
@@ -501,9 +501,9 @@ mod tests {
 
     #[test]
     fn fptas_is_within_bounds() -> Result<()> {
-        let opts = load_solutions()?;
+        let opts = load_solutions("NK")?;
         for eps in [0.1, 0.01] {
-            for file in list_input_files(0..5)? {
+            for file in list_input_files("NK", 0..5)? {
                 let file = file?;
                 let mut r = BufReader::new(File::open(file.path())?);
                 while let Some(sln) = parse_line(&mut r)?.as_ref().map(|x| x.fptas(eps)) {
