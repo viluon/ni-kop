@@ -92,9 +92,6 @@ $(docs_dir)/assets:
 #	Hack to allow ![](assets/foo) both in the PDF and the website
 	ln -sf $(docs_dir)/assets ./
 
-$(docs_dir)/criterion: solver/target/criterion
-	cp -r $< $@
-
 $(pandoc_intermediary): $(input_files) $(docs_dir)/assets $(docs_dir)/criterion
 	JUPYTER=1 pandoc $(pandoc_args) $(input_files) -o $@
 
