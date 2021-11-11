@@ -28,7 +28,8 @@ fn full(c: &mut Criterion) -> Result<()> {
         for n in ns {
             input.insert((set, n), load_input(set, n .. n + 1)?
                 .into_iter()
-                .filter(|inst| inst.id > 400)
+                .rev()
+                .take(100)
                 .collect()
             );
         }
@@ -53,7 +54,8 @@ fn benchmark(
             group.sample_size(10).warm_up_time(Duration::from_millis(200));
 
             for n in ns {
-                if !ranges.get(*name).filter(|r| r.contains(&n)).is_some() {
+                if !ranges.get(*name).filter(|r| r.contains(&n)).is_some()
+                || (*name == "bb" && *n > 22 && *set == "ZKW") {
                     continue;
                 }
 

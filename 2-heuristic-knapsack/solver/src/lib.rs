@@ -297,7 +297,6 @@ impl Instance {
                 ratio(*a)
                 .partial_cmp(&ratio(*b))
                 .unwrap()
-                .reverse() // max value first
         );
         let ord = { #[inline] |i| permutation.apply_idx(i) };
 

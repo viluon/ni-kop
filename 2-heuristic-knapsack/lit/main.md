@@ -65,7 +65,7 @@ obtížné (ne-li nemožné).
   - Tj. zvolte několik požadovaných přesností ($\varepsilon$), v závislosti na
     $\varepsilon$ měřte čas běhu a reálnou (maximální, případně i průměrnou)
     chybu algoritmu
-- [ ] Zhodnocení naměřených výsledků.
+- [x] Zhodnocení naměřených výsledků.
 
 ### Bonusový bod
 
@@ -259,19 +259,39 @@ $\varepsilon$.
   - $\varepsilon = 0.1$  [`ZKW-fptas1`](criterion/ZKW-fptas1/report/index.html)
   - $\varepsilon = 0.01$ [`ZKW-fptas2`](criterion/ZKW-fptas2/report/index.html)
 
+Z grafů je vidět, že (alespoň na těchto datových sadách) se dekompozice podle
+váhy vyplatí mnohem více, než dekompozice podle ceny. FPTAS sice něco z
+výpočetní náročnosti ušetří (na úkor kvality řešení), dynamické programování
+podle váhy ale stále vede.
+
 #### Odpovídají obě závislosti (kvality a času) předpokladům?
 Ne. Čekal jsem, že FPTAS bude často mnohem blíže požadované hranici
 $\varepsilon$. Varianta `fptas1` ale většinou překoná i hranici pro `fptas2`,
 přitom je mnohem rychlejší.
 
+V sadě ZKW je zároveň poměrně málo instancí, ve kterých se navíc objevují
+nečekané trendy. Ty vedou k tomu, že dynamické programování s rozkladem podle
+ceny na této sadě projevuje nemonotonní vztah mezi velikostí instance a dobou
+běhu.
+
 #### Je některá heuristická metoda systematicky lepší v některém kritériu?
-TODO
+Heuristiky běží podstatně rychleji než ostatní algoritmy. Redux je navíc i
+užitečná, protože její maximální chyba je shora omezená. Naproti tomu hloupý
+hladový přístup často skončí s vysokou chybou.
 
 #### Jak se liší obtížnost jednotlivých sad z hlediska jednotlivých metod?
-TODO
+Sady NK a ZKC jsou si zřejmě dost podobné. Metoda větví a hranic má trochu
+problémy v sadě ZKC, pro $n = 25$ už řešení trvalo 10 sekund (proto jsem jej z
+měření vyřadil). Sada ZKW se zdá být podstatně jednodušší pro dynamické
+programování a FPTAS na něm založený.
 
 #### Jaká je závislost maximální chyby ($\varepsilon$) a času FPTAS algoritmu na zvolené přesnosti? Odpovídá předpokladům?
-TODO
+Nikoliv. `fptas1` (pro $\varepsilon = 0.1$) je překvapivě časově efektivní a
+zároveň dosahuje velmi pěkných výsledků. Kromě sady ZKW, kde má trochu problémy,
+často přesáhne mez stanovenou jeho výrazně pomalejšímu bratru `fptas2`. Na
+těchto datech se zdá být dobrým kompromisem mezi výpočetní složitostí a
+přesností výsledku, ačkoliv kvality dynamického programování podle váhy
+samozřejmě nedosahuje.
 
 ## Implementace
 
@@ -460,7 +480,6 @@ fn greedy(&self) -> Solution {
             ratio(*a)
             .partial_cmp(&ratio(*b))
             .unwrap()
-            .reverse() // max value first
     );
     let ord = { #[inline] |i| permutation.apply_idx(i) };
 
@@ -669,14 +688,18 @@ fn fptas(&self, eps: f64) -> Solution {
 
 ## Závěr
 
-Tento úvodní problém byl příležitostí připravit si technické zázemí pro
-nadcházející úkoly. Implementace, které odevzdávám, se značně spoléhají na
-bezpečí typového systému jazyka Rust. Čas ukáže, jestli to usnadní jejich další
-rozšiřování a obohacování. Zadání jsem se pokusil splnit v celém rozsahu, ale
-neměl jsem už čas implementovat ořezávání s pomocí fragmentální varianty
-problému batohu v metodě větví a hranic.
+Zadání jsem se znovu pokusil splnit v celém rozsahu. Implementoval jsem všechny
+zadané algoritmy, k nim navíc dynamické programování s rozkladem podle kapacity.
+Díky nové implementaci měření jsem zachytil podrobné statistiky ze všech
+experimentů, včetně středních odchylek, průměrů, mediánů a dalších statistických
+veličin doby běhu jednotlivých algoritmů na různých datových sadách, ale také
+průměrné a maximální chyby všech výsledků.
 
-TODO: zhodnocení rozhodnutí z minulého úkolu
+Podrobné reporty kombinace algoritmů, datových sad a velikostí instancí, jakožto
+i přehledy výkonu algoritmů na datových sadách napříč všemi velikostmi instancí
+jsou zachycené zvlášť. Archív odevzdaný na Moodle je obsahuje v podsložce
+`criterion`, jsou také dostupné online (např. [přehled výkonu `redux` na
+ZKC](https://viluon.me/ni-kop/criterion/ZKC-redux/report/)).
 
 ## Appendix
 
@@ -824,7 +847,8 @@ fn full(c: &mut Criterion) -> Result<()> {
         for n in ns {
             input.insert((set, n), load_input(set, n .. n + 1)?
                 .into_iter()
-                .filter(|inst| inst.id > 400)
+                .rev()
+                .take(100)
                 .collect()
             );
         }
@@ -849,7 +873,8 @@ fn benchmark(
             group.sample_size(10).warm_up_time(Duration::from_millis(200));
 
             for n in ns {
-                if !ranges.get(*name).filter(|r| r.contains(&n)).is_some() {
+                if !ranges.get(*name).filter(|r| r.contains(&n)).is_some()
+                || (*name == "bb" && *n > 22 && *set == "ZKW") {
                     continue;
                 }
 
