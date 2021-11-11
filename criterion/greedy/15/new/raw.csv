@@ -1,0 +1,11 @@
+group,function,value,throughput_num,throughput_type,sample_measured_value,unit,iteration_count
+greedy,,15,,,90840873.0,ns,203
+greedy,,15,,,182390051.0,ns,406
+greedy,,15,,,267026177.0,ns,609
+greedy,,15,,,355591833.0,ns,812
+greedy,,15,,,459073599.0,ns,1015
+greedy,,15,,,542270716.0,ns,1218
+greedy,,15,,,638481727.0,ns,1421
+greedy,,15,,,723670659.0,ns,1624
+greedy,,15,,,880730822.0,ns,1827
+greedy,,15,,,900423667.0,ns,2030

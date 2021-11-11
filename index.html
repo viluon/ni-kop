@@ -168,15 +168,15 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <ul class="task-list">
 <li><input type="checkbox" disabled="" checked="" />
 Popis implementovaných metod.</li>
-<li><input type="checkbox" disabled="" />
+<li><input type="checkbox" disabled="" checked="" />
 Srovnání výpočetních časů metody větví a hranic, dynamického programování a heuristiky cena/váha (stačí jedna). Grafy vítány.<ul>
 <li>Tj. závislosti výpočetních časů na velikosti instance</li>
 </ul></li>
-<li><input type="checkbox" disabled="" />
+<li><input type="checkbox" disabled="" checked="" />
 Porovnání relativních chyb (průměrných a maximálních) obou heuristik.<ul>
 <li>Tj. závislosti rel. chyby na velikosti instance</li>
 </ul></li>
-<li><input type="checkbox" disabled="" />
+<li><input type="checkbox" disabled="" checked="" />
 U FPTAS algoritmu pozorujte (naměřte, zdokumentujte) závislost chyby a výpočetního času algoritmu na zvolené přesnosti zobrazení (pro několik různých přesností), srovnání maximální naměřené chyby s teoreticky předpokládanou.<ul>
 <li>Tj. zvolte několik požadovaných přesností (<span class="math inline">\(\varepsilon\)</span>), v závislosti na <span class="math inline">\(\varepsilon\)</span> měřte čas běhu a reálnou (maximální, případně i průměrnou) chybu algoritmu</li>
 </ul></li>
@@ -208,39 +208,39 @@ Zhodnocení naměřených výsledků.</li>
 <div class="programOutput">
 <pre class="ansi2html-content"><span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">    Updating</span> crates.io index
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00"> Downloading</span> crates ...
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> aho-corasick v0.7.18
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> radium v0.6.2
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> quickcheck_macros v1.0.0
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> wyz v0.4.0
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> funty v1.2.0
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> log v0.4.14
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> anyhow v1.0.44
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> env_logger v0.8.4
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> quickcheck v1.0.3
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> proc-macro2 v1.0.29
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> syn v1.0.80
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> tap v1.0.1
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> radium v0.6.2
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> permutation v0.2.5
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> wyz v0.4.0
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> quickcheck_macros v1.0.0
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> funty v1.2.0
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> aho-corasick v0.7.18
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> bitvec v0.22.3
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> libc v0.2.103
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> permutation v0.2.5
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> proc-macro2 v1.0.29
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> env_logger v0.8.4
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> anyhow v1.0.44
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> tap v1.0.1
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> quickcheck v1.0.3
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> log v0.4.14
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> memchr v2.4.1
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> libc v0.2.103
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> cfg-if v1.0.0
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> memchr v2.4.1
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> proc-macro2 v1.0.29
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> log v0.4.14
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> unicode-xid v0.2.2
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> regex-syntax v0.6.25
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> log v0.4.14
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> radium v0.6.2
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> regex-syntax v0.6.25
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> syn v1.0.80
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> anyhow v1.0.44
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> tap v1.0.1
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> anyhow v1.0.44
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> funty v1.2.0
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> permutation v0.2.5
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> wyz v0.4.0
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> aho-corasick v0.7.18
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> getrandom v0.2.3
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> bitvec v0.22.3
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> quote v1.0.10
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> bitvec v0.22.3
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> rand_core v0.6.3
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> regex v1.5.4
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> rand v0.8.4
@@ -260,7 +260,7 @@ Zhodnocení naměřených výsledků.</li>
    <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">= </span><span style="font-weight: bold">note</span>: `#[warn(unused_imports)]` on by default
 
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #aa5500">warning</span><span style="font-weight: bold">:</span> `solver` (lib) generated 1 warning
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">    Finished</span> release [optimized + debuginfo] target(s) in 38.93s
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">    Finished</span> release [optimized + debuginfo] target(s) in 43.97s
 </pre>
 </div>
 </div>
@@ -276,55 +276,56 @@ Zhodnocení naměřených výsledků.</li>
 <span id="benchmark-2"><a href="#benchmark-2" aria-hidden="true" tabindex="-1"></a>./cpufetch --logo-short --color ibm</span>
 <span id="benchmark-3"><a href="#benchmark-3" aria-hidden="true" tabindex="-1"></a>mkdir -p docs/measurements/</span>
 <span id="benchmark-4"><a href="#benchmark-4" aria-hidden="true" tabindex="-1"></a><span class="kw">cd</span> solver</span>
-<span id="benchmark-5"><a href="#benchmark-5" aria-hidden="true" tabindex="-1"></a>cargo bench</span></code></pre></div>
+<span id="benchmark-5"><a href="#benchmark-5" aria-hidden="true" tabindex="-1"></a>cargo bench</span>
+<span id="benchmark-6"><a href="#benchmark-6" aria-hidden="true" tabindex="-1"></a>cp -r target/criterion ../docs/criterion</span></code></pre></div>
 </div>
 </div>
 </div>
 <div class="doctestResult">
 <div class="programOutput">
-<pre class="ansi2html-content">Linux 5b0a8db16e03 5.11.0-1020-azure #21~20.04.1-Ubuntu SMP Mon Oct 11 18:54:28 UTC 2021 x86_64 GNU/Linux
+<pre class="ansi2html-content">Linux 6f1dac33e6a9 5.11.0-1020-azure #21~20.04.1-Ubuntu SMP Mon Oct 11 18:54:28 UTC 2021 x86_64 GNU/Linux
 
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">                   .#################.          </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">Name:</span>       <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">Intel Xeon Platinum </span>
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">                   .#################.          </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">Name:</span>       <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">Intel Xeon E5-2673 v</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">              .####                   ####.     </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">Hypervisor:</span> <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">Microsoft Hyper-V</span>
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">          .##                             ###   </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">uArch:</span>      <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">Cascade Lake</span>
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">       ##                          :##     ###  </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">Technology:</span> <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">14nm</span>
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">          .##                             ###   </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">uArch:</span>      <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">Haswell</span>
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">       ##                          :##     ###  </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">Technology:</span> <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">22nm</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">    #                ##            :##      ##  </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">Max Freq:</span>   <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">Unknown</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">  ##   ##  ######.   ####  ######  :##      ##  </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">Cores:</span>      <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">2 cores</span>
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7"> ##    ##  ##:  ##:  ##   ##   ### :##     ###  </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">AVX:</span>        <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">AVX,AVX2,AVX512</span>
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7"> ##    ##  ##:  ##:  ##   ##   ### :##     ###  </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">AVX:</span>        <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">AVX,AVX2</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">##     ##  ##:  ##:  ##  :######## :##    ##    </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">FMA:</span>        <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">FMA3</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">##     ##  ##:  ##:  ##   ##.   .  :## ####     </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">L1i Size:</span>   <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">32KB (64KB Total)</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">##      #  ##:  ##:  ####  #####:   ##          </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">L1d Size:</span>   <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">32KB (64KB Total)</span>
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7"> ##                                             </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">L2 Size:</span>    <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">1MB (2MB Total)</span>
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">  ###.                         ..o####.         </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">L3 Size:</span>    <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">35.75MB</span>
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7"> ##                                             </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">L2 Size:</span>    <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">256KB (512KB Total)</span>
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">  ###.                         ..o####.         </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">L3 Size:</span>    <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">30MB</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">   ######oo...         ..oo#######              </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">Peak Perf.:</span> <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">Unknown</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">          o###############o                     </span>
 
  Downloading crates ...
-  Downloaded crossbeam-utils v0.8.5
-  Downloaded oorandom v11.1.3
-  Downloaded plotters-svg v0.3.1
+  Downloaded memoffset v0.6.4
   Downloaded crossbeam-channel v0.5.1
+  Downloaded plotters-svg v0.3.1
+  Downloaded half v1.8.2
+  Downloaded crossbeam-epoch v0.9.5
+  Downloaded same-file v1.0.6
+  Downloaded scopeguard v1.1.0
+  Downloaded rayon-core v1.9.1
   Downloaded walkdir v2.3.2
   Downloaded rayon v1.5.1
-  Downloaded serde_cbor v0.11.2
-  Downloaded crossbeam-epoch v0.9.5
+  Downloaded crossbeam-deque v0.8.1
+  Downloaded either v1.6.1
+  Downloaded oorandom v11.1.3
+  Downloaded serde_json v1.0.69
+  Downloaded crossbeam-utils v0.8.5
   Downloaded rustc_version v0.4.0
   Downloaded itertools v0.10.1
-  Downloaded semver v1.0.4
-  Downloaded scopeguard v1.1.0
-  Downloaded criterion v0.3.5
-  Downloaded half v1.8.2
-  Downloaded tinytemplate v1.2.1
+  Downloaded serde_cbor v0.11.2
   Downloaded plotters-backend v0.3.2
-  Downloaded memoffset v0.6.4
+  Downloaded tinytemplate v1.2.1
+  Downloaded semver v1.0.4
+  Downloaded criterion v0.3.5
   Downloaded criterion-plot v0.4.4
-  Downloaded crossbeam-deque v0.8.1
   Downloaded cast v0.2.7
   Downloaded num_cpus v1.13.0
-  Downloaded either v1.6.1
-  Downloaded serde_json v1.0.69
-  Downloaded same-file v1.0.6
-  Downloaded rayon-core v1.9.1
   Downloaded plotters v0.3.1
    Compiling cfg-if v1.0.0
    Compiling autocfg v1.0.1
@@ -333,30 +334,30 @@ Zhodnocení naměřených výsledků.</li>
    Compiling crossbeam-utils v0.8.5
    Compiling serde v1.0.130
    Compiling semver v1.0.4
-   Compiling crossbeam-epoch v0.9.5
    Compiling ryu v1.0.5
    Compiling regex-syntax v0.6.25
-   Compiling scopeguard v1.1.0
+   Compiling crossbeam-epoch v0.9.5
    Compiling rayon-core v1.9.1
-   Compiling itoa v0.4.8
-   Compiling either v1.6.1
-   Compiling serde_json v1.0.69
+   Compiling scopeguard v1.1.0
    Compiling tap v1.0.1
+   Compiling either v1.6.1
+   Compiling itoa v0.4.8
+   Compiling serde_json v1.0.69
    Compiling unicode-width v0.1.9
+   Compiling funty v1.2.0
    Compiling regex-automata v0.1.10
    Compiling serde_derive v1.0.130
    Compiling plotters-backend v0.3.2
-   Compiling funty v1.2.0
-   Compiling half v1.8.2
-   Compiling same-file v1.0.6
    Compiling permutation v0.2.5
+   Compiling same-file v1.0.6
+   Compiling half v1.8.2
    Compiling bitflags v1.3.2
    Compiling oorandom v11.1.3
    Compiling memoffset v0.6.4
    Compiling num-traits v0.2.14
    Compiling rayon v1.5.1
-   Compiling itertools v0.10.1
    Compiling wyz v0.4.0
+   Compiling itertools v0.10.1
    Compiling textwrap v0.11.0
    Compiling plotters-svg v0.3.1
    Compiling walkdir v2.3.2
@@ -365,25 +366,25 @@ Zhodnocení naměřených výsledků.</li>
    Compiling radium v0.6.2
    Compiling anyhow v1.0.44
    Compiling clap v2.33.3
-   Compiling aho-corasick v0.7.18
-   Compiling csv-core v0.1.10
    Compiling getrandom v0.2.3
    Compiling num_cpus v1.13.0
    Compiling atty v0.2.14
+   Compiling aho-corasick v0.7.18
+   Compiling csv-core v0.1.10
    Compiling crossbeam-channel v0.5.1
    Compiling rustc_version v0.4.0
    Compiling bitvec v0.22.3
    Compiling bstr v0.2.17
    Compiling serde_cbor v0.11.2
-   Compiling plotters v0.3.1
-   Compiling regex v1.5.4
    Compiling rand_core v0.6.3
+   Compiling regex v1.5.4
+   Compiling plotters v0.3.1
    Compiling cast v0.2.7
-   Compiling csv v1.1.6
    Compiling tinytemplate v1.2.1
-   Compiling crossbeam-deque v0.8.1
-   Compiling env_logger v0.8.4
+   Compiling csv v1.1.6
    Compiling rand v0.8.4
+   Compiling env_logger v0.8.4
+   Compiling crossbeam-deque v0.8.1
    Compiling quickcheck v1.0.3
    Compiling solver v0.1.0 (/__w/ni-kop/ni-kop/2-heuristic-knapsack/solver)
 warning: unused imports: `ReadDir`, `iter::Filter`
@@ -397,9 +398,9 @@ warning: unused imports: `ReadDir`, `iter::Filter`
    |
    = note: `#[warn(unused_imports)]` on by default
 
+warning: `solver` (lib) generated 1 warning
    Compiling criterion-plot v0.4.4
    Compiling criterion v0.3.5
-warning: `solver` (lib) generated 1 warning
 warning: unused import: `anyhow`
  --&gt; benches/bench.rs:6:22
   |
@@ -410,7 +411,7 @@ warning: unused import: `anyhow`
 
 warning: `solver` (lib test) generated 1 warning (1 duplicate)
 warning: `solver` (bench "bench") generated 1 warning
-    Finished bench [optimized] target(s) in 1m 40s
+    Finished bench [optimized] target(s) in 2m 07s
      Running unittests (target/release/deps/solver-b19ddf4ee3f29767)
 
 running 9 tests
@@ -437,16 +438,74 @@ WARNING: HTML report generation will become a non-default optional feature in Cr
 This feature is being moved to cargo-criterion (https://github.com/bheisler/cargo-criterion) and will be optional in a future version of Criterion.rs. To silence this warning, either switch to cargo-criterion or enable the 'html_reports' feature in your Cargo.toml.
 
 Gnuplot not found, using plotters backend
-Benchmarking dpc/4                  Benchmarking dpc/4: Warming up for 200.00 ms                                            Benchmarking dpc/4: Collecting 10 samples in estimated 6.1695 s (30 iterations)                                                                               Benchmarking dpc/4: Analyzing                             <span style="color: #00aa00">dpc/4</span>                   time:   [<span style="font-weight: lighter">205.03 ms</span> <span style="font-weight: bold">205.06 ms</span> <span style="font-weight: lighter">205.10 ms</span>]
-<span style="color: #aa5500">Found 2 outliers among 10 measurements (20.00%)</span>
+Benchmarking bb/4                 Benchmarking bb/4: Warming up for 200.00 ms                                           Benchmarking bb/4: Collecting 10 samples in estimated 5.0008 s (37k iterations)                                                                               Benchmarking bb/4: Analyzing                            <span style="color: #00aa00">bb/4</span>                    time:   [<span style="font-weight: lighter">139.44 us</span> <span style="font-weight: bold">140.51 us</span> <span style="font-weight: lighter">141.60 us</span>]
+<span style="color: #aa5500">Found 3 outliers among 10 measurements (30.00%)</span>
+  1 (10.00%) low severe
+  1 (10.00%) low mild
   1 (10.00%) high mild
-  1 (10.00%) high severe
+Benchmarking bb/10                  Benchmarking bb/10: Warming up for 200.00 ms                                            Benchmarking bb/10: Collecting 10 samples in estimated 5.0884 s (3080 iterations)                                                                                 Benchmarking bb/10: Analyzing                             <span style="color: #00aa00">bb/10</span>                   time:   [<span style="font-weight: lighter">1.6552 ms</span> <span style="font-weight: bold">1.6615 ms</span> <span style="font-weight: lighter">1.6699 ms</span>]
+Benchmarking bb/15                  Benchmarking bb/15: Warming up for 200.00 ms                                            Benchmarking bb/15: Collecting 10 samples in estimated 5.3171 s (220 iterations)                                                                                Benchmarking bb/15: Analyzing                             <span style="color: #00aa00">bb/15</span>                   time:   [<span style="font-weight: lighter">24.457 ms</span> <span style="font-weight: bold">24.664 ms</span> <span style="font-weight: lighter">24.845 ms</span>]
+Benchmarking bb/20                  Benchmarking bb/20: Warming up for 200.00 ms                                            Benchmarking bb/20: Collecting 10 samples in estimated 9.5844 s (20 iterations)                                                                               Benchmarking bb/20: Analyzing                             <span style="color: #00aa00">bb/20</span>                   time:   [<span style="font-weight: lighter">485.63 ms</span> <span style="font-weight: bold">488.49 ms</span> <span style="font-weight: lighter">491.14 ms</span>]
 
-Benchmarking dpw/4                  Benchmarking dpw/4: Warming up for 200.00 ms                                            Benchmarking dpw/4: Collecting 10 samples in estimated 5.1750 s (1155 iterations)                                                                                 Benchmarking dpw/4: Analyzing                             <span style="color: #00aa00">dpw/4</span>                   time:   [<span style="font-weight: lighter">4.4721 ms</span> <span style="font-weight: bold">4.4728 ms</span> <span style="font-weight: lighter">4.4736 ms</span>]
+Benchmarking dpc/4                  Benchmarking dpc/4: Warming up for 200.00 ms                                            Benchmarking dpc/4: Collecting 10 samples in estimated 5.7107 s (20 iterations)                                                                               Benchmarking dpc/4: Analyzing                             <span style="color: #00aa00">dpc/4</span>                   time:   [<span style="font-weight: lighter">281.63 ms</span> <span style="font-weight: bold">284.25 ms</span> <span style="font-weight: lighter">286.92 ms</span>]
+Benchmarking dpc/10                   Benchmarking dpc/10: Warming up for 200.00 ms
+Warning: Unable to complete 10 samples in 5.0s. You may wish to increase target time to 21.4s.
+                                             Benchmarking dpc/10: Collecting 10 samples in estimated 21.442 s (10 iterations)                                                                                Benchmarking dpc/10: Analyzing                              <span style="color: #00aa00">dpc/10</span>                  time:   [<span style="font-weight: lighter">2.1298 s</span> <span style="font-weight: bold">2.1397 s</span> <span style="font-weight: lighter">2.1492 s</span>]
+Benchmarking dpc/15                   Benchmarking dpc/15: Warming up for 200.00 ms
+Warning: Unable to complete 10 samples in 5.0s. You may wish to increase target time to 51.9s.
+                                             Benchmarking dpc/15: Collecting 10 samples in estimated 51.878 s (10 iterations)                                                                                Benchmarking dpc/15: Analyzing                              <span style="color: #00aa00">dpc/15</span>                  time:   [<span style="font-weight: lighter">5.0950 s</span> <span style="font-weight: bold">5.1061 s</span> <span style="font-weight: lighter">5.1177 s</span>]
+Benchmarking dpc/20                   Benchmarking dpc/20: Warming up for 200.00 ms
+Warning: Unable to complete 10 samples in 5.0s. You may wish to increase target time to 95.9s.
+                                             Benchmarking dpc/20: Collecting 10 samples in estimated 95.940 s (10 iterations)                                                                                Benchmarking dpc/20: Analyzing                              <span style="color: #00aa00">dpc/20</span>                  time:   [<span style="font-weight: lighter">9.5316 s</span> <span style="font-weight: bold">9.5543 s</span> <span style="font-weight: lighter">9.5764 s</span>]
+
+Benchmarking dpw/4                  Benchmarking dpw/4: Warming up for 200.00 ms                                            Benchmarking dpw/4: Collecting 10 samples in estimated 5.1297 s (935 iterations)                                                                                Benchmarking dpw/4: Analyzing                             <span style="color: #00aa00">dpw/4</span>                   time:   [<span style="font-weight: lighter">5.5203 ms</span> <span style="font-weight: bold">5.6064 ms</span> <span style="font-weight: lighter">5.6633 ms</span>]
+Benchmarking dpw/10                   Benchmarking dpw/10: Warming up for 200.00 ms                                             Benchmarking dpw/10: Collecting 10 samples in estimated 5.2723 s (110 iterations)                                                                                 Benchmarking dpw/10: Analyzing                              <span style="color: #00aa00">dpw/10</span>                  time:   [<span style="font-weight: lighter">46.409 ms</span> <span style="font-weight: bold">46.779 ms</span> <span style="font-weight: lighter">47.009 ms</span>]
+<span style="color: #aa5500">Found 1 outliers among 10 measurements (10.00%)</span>
+  1 (10.00%) high mild
+Benchmarking dpw/15                   Benchmarking dpw/15: Warming up for 200.00 ms
+Warning: Unable to complete 10 samples in 5.0s. You may wish to increase target time to 6.4s or enable flat sampling.
+                                             Benchmarking dpw/15: Collecting 10 samples in estimated 6.4452 s (55 iterations)                                                                                Benchmarking dpw/15: Analyzing                              <span style="color: #00aa00">dpw/15</span>                  time:   [<span style="font-weight: lighter">117.01 ms</span> <span style="font-weight: bold">117.71 ms</span> <span style="font-weight: lighter">118.73 ms</span>]
+<span style="color: #aa5500">Found 1 outliers among 10 measurements (10.00%)</span>
+  1 (10.00%) high mild
+Benchmarking dpw/20                   Benchmarking dpw/20: Warming up for 200.00 ms                                             Benchmarking dpw/20: Collecting 10 samples in estimated 6.6140 s (30 iterations)                                                                                Benchmarking dpw/20: Analyzing                              <span style="color: #00aa00">dpw/20</span>                  time:   [<span style="font-weight: lighter">223.51 ms</span> <span style="font-weight: bold">224.63 ms</span> <span style="font-weight: lighter">225.67 ms</span>]
+
+Benchmarking fptas1/4                     Benchmarking fptas1/4: Warming up for 200.00 ms                                               Benchmarking fptas1/4: Collecting 10 samples in estimated 5.0777 s (1045 iterations)                                                                                    Benchmarking fptas1/4: Analyzing                                <span style="color: #00aa00">fptas1/4</span>                time:   [<span style="font-weight: lighter">4.8871 ms</span> <span style="font-weight: bold">4.9648 ms</span> <span style="font-weight: lighter">5.0418 ms</span>]
+Benchmarking fptas1/10                      Benchmarking fptas1/10: Warming up for 200.00 ms
+Warning: Unable to complete 10 samples in 5.0s. You may wish to increase target time to 5.2s or enable flat sampling.
+                                                Benchmarking fptas1/10: Collecting 10 samples in estimated 5.2162 s (55 iterations)                                                                                   Benchmarking fptas1/10: Analyzing                                 <span style="color: #00aa00">fptas1/10</span>               time:   [<span style="font-weight: lighter">92.476 ms</span> <span style="font-weight: bold">93.225 ms</span> <span style="font-weight: lighter">94.444 ms</span>]
+<span style="color: #aa5500">Found 1 outliers among 10 measurements (10.00%)</span>
+  1 (10.00%) high mild
+Benchmarking fptas1/15                      Benchmarking fptas1/15: Warming up for 200.00 ms                                                Benchmarking fptas1/15: Collecting 10 samples in estimated 6.2573 s (20 iterations)                                                                                   Benchmarking fptas1/15: Analyzing                                 <span style="color: #00aa00">fptas1/15</span>               time:   [<span style="font-weight: lighter">315.90 ms</span> <span style="font-weight: bold">318.42 ms</span> <span style="font-weight: lighter">320.97 ms</span>]
+Benchmarking fptas1/20                      Benchmarking fptas1/20: Warming up for 200.00 ms
+Warning: Unable to complete 10 samples in 5.0s. You may wish to increase target time to 7.5s.
+                                                Benchmarking fptas1/20: Collecting 10 samples in estimated 7.5336 s (10 iterations)                                                                                   Benchmarking fptas1/20: Analyzing                                 <span style="color: #00aa00">fptas1/20</span>               time:   [<span style="font-weight: lighter">751.71 ms</span> <span style="font-weight: bold">759.24 ms</span> <span style="font-weight: lighter">767.71 ms</span>]
+
+Benchmarking fptas2/4                     Benchmarking fptas2/4: Warming up for 200.00 ms                                               Benchmarking fptas2/4: Collecting 10 samples in estimated 5.8567 s (110 iterations)                                                                                   Benchmarking fptas2/4: Analyzing                                <span style="color: #00aa00">fptas2/4</span>                time:   [<span style="font-weight: lighter">53.738 ms</span> <span style="font-weight: bold">54.012 ms</span> <span style="font-weight: lighter">54.365 ms</span>]
+<span style="color: #aa5500">Found 1 outliers among 10 measurements (10.00%)</span>
+  1 (10.00%) low mild
+Benchmarking fptas2/10                      Benchmarking fptas2/10: Warming up for 200.00 ms
+Warning: Unable to complete 10 samples in 5.0s. You may wish to increase target time to 9.2s.
+                                                Benchmarking fptas2/10: Collecting 10 samples in estimated 9.2324 s (10 iterations)                                                                                   Benchmarking fptas2/10: Analyzing                                 <span style="color: #00aa00">fptas2/10</span>               time:   [<span style="font-weight: lighter">928.50 ms</span> <span style="font-weight: bold">932.44 ms</span> <span style="font-weight: lighter">936.49 ms</span>]
+Benchmarking fptas2/15                      Benchmarking fptas2/15: Warming up for 200.00 ms
+Warning: Unable to complete 10 samples in 5.0s. You may wish to increase target time to 33.1s.
+                                                Benchmarking fptas2/15: Collecting 10 samples in estimated 33.080 s (10 iterations)                                                                                   Benchmarking fptas2/15: Analyzing                                 <span style="color: #00aa00">fptas2/15</span>               time:   [<span style="font-weight: lighter">3.2611 s</span> <span style="font-weight: bold">3.2691 s</span> <span style="font-weight: lighter">3.2769 s</span>]
+Benchmarking fptas2/20                      Benchmarking fptas2/20: Warming up for 200.00 ms
+Warning: Unable to complete 10 samples in 5.0s. You may wish to increase target time to 77.9s.
+                                                Benchmarking fptas2/20: Collecting 10 samples in estimated 77.946 s (10 iterations)                                                                                   Benchmarking fptas2/20: Analyzing                                 <span style="color: #00aa00">fptas2/20</span>               time:   [<span style="font-weight: lighter">7.8129 s</span> <span style="font-weight: bold">7.8259 s</span> <span style="font-weight: lighter">7.8372 s</span>]
+
+Benchmarking greedy/4                     Benchmarking greedy/4: Warming up for 200.00 ms                                               Benchmarking greedy/4: Collecting 10 samples in estimated 5.0045 s (52k iterations)                                                                                   Benchmarking greedy/4: Analyzing                                <span style="color: #00aa00">greedy/4</span>                time:   [<span style="font-weight: lighter">95.639 us</span> <span style="font-weight: bold">96.121 us</span> <span style="font-weight: lighter">96.471 us</span>]
+Benchmarking greedy/10                      Benchmarking greedy/10: Warming up for 200.00 ms                                                Benchmarking greedy/10: Collecting 10 samples in estimated 5.0111 s (18k iterations)                                                                                    Benchmarking greedy/10: Analyzing                                 <span style="color: #00aa00">greedy/10</span>               time:   [<span style="font-weight: lighter">262.82 us</span> <span style="font-weight: bold">264.98 us</span> <span style="font-weight: lighter">267.00 us</span>]
+Benchmarking greedy/15                      Benchmarking greedy/15: Warming up for 200.00 ms                                                Benchmarking greedy/15: Collecting 10 samples in estimated 5.0047 s (11k iterations)                                                                                    Benchmarking greedy/15: Analyzing                                 <span style="color: #00aa00">greedy/15</span>               time:   [<span style="font-weight: lighter">443.95 us</span> <span style="font-weight: bold">453.17 us</span> <span style="font-weight: lighter">467.32 us</span>]
 <span style="color: #aa5500">Found 1 outliers among 10 measurements (10.00%)</span>
   1 (10.00%) high severe
+Benchmarking greedy/20                      Benchmarking greedy/20: Warming up for 200.00 ms                                                Benchmarking greedy/20: Collecting 10 samples in estimated 5.0347 s (7700 iterations)                                                                                     Benchmarking greedy/20: Analyzing                                 <span style="color: #00aa00">greedy/20</span>               time:   [<span style="font-weight: lighter">659.37 us</span> <span style="font-weight: bold">666.47 us</span> <span style="font-weight: lighter">670.93 us</span>]
+<span style="color: #aa5500">Found 1 outliers among 10 measurements (10.00%)</span>
+  1 (10.00%) low mild
 
-Benchmarking fptas1/4                     Benchmarking fptas1/4: Warming up for 200.00 ms                                               Benchmarking fptas1/4: Collecting 10 samples in estimated 5.1030 s (1210 iterations)                                                                                    Benchmarking fptas1/4: Analyzing                                <span style="color: #00aa00">fptas1/4</span>                time:   [<span style="font-weight: lighter">4.1939 ms</span> <span style="font-weight: bold">4.1944 ms</span> <span style="font-weight: lighter">4.1950 ms</span>]
+Benchmarking redux/4                    Benchmarking redux/4: Warming up for 200.00 ms                                              Benchmarking redux/4: Collecting 10 samples in estimated 5.0044 s (46k iterations)                                                                                  Benchmarking redux/4: Analyzing                               <span style="color: #00aa00">redux/4</span>                 time:   [<span style="font-weight: lighter">107.15 us</span> <span style="font-weight: bold">108.25 us</span> <span style="font-weight: lighter">109.23 us</span>]
+Benchmarking redux/10                     Benchmarking redux/10: Warming up for 200.00 ms                                               Benchmarking redux/10: Collecting 10 samples in estimated 5.0139 s (17k iterations)                                                                                   Benchmarking redux/10: Analyzing                                <span style="color: #00aa00">redux/10</span>                time:   [<span style="font-weight: lighter">293.54 us</span> <span style="font-weight: bold">294.67 us</span> <span style="font-weight: lighter">295.81 us</span>]
+Benchmarking redux/15                     Benchmarking redux/15: Warming up for 200.00 ms                                               Benchmarking redux/15: Collecting 10 samples in estimated 5.0134 s (10k iterations)                                                                                   Benchmarking redux/15: Analyzing                                <span style="color: #00aa00">redux/15</span>                time:   [<span style="font-weight: lighter">487.31 us</span> <span style="font-weight: bold">491.53 us</span> <span style="font-weight: lighter">495.06 us</span>]
+Benchmarking redux/20                     Benchmarking redux/20: Warming up for 200.00 ms                                               Benchmarking redux/20: Collecting 10 samples in estimated 5.0113 s (6930 iterations)                                                                                    Benchmarking redux/20: Analyzing                                <span style="color: #00aa00">redux/20</span>                time:   [<span style="font-weight: lighter">713.95 us</span> <span style="font-weight: bold">718.18 us</span> <span style="font-weight: lighter">722.11 us</span>]
 
 </pre>
 </div>
@@ -454,114 +513,91 @@ Benchmarking fptas1/4                     Benchmarking fptas1/4: Warming up fo
 </div>
 <p>Výsledná měření najdeme ve složce <code>solver/target/criterion/</code>. Zahrnují jak hotové reporty jednotlivých algoritmů se srovnáním doby běhu přes různé hodnoty <span class="math inline">\(n\)</span>, tak i detailní záznamy naměřených dat ve formátu JSON.</p>
 <h3 id="srovnání-algoritmů">Srovnání algoritmů</h3>
-<p>TODO: přepracovat</p>
 <div class="annotated-code">
 <p><span><em>«analysis/charts.py»=</em></span></p>
 <div class="sourceCode" id="cb1" data-file="analysis/charts.py"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>preprocessing<span class="op">&gt;&gt;</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>performance<span class="op">-</span>chart<span class="op">&gt;&gt;</span></span>
-<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>histogram<span class="op">&gt;&gt;</span></span></code></pre></div>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>performance<span class="op">-</span>chart<span class="op">&gt;&gt;</span></span></code></pre></div>
 </div>
 <div class="fold-block">
 <button class="btn btn-outline-primary btn-sm fold-toggle" type="button" data-toggle="collapse" data-target="#preprocessing-container" aria-controls="preprocessing-container">&lt;&lt;preprocessing&gt;&gt;=</button>
 <div id="preprocessing-container" class="collapse">
 <div class="sourceCode" id="preprocessing" style="max-height: 50vh"><pre class="sourceCode python bootstrap-fold overflow-auto"><code class="sourceCode python"><span id="preprocessing-1"><a href="#preprocessing-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
 <span id="preprocessing-2"><a href="#preprocessing-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
-<span id="preprocessing-3"><a href="#preprocessing-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pandas.core.tools.numeric <span class="im">import</span> to_numeric</span>
-<span id="preprocessing-4"><a href="#preprocessing-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="preprocessing-5"><a href="#preprocessing-5" aria-hidden="true" tabindex="-1"></a>bench <span class="op">=</span> pd.read_csv(<span class="st">&quot;docs/bench.csv&quot;</span>, dtype <span class="op">=</span> <span class="st">&quot;string&quot;</span>)</span>
-<span id="preprocessing-6"><a href="#preprocessing-6" aria-hidden="true" tabindex="-1"></a>bench.rename({</span>
-<span id="preprocessing-7"><a href="#preprocessing-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;alg.&quot;</span>: <span class="st">&quot;alg&quot;</span>,</span>
-<span id="preprocessing-8"><a href="#preprocessing-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;$n$&quot;</span>: <span class="st">&quot;n&quot;</span>,</span>
-<span id="preprocessing-9"><a href="#preprocessing-9" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;sada&quot;</span>: <span class="st">&quot;set&quot;</span>,</span>
-<span id="preprocessing-10"><a href="#preprocessing-10" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;průměr&quot;</span>: <span class="st">&quot;avg&quot;</span>,</span>
-<span id="preprocessing-11"><a href="#preprocessing-11" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;$\pm \sigma$&quot;</span>: <span class="st">&quot;sigma&quot;</span>,</span>
-<span id="preprocessing-12"><a href="#preprocessing-12" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;medián&quot;</span>: <span class="st">&quot;median&quot;</span>,</span>
-<span id="preprocessing-13"><a href="#preprocessing-13" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;minimum&quot;</span>: <span class="st">&quot;min&quot;</span>,</span>
-<span id="preprocessing-14"><a href="#preprocessing-14" aria-hidden="true" tabindex="-1"></a>        <span class="st">&quot;maximum&quot;</span>: <span class="st">&quot;max&quot;</span>,</span>
-<span id="preprocessing-15"><a href="#preprocessing-15" aria-hidden="true" tabindex="-1"></a>    },</span>
-<span id="preprocessing-16"><a href="#preprocessing-16" aria-hidden="true" tabindex="-1"></a>    inplace <span class="op">=</span> <span class="va">True</span>,</span>
-<span id="preprocessing-17"><a href="#preprocessing-17" aria-hidden="true" tabindex="-1"></a>    errors  <span class="op">=</span> <span class="st">&quot;raise&quot;</span>,</span>
-<span id="preprocessing-18"><a href="#preprocessing-18" aria-hidden="true" tabindex="-1"></a>    axis    <span class="op">=</span> <span class="dv">1</span>,</span>
-<span id="preprocessing-19"><a href="#preprocessing-19" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="preprocessing-20"><a href="#preprocessing-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="preprocessing-21"><a href="#preprocessing-21" aria-hidden="true" tabindex="-1"></a>numeric_columns <span class="op">=</span> [<span class="st">&quot;n&quot;</span>, <span class="st">&quot;avg&quot;</span>, <span class="st">&quot;sigma&quot;</span>, <span class="st">&quot;min&quot;</span>, <span class="st">&quot;median&quot;</span>, <span class="st">&quot;max&quot;</span>]</span>
-<span id="preprocessing-22"><a href="#preprocessing-22" aria-hidden="true" tabindex="-1"></a>bench[numeric_columns] <span class="op">=</span> bench[numeric_columns].<span class="bu">apply</span>(<span class="kw">lambda</span> c:</span>
-<span id="preprocessing-23"><a href="#preprocessing-23" aria-hidden="true" tabindex="-1"></a>    c.<span class="bu">apply</span>(<span class="kw">lambda</span> x:</span>
-<span id="preprocessing-24"><a href="#preprocessing-24" aria-hidden="true" tabindex="-1"></a>        to_numeric(x.replace(<span class="st">&quot;**&quot;</span>, <span class="st">&quot;&quot;</span>).replace(<span class="st">&quot; ms&quot;</span>, <span class="st">&quot;&quot;</span>))</span>
-<span id="preprocessing-25"><a href="#preprocessing-25" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="preprocessing-26"><a href="#preprocessing-26" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
+<span id="preprocessing-3"><a href="#preprocessing-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> json</span>
+<span id="preprocessing-4"><a href="#preprocessing-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
+<span id="preprocessing-5"><a href="#preprocessing-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pandas.core.tools.numeric <span class="im">import</span> to_numeric</span>
+<span id="preprocessing-6"><a href="#preprocessing-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="preprocessing-7"><a href="#preprocessing-7" aria-hidden="true" tabindex="-1"></a><span class="co"># load the mean runtime per algorithm. The data is stored in the</span></span>
+<span id="preprocessing-8"><a href="#preprocessing-8" aria-hidden="true" tabindex="-1"></a><span class="co"># algorithm/n/estimates.json file, where n is the size of the input.</span></span>
+<span id="preprocessing-9"><a href="#preprocessing-9" aria-hidden="true" tabindex="-1"></a><span class="co"># The mean is in the estimate.mean.point_estimate field.</span></span>
+<span id="preprocessing-10"><a href="#preprocessing-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="preprocessing-11"><a href="#preprocessing-11" aria-hidden="true" tabindex="-1"></a><span class="co"># </span><span class="al">TODO</span><span class="co">: keep this stored in a better place (duplicities between here and</span></span>
+<span id="preprocessing-12"><a href="#preprocessing-12" aria-hidden="true" tabindex="-1"></a><span class="co"># bench.rs)</span></span>
+<span id="preprocessing-13"><a href="#preprocessing-13" aria-hidden="true" tabindex="-1"></a>algs <span class="op">=</span> [ <span class="st">&quot;bb&quot;</span></span>
+<span id="preprocessing-14"><a href="#preprocessing-14" aria-hidden="true" tabindex="-1"></a>       , <span class="st">&quot;dpc&quot;</span></span>
+<span id="preprocessing-15"><a href="#preprocessing-15" aria-hidden="true" tabindex="-1"></a>       , <span class="st">&quot;dpw&quot;</span></span>
+<span id="preprocessing-16"><a href="#preprocessing-16" aria-hidden="true" tabindex="-1"></a>       , <span class="st">&quot;fptas1&quot;</span></span>
+<span id="preprocessing-17"><a href="#preprocessing-17" aria-hidden="true" tabindex="-1"></a>       , <span class="st">&quot;fptas2&quot;</span></span>
+<span id="preprocessing-18"><a href="#preprocessing-18" aria-hidden="true" tabindex="-1"></a>       , <span class="st">&quot;greedy&quot;</span></span>
+<span id="preprocessing-19"><a href="#preprocessing-19" aria-hidden="true" tabindex="-1"></a>       , <span class="st">&quot;redux&quot;</span></span>
+<span id="preprocessing-20"><a href="#preprocessing-20" aria-hidden="true" tabindex="-1"></a>       ]</span>
+<span id="preprocessing-21"><a href="#preprocessing-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="preprocessing-22"><a href="#preprocessing-22" aria-hidden="true" tabindex="-1"></a>n_values <span class="op">=</span> [<span class="dv">4</span>, <span class="dv">10</span>, <span class="dv">15</span>, <span class="dv">20</span>]</span>
+<span id="preprocessing-23"><a href="#preprocessing-23" aria-hidden="true" tabindex="-1"></a>data <span class="op">=</span> {}</span>
+<span id="preprocessing-24"><a href="#preprocessing-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="preprocessing-25"><a href="#preprocessing-25" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> alg <span class="kw">in</span> algs:</span>
+<span id="preprocessing-26"><a href="#preprocessing-26" aria-hidden="true" tabindex="-1"></a>    data[alg] <span class="op">=</span> {}</span>
+<span id="preprocessing-27"><a href="#preprocessing-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> n <span class="kw">in</span> n_values:</span>
+<span id="preprocessing-28"><a href="#preprocessing-28" aria-hidden="true" tabindex="-1"></a>        est_file <span class="op">=</span> os.path.join(<span class="st">&quot;solver&quot;</span>, <span class="st">&quot;target&quot;</span>, <span class="st">&quot;criterion&quot;</span>, alg, <span class="bu">str</span>(n), <span class="st">&quot;new&quot;</span>, <span class="st">&quot;estimates.json&quot;</span>)</span>
+<span id="preprocessing-29"><a href="#preprocessing-29" aria-hidden="true" tabindex="-1"></a>        <span class="cf">with</span> <span class="bu">open</span>(est_file, <span class="st">&quot;r&quot;</span>) <span class="im">as</span> f:</span>
+<span id="preprocessing-30"><a href="#preprocessing-30" aria-hidden="true" tabindex="-1"></a>            estimates <span class="op">=</span> json.load(f)</span>
+<span id="preprocessing-31"><a href="#preprocessing-31" aria-hidden="true" tabindex="-1"></a>            mean <span class="op">=</span> estimates[<span class="st">&quot;mean&quot;</span>][<span class="st">&quot;point_estimate&quot;</span>]</span>
+<span id="preprocessing-32"><a href="#preprocessing-32" aria-hidden="true" tabindex="-1"></a>            data[alg][n] <span class="op">=</span> { <span class="st">&quot;mean&quot;</span>: mean <span class="op">/</span> <span class="dv">1000</span> <span class="op">/</span> <span class="dv">1000</span> <span class="op">/</span> <span class="dv">1000</span></span>
+<span id="preprocessing-33"><a href="#preprocessing-33" aria-hidden="true" tabindex="-1"></a>                           }</span>
+<span id="preprocessing-34"><a href="#preprocessing-34" aria-hidden="true" tabindex="-1"></a>        err_file <span class="op">=</span> os.path.join(<span class="st">&quot;docs&quot;</span>, <span class="st">&quot;measurements&quot;</span>, alg <span class="op">+</span> <span class="st">&quot;_&quot;</span> <span class="op">+</span> <span class="bu">str</span>(n) <span class="op">+</span> <span class="st">&quot;.txt&quot;</span>)</span>
+<span id="preprocessing-35"><a href="#preprocessing-35" aria-hidden="true" tabindex="-1"></a>        <span class="cf">with</span> <span class="bu">open</span>(err_file, <span class="st">&quot;r&quot;</span>) <span class="im">as</span> f:</span>
+<span id="preprocessing-36"><a href="#preprocessing-36" aria-hidden="true" tabindex="-1"></a>            measurements <span class="op">=</span> pd.read_csv(f)</span>
+<span id="preprocessing-37"><a href="#preprocessing-37" aria-hidden="true" tabindex="-1"></a>            data[alg][n][<span class="st">&quot;error&quot;</span>] <span class="op">=</span> { <span class="st">&quot;max&quot;</span>: measurements[<span class="st">&quot;max&quot;</span>]</span>
+<span id="preprocessing-38"><a href="#preprocessing-38" aria-hidden="true" tabindex="-1"></a>                                    , <span class="st">&quot;avg&quot;</span>: measurements[<span class="st">&quot;avg&quot;</span>]</span>
+<span id="preprocessing-39"><a href="#preprocessing-39" aria-hidden="true" tabindex="-1"></a>                                    }</span></code></pre></div>
 </div>
 </div>
 <div class="fold-block">
 <button class="btn btn-outline-primary btn-sm fold-toggle" type="button" data-toggle="collapse" data-target="#performance-chart-container" aria-controls="performance-chart-container">&lt;&lt;performance-chart&gt;&gt;=</button>
 <div id="performance-chart-container" class="collapse">
-<div class="sourceCode" id="performance-chart" style="max-height: 50vh"><pre class="sourceCode python bootstrap-fold overflow-auto"><code class="sourceCode python"><span id="performance-chart-1"><a href="#performance-chart-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a figure and a set of subplots.</span></span>
-<span id="performance-chart-2"><a href="#performance-chart-2" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize <span class="op">=</span> (<span class="dv">11</span>, <span class="dv">6</span>))</span>
-<span id="performance-chart-3"><a href="#performance-chart-3" aria-hidden="true" tabindex="-1"></a>labels <span class="op">=</span> { <span class="st">&quot;bf&quot;</span>    : <span class="st">&quot;Hrubá síla&quot;</span></span>
-<span id="performance-chart-4"><a href="#performance-chart-4" aria-hidden="true" tabindex="-1"></a>         , <span class="st">&quot;bb&quot;</span>    : <span class="st">&quot;Branch &amp; bound&quot;</span></span>
-<span id="performance-chart-5"><a href="#performance-chart-5" aria-hidden="true" tabindex="-1"></a>         , <span class="st">&quot;dpw&quot;</span>   : <span class="st">&quot;Dynamické programování - podle váhy&quot;</span></span>
-<span id="performance-chart-6"><a href="#performance-chart-6" aria-hidden="true" tabindex="-1"></a>         , <span class="st">&quot;dpc&quot;</span>   : <span class="st">&quot;Dynamické programování - podle ceny&quot;</span></span>
-<span id="performance-chart-7"><a href="#performance-chart-7" aria-hidden="true" tabindex="-1"></a>         , <span class="st">&quot;fptas1&quot;</span>: <span class="st">&quot;FPTAS eps = 0.1&quot;</span></span>
-<span id="performance-chart-8"><a href="#performance-chart-8" aria-hidden="true" tabindex="-1"></a>         , <span class="st">&quot;fptas2&quot;</span>: <span class="st">&quot;FPTAS eps = 0.01&quot;</span></span>
-<span id="performance-chart-9"><a href="#performance-chart-9" aria-hidden="true" tabindex="-1"></a>         , <span class="st">&quot;greedy&quot;</span>: <span class="st">&quot;Hladový přístup&quot;</span></span>
-<span id="performance-chart-10"><a href="#performance-chart-10" aria-hidden="true" tabindex="-1"></a>         , <span class="st">&quot;redux&quot;</span> : <span class="st">&quot;Hladový přístup - redux&quot;</span></span>
-<span id="performance-chart-11"><a href="#performance-chart-11" aria-hidden="true" tabindex="-1"></a>         }</span>
-<span id="performance-chart-12"><a href="#performance-chart-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="performance-chart-13"><a href="#performance-chart-13" aria-hidden="true" tabindex="-1"></a><span class="co"># Group the dataframe by alg and create a line for each group.</span></span>
-<span id="performance-chart-14"><a href="#performance-chart-14" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> name, group <span class="kw">in</span> bench.groupby([<span class="st">&quot;alg&quot;</span>, <span class="st">&quot;set&quot;</span>]):</span>
-<span id="performance-chart-15"><a href="#performance-chart-15" aria-hidden="true" tabindex="-1"></a>    (x, y, sigma) <span class="op">=</span> (group[<span class="st">&quot;n&quot;</span>], group[<span class="st">&quot;avg&quot;</span>], group[<span class="st">&quot;sigma&quot;</span>])</span>
-<span id="performance-chart-16"><a href="#performance-chart-16" aria-hidden="true" tabindex="-1"></a>    ax.plot(x, y, label <span class="op">=</span> labels[name[<span class="dv">0</span>]] <span class="op">+</span> <span class="st">&quot; na sadě &quot;</span> <span class="op">+</span> name[<span class="dv">1</span>])</span>
-<span id="performance-chart-17"><a href="#performance-chart-17" aria-hidden="true" tabindex="-1"></a>    ax.fill_between(x, y <span class="op">+</span> sigma, y <span class="op">-</span> sigma, alpha <span class="op">=</span> <span class="fl">0.3</span>)</span>
-<span id="performance-chart-18"><a href="#performance-chart-18" aria-hidden="true" tabindex="-1"></a></span>
-<span id="performance-chart-19"><a href="#performance-chart-19" aria-hidden="true" tabindex="-1"></a><span class="co"># Axis metadata: ticks, scaling, margins, and the legend</span></span>
-<span id="performance-chart-20"><a href="#performance-chart-20" aria-hidden="true" tabindex="-1"></a>plt.xticks(bench[<span class="st">&quot;n&quot;</span>])</span>
-<span id="performance-chart-21"><a href="#performance-chart-21" aria-hidden="true" tabindex="-1"></a>ax.set_yscale(<span class="st">&quot;log&quot;</span>, base <span class="op">=</span> <span class="dv">10</span>)</span>
-<span id="performance-chart-22"><a href="#performance-chart-22" aria-hidden="true" tabindex="-1"></a>ax.margins(<span class="fl">0.05</span>, <span class="fl">0.1</span>)</span>
-<span id="performance-chart-23"><a href="#performance-chart-23" aria-hidden="true" tabindex="-1"></a>ax.legend(loc<span class="op">=</span><span class="st">&quot;upper left&quot;</span>)</span>
-<span id="performance-chart-24"><a href="#performance-chart-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="performance-chart-25"><a href="#performance-chart-25" aria-hidden="true" tabindex="-1"></a><span class="co"># Reverse the legend</span></span>
-<span id="performance-chart-26"><a href="#performance-chart-26" aria-hidden="true" tabindex="-1"></a>handles, labels <span class="op">=</span> plt.gca().get_legend_handles_labels()</span>
-<span id="performance-chart-27"><a href="#performance-chart-27" aria-hidden="true" tabindex="-1"></a>order <span class="op">=</span> <span class="bu">range</span>(<span class="bu">len</span>(labels) <span class="op">-</span> <span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>)</span>
-<span id="performance-chart-28"><a href="#performance-chart-28" aria-hidden="true" tabindex="-1"></a>plt.legend([handles[idx] <span class="cf">for</span> idx <span class="kw">in</span> order],[labels[idx] <span class="cf">for</span> idx <span class="kw">in</span> order])</span>
-<span id="performance-chart-29"><a href="#performance-chart-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="performance-chart-30"><a href="#performance-chart-30" aria-hidden="true" tabindex="-1"></a>plt.savefig(<span class="st">&quot;docs/assets/graph.svg&quot;</span>)</span></code></pre></div>
+<div class="sourceCode" id="performance-chart" style="max-height: 50vh"><pre class="sourceCode python bootstrap-fold overflow-auto"><code class="sourceCode python"><span id="performance-chart-1"><a href="#performance-chart-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="performance-chart-2"><a href="#performance-chart-2" aria-hidden="true" tabindex="-1"></a><span class="co"># plot the mean runtimes</span></span>
+<span id="performance-chart-3"><a href="#performance-chart-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="performance-chart-4"><a href="#performance-chart-4" aria-hidden="true" tabindex="-1"></a>plt.figure()</span>
+<span id="performance-chart-5"><a href="#performance-chart-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="performance-chart-6"><a href="#performance-chart-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> alg <span class="kw">in</span> algs:</span>
+<span id="performance-chart-7"><a href="#performance-chart-7" aria-hidden="true" tabindex="-1"></a>    plt.plot(n_values, [data[alg][n][<span class="st">&quot;mean&quot;</span>] <span class="cf">for</span> n <span class="kw">in</span> n_values], <span class="st">&quot;-o&quot;</span>, label<span class="op">=</span>alg)</span>
+<span id="performance-chart-8"><a href="#performance-chart-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="performance-chart-9"><a href="#performance-chart-9" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">&quot;Input size&quot;</span>)</span>
+<span id="performance-chart-10"><a href="#performance-chart-10" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">&quot;Mean runtime (sec)&quot;</span>)</span>
+<span id="performance-chart-11"><a href="#performance-chart-11" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="performance-chart-12"><a href="#performance-chart-12" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">&quot;Mean runtimes for various algorithms&quot;</span>)</span>
+<span id="performance-chart-13"><a href="#performance-chart-13" aria-hidden="true" tabindex="-1"></a>plt.savefig(<span class="st">&quot;docs/assets/mean_runtimes.svg&quot;</span>)</span>
+<span id="performance-chart-14"><a href="#performance-chart-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="performance-chart-15"><a href="#performance-chart-15" aria-hidden="true" tabindex="-1"></a>plt.figure()</span>
+<span id="performance-chart-16"><a href="#performance-chart-16" aria-hidden="true" tabindex="-1"></a>plt.title(<span class="st">&quot;Maximum error for each algorithm and n&quot;</span>)</span>
+<span id="performance-chart-17"><a href="#performance-chart-17" aria-hidden="true" tabindex="-1"></a>plt.xlabel(<span class="st">&quot;n&quot;</span>)</span>
+<span id="performance-chart-18"><a href="#performance-chart-18" aria-hidden="true" tabindex="-1"></a>plt.ylabel(<span class="st">&quot;error&quot;</span>)</span>
+<span id="performance-chart-19"><a href="#performance-chart-19" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> alg <span class="kw">in</span> algs:</span>
+<span id="performance-chart-20"><a href="#performance-chart-20" aria-hidden="true" tabindex="-1"></a>    plt.plot(n_values, [data[alg][n][<span class="st">&quot;error&quot;</span>][<span class="st">&quot;max&quot;</span>] <span class="cf">for</span> n <span class="kw">in</span> n_values], label<span class="op">=</span>alg)</span>
+<span id="performance-chart-21"><a href="#performance-chart-21" aria-hidden="true" tabindex="-1"></a>plt.legend()</span>
+<span id="performance-chart-22"><a href="#performance-chart-22" aria-hidden="true" tabindex="-1"></a>plt.savefig(<span class="st">&quot;docs/assets/max_errors.svg&quot;</span>)</span></code></pre></div>
 </div>
 </div>
 <figure>
-<img src="assets/graph.svg" alt="Závislost doby běhu na počtu předmětů. Částečně průhledná oblast značí směrodatnou odchylku (\sigma)." /><figcaption aria-hidden="true">Závislost doby běhu na počtu předmětů. Částečně průhledná oblast značí směrodatnou odchylku (<span class="math inline">\(\sigma\)</span>).</figcaption>
+<img src="assets/mean_runtimes.svg" alt="Závislost doby běhu na počtu předmětů." /><figcaption aria-hidden="true">Závislost doby běhu na počtu předmětů.</figcaption>
 </figure>
-<div class="fold-block">
-<button class="btn btn-outline-primary btn-sm fold-toggle" type="button" data-toggle="collapse" data-target="#histogram-container" aria-controls="histogram-container">&lt;&lt;histogram&gt;&gt;=</button>
-<div id="histogram-container" class="collapse">
-<div class="sourceCode" id="histogram" style="max-height: 50vh"><pre class="sourceCode python bootstrap-fold overflow-auto"><code class="sourceCode python"><span id="histogram-1"><a href="#histogram-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> os</span>
-<span id="histogram-2"><a href="#histogram-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="histogram-3"><a href="#histogram-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Load the data</span></span>
-<span id="histogram-4"><a href="#histogram-4" aria-hidden="true" tabindex="-1"></a>data <span class="op">=</span> []</span>
-<span id="histogram-5"><a href="#histogram-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="histogram-6"><a href="#histogram-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> filename <span class="kw">in</span> os.listdir(<span class="st">&#39;docs/measurements&#39;</span>):</span>
-<span id="histogram-7"><a href="#histogram-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> filename.endswith(<span class="st">&quot;.txt&quot;</span>):</span>
-<span id="histogram-8"><a href="#histogram-8" aria-hidden="true" tabindex="-1"></a>        alg <span class="op">=</span> filename[:<span class="op">-</span><span class="dv">4</span>]</span>
-<span id="histogram-9"><a href="#histogram-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">with</span> <span class="bu">open</span>(<span class="st">&#39;docs/measurements/&#39;</span> <span class="op">+</span> filename) <span class="im">as</span> f:</span>
-<span id="histogram-10"><a href="#histogram-10" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> line <span class="kw">in</span> f:</span>
-<span id="histogram-11"><a href="#histogram-11" aria-hidden="true" tabindex="-1"></a>                data.append({<span class="st">&#39;alg&#39;</span>: alg, <span class="st">&#39;n&#39;</span>: <span class="bu">int</span>(line)})</span>
-<span id="histogram-12"><a href="#histogram-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="histogram-13"><a href="#histogram-13" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.DataFrame(data)</span>
-<span id="histogram-14"><a href="#histogram-14" aria-hidden="true" tabindex="-1"></a></span>
-<span id="histogram-15"><a href="#histogram-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Plot the histograms</span></span>
-<span id="histogram-16"><a href="#histogram-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="histogram-17"><a href="#histogram-17" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> alg <span class="kw">in</span> df.alg.unique():</span>
-<span id="histogram-18"><a href="#histogram-18" aria-hidden="true" tabindex="-1"></a>    plt.figure()</span>
-<span id="histogram-19"><a href="#histogram-19" aria-hidden="true" tabindex="-1"></a>    plt.xlabel(<span class="st">&#39;Počet konfigurací&#39;</span>)</span>
-<span id="histogram-20"><a href="#histogram-20" aria-hidden="true" tabindex="-1"></a>    plt.ylabel(<span class="st">&#39;Četnost výskytu&#39;</span>)</span>
-<span id="histogram-21"><a href="#histogram-21" aria-hidden="true" tabindex="-1"></a>    plt.hist(df[df.alg <span class="op">==</span> alg].n, color <span class="op">=</span> <span class="st">&#39;tab:blue&#39;</span> <span class="cf">if</span> alg[<span class="op">-</span><span class="dv">3</span>] <span class="op">==</span> <span class="st">&#39;N&#39;</span> <span class="cf">else</span> <span class="st">&#39;orange&#39;</span>, bins <span class="op">=</span> <span class="dv">20</span>)</span>
-<span id="histogram-22"><a href="#histogram-22" aria-hidden="true" tabindex="-1"></a>    plt.xlim(xmin <span class="op">=</span> <span class="dv">0</span>)</span>
-<span id="histogram-23"><a href="#histogram-23" aria-hidden="true" tabindex="-1"></a>    plt.savefig(<span class="st">&#39;docs/assets/histogram-&#39;</span> <span class="op">+</span> alg <span class="op">+</span> <span class="st">&#39;.svg&#39;</span>)</span>
-<span id="histogram-24"><a href="#histogram-24" aria-hidden="true" tabindex="-1"></a>    plt.close()</span></code></pre></div>
-</div>
-</div>
+<figure>
+<img src="assets/max_errors.svg" alt="Maximální chyba řešení." /><figcaption aria-hidden="true">Maximální chyba řešení.</figcaption>
+</figure>
 <h3 id="analýza">Analýza</h3>
+<p>Detailní analýza algoritmu FPTAS je dostupná pro <span class="math inline">\(\varepsilon = 0.1\)</span> a <span class="math inline">\(\varepsilon = 0.01\)</span> v reportu <a href="criterion/fptas1/report/index.html"><code>fptas1</code></a>, resp. <a href="criterion/fptas1/report/index.html"><code>fptas2</code></a>.</p>
 <h4 id="vyhovují-nejhorší-případy-očekávané-závislosti">Vyhovují nejhorší případy očekávané závislosti?</h4>
 <p>Ano. Jak ukazují měření, s rostoucím počtem předmětů v batohu počet konfigurací i skutečný CPU čas velmi rychle roste. Pro <span class="math inline">\(n &lt; 15\)</span> můžeme pozorovat jisté fluktuace doby běhu, pro větší instance už ale není pochyb.</p>
 <h4 id="závisí-střední-hodnota-výpočetní-závislosti-na-sadě-instancí">Závisí střední hodnota výpočetní závislosti na sadě instancí?</h4>
@@ -912,6 +948,7 @@ Benchmarking fptas1/4                     Benchmarking fptas1/4: Warming up fo
 </div>
 <h2 id="závěr">Závěr</h2>
 <p>Tento úvodní problém byl příležitostí připravit si technické zázemí pro nadcházející úkoly. Implementace, které odevzdávám, se značně spoléhají na bezpečí typového systému jazyka Rust. Čas ukáže, jestli to usnadní jejich další rozšiřování a obohacování. Zadání jsem se pokusil splnit v celém rozsahu, ale neměl jsem už čas implementovat ořezávání s pomocí fragmentální varianty problému batohu v metodě větví a hranic.</p>
+<p>TODO: zhodnocení rozhodnutí z minulého úkolu</p>
 <h2 id="appendix">Appendix</h2>
 <p>Dodatek obsahuje nezajímavé části implementace, jako je import symbolů z knihoven.</p>
 <div class="fold-block">
@@ -1039,80 +1076,84 @@ Benchmarking fptas1/4                     Benchmarking fptas1/4: Warming up fo
 <span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> algs <span class="op">=</span> get_algorithms()<span class="op">;</span></span>
 <span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> solutions <span class="op">=</span> load_solutions()<span class="op">?;</span></span>
 <span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> ranges <span class="op">=</span> <span class="pp">HashMap::</span>from([</span>
-<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>        (<span class="st">&quot;dpw&quot;</span><span class="op">,</span> <span class="dv">0</span><span class="op">..=</span><span class="dv">20</span>)<span class="op">,</span></span>
-<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        (<span class="st">&quot;dpc&quot;</span><span class="op">,</span> <span class="dv">0</span><span class="op">..=</span><span class="dv">15</span>)<span class="op">,</span></span>
-<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        (<span class="st">&quot;fptas1&quot;</span><span class="op">,</span> <span class="dv">0</span><span class="op">..=</span><span class="dv">15</span>)<span class="op">,</span></span>
-<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    ])<span class="op">;</span></span>
-<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> input<span class="op">:</span> HashMap<span class="op">&lt;</span><span class="dt">u32</span><span class="op">,</span> <span class="dt">Vec</span><span class="op">&lt;</span>Instance<span class="op">&gt;&gt;</span> <span class="op">=</span> <span class="pp">HashMap::</span>new()<span class="op">;</span></span>
-<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> ns <span class="op">=</span> [<span class="dv">4</span>]<span class="op">;</span></span>
-<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    <span class="kw">for</span> n <span class="kw">in</span> ns <span class="op">{</span> input<span class="op">.</span>insert(n<span class="op">,</span> load_input(n <span class="op">..</span> n <span class="op">+</span> <span class="dv">1</span>)<span class="op">?</span>)<span class="op">;</span> <span class="op">}</span></span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>        (<span class="st">&quot;bb&quot;</span><span class="op">,</span> <span class="dv">0</span><span class="op">..=</span><span class="dv">20</span>)<span class="op">,</span></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        (<span class="st">&quot;dpw&quot;</span><span class="op">,</span> <span class="dv">0</span><span class="op">..=</span><span class="dv">20</span>)<span class="op">,</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        (<span class="st">&quot;dpc&quot;</span><span class="op">,</span> <span class="dv">0</span><span class="op">..=</span><span class="dv">20</span>)<span class="op">,</span></span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>        (<span class="st">&quot;fptas1&quot;</span><span class="op">,</span> <span class="dv">0</span><span class="op">..=</span><span class="dv">20</span>)<span class="op">,</span></span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>        (<span class="st">&quot;fptas2&quot;</span><span class="op">,</span> <span class="dv">0</span><span class="op">..=</span><span class="dv">20</span>)<span class="op">,</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>        (<span class="st">&quot;greedy&quot;</span><span class="op">,</span> <span class="dv">0</span><span class="op">..=</span><span class="dv">20</span>)<span class="op">,</span></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>        (<span class="st">&quot;redux&quot;</span><span class="op">,</span> <span class="dv">0</span><span class="op">..=</span><span class="dv">20</span>)<span class="op">,</span></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    ])<span class="op">;</span></span>
 <span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">for</span> (name<span class="op">,</span> alg) <span class="kw">in</span> algs<span class="op">.</span>iter() <span class="op">{</span></span>
-<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="kw">mut</span> group <span class="op">=</span> c<span class="op">.</span>benchmark_group(<span class="op">*</span>name)<span class="op">;</span></span>
-<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>        group<span class="op">.</span>sample_size(<span class="dv">10</span>)<span class="op">.</span>warm_up_time(<span class="pp">Duration::</span>from_millis(<span class="dv">200</span>))<span class="op">;</span></span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> input<span class="op">:</span> HashMap<span class="op">&lt;</span><span class="dt">u32</span><span class="op">,</span> <span class="dt">Vec</span><span class="op">&lt;</span>Instance<span class="op">&gt;&gt;</span> <span class="op">=</span> <span class="pp">HashMap::</span>new()<span class="op">;</span></span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> ns <span class="op">=</span> [<span class="dv">4</span><span class="op">,</span> <span class="dv">10</span><span class="op">,</span> <span class="dv">15</span><span class="op">,</span> <span class="dv">20</span>]<span class="op">;</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    <span class="kw">for</span> n <span class="kw">in</span> ns <span class="op">{</span> input<span class="op">.</span>insert(n<span class="op">,</span> load_input(n <span class="op">..</span> n <span class="op">+</span> <span class="dv">1</span>)<span class="op">?</span>)<span class="op">;</span> <span class="op">}</span></span>
 <span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>        <span class="kw">for</span> n <span class="kw">in</span> ns <span class="op">{</span></span>
-<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>            <span class="kw">if</span> <span class="op">!</span>ranges<span class="op">.</span>get(<span class="op">*</span>name)<span class="op">.</span>filter(<span class="op">|</span>r<span class="op">|</span> r<span class="op">.</span>contains(<span class="op">&amp;</span>n))<span class="op">.</span>is_some() <span class="op">{</span></span>
-<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>                <span class="kw">continue</span><span class="op">;</span></span>
-<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
-<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>            <span class="kw">let</span> (max<span class="op">,</span> avg) <span class="op">=</span> measure(<span class="op">&amp;</span><span class="kw">mut</span> group<span class="op">,</span> <span class="op">*</span>alg<span class="op">,</span> <span class="op">&amp;</span>solutions<span class="op">,</span> n<span class="op">,</span> <span class="op">&amp;</span>input[<span class="op">&amp;</span>n])<span class="op">;</span></span>
-<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>            <span class="kw">let</span> avg <span class="op">=</span> avg <span class="op">/</span> n <span class="kw">as</span> <span class="dt">f64</span><span class="op">;</span></span>
-<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>            <span class="kw">let</span> <span class="kw">mut</span> file <span class="op">=</span> <span class="pp">File::</span>create(<span class="pp">format!</span>(<span class="st">&quot;../docs/measurements/{}_{}.txt&quot;</span><span class="op">,</span> name<span class="op">,</span> n))<span class="op">?;</span></span>
-<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>            file<span class="op">.</span>write_all(<span class="pp">format!</span>(<span class="st">&quot;max,avg</span><span class="sc">\n</span><span class="st">{},{}&quot;</span><span class="op">,</span> max<span class="op">,</span> avg)<span class="op">.</span>as_bytes())<span class="op">?;</span></span>
-<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>        group<span class="op">.</span>finish()<span class="op">;</span></span>
-<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(())</span>
-<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> measure(</span>
-<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>    group<span class="op">:</span> <span class="op">&amp;</span><span class="kw">mut</span> <span class="pp">criterion::</span>BenchmarkGroup<span class="op">&lt;</span><span class="pp">criterion::measurement::</span>WallTime<span class="op">&gt;,</span></span>
-<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>    alg<span class="op">:</span> <span class="kw">for</span><span class="op">&lt;</span><span class="ot">&#39;a</span><span class="op">&gt;</span> <span class="kw">fn</span>(<span class="op">&amp;</span><span class="ot">&#39;a</span> Instance) <span class="op">-&gt;</span> Solution<span class="op">&lt;</span><span class="ot">&#39;a</span><span class="op">&gt;,</span></span>
-<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>    solutions<span class="op">:</span> <span class="op">&amp;</span>HashMap<span class="op">&lt;</span>(<span class="dt">u32</span><span class="op">,</span> <span class="dt">i32</span>)<span class="op">,</span> OptimalSolution<span class="op">&gt;,</span></span>
-<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>    n<span class="op">:</span> <span class="dt">u32</span><span class="op">,</span></span>
-<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>    instances<span class="op">:</span> <span class="op">&amp;</span><span class="dt">Vec</span><span class="op">&lt;</span>Instance<span class="op">&gt;</span></span>
-<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> (<span class="dt">f64</span><span class="op">,</span> <span class="dt">f64</span>) <span class="op">{</span></span>
-<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> stats <span class="op">=</span> (<span class="dv">0.0</span><span class="op">,</span> <span class="dv">0.0</span>)<span class="op">;</span></span>
-<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>    group<span class="op">.</span>bench_with_input(</span>
-<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>        <span class="pp">BenchmarkId::</span>from_parameter(n)<span class="op">,</span></span>
-<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>        instances<span class="op">,</span></span>
-<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>        <span class="op">|</span>b<span class="op">,</span> ins<span class="op">|</span> b<span class="op">.</span>iter(</span>
-<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>            <span class="op">||</span> ins<span class="op">.</span>iter()<span class="op">.</span>for_each(<span class="op">|</span>inst<span class="op">|</span> <span class="op">{</span></span>
-<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>                <span class="kw">let</span> sln <span class="op">=</span> alg(inst)<span class="op">;</span></span>
-<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a>                <span class="kw">let</span> optimal <span class="op">=</span> <span class="op">&amp;</span>solutions[<span class="op">&amp;</span>(n<span class="op">,</span> inst<span class="op">.</span>id)]<span class="op">;</span></span>
-<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a>                <span class="kw">let</span> error <span class="op">=</span> <span class="dv">1.0</span> <span class="op">-</span> sln<span class="op">.</span>cost <span class="kw">as</span> <span class="dt">f64</span> <span class="op">/</span> optimal<span class="op">.</span>cost <span class="kw">as</span> <span class="dt">f64</span><span class="op">;</span></span>
-<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>                <span class="kw">let</span> (max<span class="op">,</span> avg) <span class="op">=</span> stats<span class="op">;</span></span>
-<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a>                stats <span class="op">=</span> (<span class="kw">if</span> error <span class="op">&gt;</span> max <span class="op">{</span> error <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span> max <span class="op">},</span> avg <span class="op">+</span> error)<span class="op">;</span></span>
-<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span>)</span>
-<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a>        )</span>
-<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>    )<span class="op">;</span></span>
-<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a>    stats</span>
-<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> load_input(r<span class="op">:</span> Range<span class="op">&lt;</span><span class="dt">u32</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span>Instance<span class="op">&gt;&gt;</span> <span class="op">{</span></span>
-<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> instances <span class="op">=</span> <span class="dt">Vec</span><span class="pp">::</span>new()<span class="op">;</span></span>
-<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a>    <span class="kw">for</span> file <span class="kw">in</span> list_input_files(r)<span class="op">?</span> <span class="op">{</span></span>
-<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> file <span class="op">=</span> file<span class="op">?;</span></span>
-<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="kw">mut</span> r <span class="op">=</span> <span class="pp">BufReader::</span>new(<span class="pp">File::</span>open(file<span class="op">.</span>path())<span class="op">?</span>)<span class="op">;</span></span>
-<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a>        <span class="kw">while</span> <span class="kw">let</span> <span class="cn">Some</span>(inst) <span class="op">=</span> parse_line(<span class="op">&amp;</span><span class="kw">mut</span> r)<span class="op">?</span> <span class="op">{</span></span>
-<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a>            instances<span class="op">.</span>push(inst)<span class="op">;</span></span>
-<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
-<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
-<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(instances)</span>
-<span id="cb3-78"><a href="#cb3-78" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
-<span id="cb3-79"><a href="#cb3-79" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-80"><a href="#cb3-80" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> proxy(c<span class="op">:</span> <span class="op">&amp;</span><span class="kw">mut</span> Criterion) <span class="op">{</span></span>
-<span id="cb3-81"><a href="#cb3-81" aria-hidden="true" tabindex="-1"></a>    full(c)<span class="op">.</span>unwrap()</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>    <span class="kw">for</span> (name<span class="op">,</span> alg) <span class="kw">in</span> algs<span class="op">.</span>iter() <span class="op">{</span></span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="kw">mut</span> group <span class="op">=</span> c<span class="op">.</span>benchmark_group(<span class="op">*</span>name)<span class="op">;</span></span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>        group<span class="op">.</span>sample_size(<span class="dv">10</span>)<span class="op">.</span>warm_up_time(<span class="pp">Duration::</span>from_millis(<span class="dv">200</span>))<span class="op">;</span></span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>        <span class="kw">for</span> n <span class="kw">in</span> ns <span class="op">{</span></span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>            <span class="kw">if</span> <span class="op">!</span>ranges<span class="op">.</span>get(<span class="op">*</span>name)<span class="op">.</span>filter(<span class="op">|</span>r<span class="op">|</span> r<span class="op">.</span>contains(<span class="op">&amp;</span>n))<span class="op">.</span>is_some() <span class="op">{</span></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>                <span class="kw">continue</span><span class="op">;</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>            <span class="kw">let</span> (max<span class="op">,</span> avg) <span class="op">=</span> measure(<span class="op">&amp;</span><span class="kw">mut</span> group<span class="op">,</span> <span class="op">*</span>alg<span class="op">,</span> <span class="op">&amp;</span>solutions<span class="op">,</span> n<span class="op">,</span> <span class="op">&amp;</span>input[<span class="op">&amp;</span>n])<span class="op">;</span></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>            <span class="kw">let</span> avg <span class="op">=</span> avg <span class="op">/</span> n <span class="kw">as</span> <span class="dt">f64</span><span class="op">;</span></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>            <span class="kw">let</span> <span class="kw">mut</span> file <span class="op">=</span> <span class="pp">File::</span>create(<span class="pp">format!</span>(<span class="st">&quot;../docs/measurements/{}_{}.txt&quot;</span><span class="op">,</span> name<span class="op">,</span> n))<span class="op">?;</span></span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>            file<span class="op">.</span>write_all(<span class="pp">format!</span>(<span class="st">&quot;max,avg</span><span class="sc">\n</span><span class="st">{},{}&quot;</span><span class="op">,</span> max<span class="op">,</span> avg)<span class="op">.</span>as_bytes())<span class="op">?;</span></span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>        group<span class="op">.</span>finish()<span class="op">;</span></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(())</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> measure(</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>    group<span class="op">:</span> <span class="op">&amp;</span><span class="kw">mut</span> <span class="pp">criterion::</span>BenchmarkGroup<span class="op">&lt;</span><span class="pp">criterion::measurement::</span>WallTime<span class="op">&gt;,</span></span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>    alg<span class="op">:</span> <span class="kw">for</span><span class="op">&lt;</span><span class="ot">&#39;a</span><span class="op">&gt;</span> <span class="kw">fn</span>(<span class="op">&amp;</span><span class="ot">&#39;a</span> Instance) <span class="op">-&gt;</span> Solution<span class="op">&lt;</span><span class="ot">&#39;a</span><span class="op">&gt;,</span></span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>    solutions<span class="op">:</span> <span class="op">&amp;</span>HashMap<span class="op">&lt;</span>(<span class="dt">u32</span><span class="op">,</span> <span class="dt">i32</span>)<span class="op">,</span> OptimalSolution<span class="op">&gt;,</span></span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>    n<span class="op">:</span> <span class="dt">u32</span><span class="op">,</span></span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>    instances<span class="op">:</span> <span class="op">&amp;</span><span class="dt">Vec</span><span class="op">&lt;</span>Instance<span class="op">&gt;</span></span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>) <span class="op">-&gt;</span> (<span class="dt">f64</span><span class="op">,</span> <span class="dt">f64</span>) <span class="op">{</span></span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> stats <span class="op">=</span> (<span class="dv">0.0</span><span class="op">,</span> <span class="dv">0.0</span>)<span class="op">;</span></span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>    group<span class="op">.</span>bench_with_input(</span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>        <span class="pp">BenchmarkId::</span>from_parameter(n)<span class="op">,</span></span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a>        instances<span class="op">,</span></span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a>        <span class="op">|</span>b<span class="op">,</span> ins<span class="op">|</span> b<span class="op">.</span>iter(</span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>            <span class="op">||</span> ins<span class="op">.</span>iter()<span class="op">.</span>for_each(<span class="op">|</span>inst<span class="op">|</span> <span class="op">{</span></span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a>                <span class="kw">let</span> sln <span class="op">=</span> alg(inst)<span class="op">;</span></span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a>                <span class="kw">let</span> optimal <span class="op">=</span> <span class="op">&amp;</span>solutions[<span class="op">&amp;</span>(n<span class="op">,</span> inst<span class="op">.</span>id)]<span class="op">;</span></span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a>                <span class="kw">let</span> error <span class="op">=</span> <span class="dv">1.0</span> <span class="op">-</span> sln<span class="op">.</span>cost <span class="kw">as</span> <span class="dt">f64</span> <span class="op">/</span> optimal<span class="op">.</span>cost <span class="kw">as</span> <span class="dt">f64</span><span class="op">;</span></span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>                <span class="kw">let</span> (max<span class="op">,</span> avg) <span class="op">=</span> stats<span class="op">;</span></span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a>                stats <span class="op">=</span> (<span class="kw">if</span> error <span class="op">&gt;</span> max <span class="op">{</span> error <span class="op">}</span> <span class="kw">else</span> <span class="op">{</span> max <span class="op">},</span> avg <span class="op">+</span> error)<span class="op">;</span></span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a>            <span class="op">}</span>)</span>
+<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a>    )<span class="op">;</span></span>
+<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a>    stats</span>
+<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> load_input(r<span class="op">:</span> Range<span class="op">&lt;</span><span class="dt">u32</span><span class="op">&gt;</span>) <span class="op">-&gt;</span> <span class="dt">Result</span><span class="op">&lt;</span><span class="dt">Vec</span><span class="op">&lt;</span>Instance<span class="op">&gt;&gt;</span> <span class="op">{</span></span>
+<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a>    <span class="kw">let</span> <span class="kw">mut</span> instances <span class="op">=</span> <span class="dt">Vec</span><span class="pp">::</span>new()<span class="op">;</span></span>
+<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a>    <span class="kw">for</span> file <span class="kw">in</span> list_input_files(r)<span class="op">?</span> <span class="op">{</span></span>
+<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> file <span class="op">=</span> file<span class="op">?;</span></span>
+<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a>        <span class="kw">let</span> <span class="kw">mut</span> r <span class="op">=</span> <span class="pp">BufReader::</span>new(<span class="pp">File::</span>open(file<span class="op">.</span>path())<span class="op">?</span>)<span class="op">;</span></span>
+<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a>        <span class="kw">while</span> <span class="kw">let</span> <span class="cn">Some</span>(inst) <span class="op">=</span> parse_line(<span class="op">&amp;</span><span class="kw">mut</span> r)<span class="op">?</span> <span class="op">{</span></span>
+<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a>            instances<span class="op">.</span>push(inst)<span class="op">;</span></span>
+<span id="cb3-78"><a href="#cb3-78" aria-hidden="true" tabindex="-1"></a>        <span class="op">}</span></span>
+<span id="cb3-79"><a href="#cb3-79" aria-hidden="true" tabindex="-1"></a>    <span class="op">}</span></span>
+<span id="cb3-80"><a href="#cb3-80" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-81"><a href="#cb3-81" aria-hidden="true" tabindex="-1"></a>    <span class="cn">Ok</span>(instances)</span>
 <span id="cb3-82"><a href="#cb3-82" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
 <span id="cb3-83"><a href="#cb3-83" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-84"><a href="#cb3-84" aria-hidden="true" tabindex="-1"></a><span class="pp">criterion_group!</span>(benches<span class="op">,</span> proxy)<span class="op">;</span></span>
-<span id="cb3-85"><a href="#cb3-85" aria-hidden="true" tabindex="-1"></a><span class="pp">criterion_main!</span>(benches)<span class="op">;</span></span></code></pre></div>
+<span id="cb3-84"><a href="#cb3-84" aria-hidden="true" tabindex="-1"></a><span class="kw">fn</span> proxy(c<span class="op">:</span> <span class="op">&amp;</span><span class="kw">mut</span> Criterion) <span class="op">{</span></span>
+<span id="cb3-85"><a href="#cb3-85" aria-hidden="true" tabindex="-1"></a>    full(c)<span class="op">.</span>unwrap()</span>
+<span id="cb3-86"><a href="#cb3-86" aria-hidden="true" tabindex="-1"></a><span class="op">}</span></span>
+<span id="cb3-87"><a href="#cb3-87" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-88"><a href="#cb3-88" aria-hidden="true" tabindex="-1"></a><span class="pp">criterion_group!</span>(benches<span class="op">,</span> proxy)<span class="op">;</span></span>
+<span id="cb3-89"><a href="#cb3-89" aria-hidden="true" tabindex="-1"></a><span class="pp">criterion_main!</span>(benches)<span class="op">;</span></span></code></pre></div>
 </div>
 </div>
 <h3 id="spouštění-jednotlivých-řešičů">Spouštění jednotlivých řešičů</h3>

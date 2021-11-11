@@ -1,0 +1,11 @@
+group,function,value,throughput_num,throughput_type,sample_measured_value,unit,iteration_count
+bb,,10,,,92134574.0,ns,56
+bb,,10,,,183849544.0,ns,112
+bb,,10,,,287062623.0,ns,168
+bb,,10,,,377854185.0,ns,224
+bb,,10,,,457239738.0,ns,280
+bb,,10,,,564486755.0,ns,336
+bb,,10,,,650097568.0,ns,392
+bb,,10,,,743040849.0,ns,448
+bb,,10,,,835900428.0,ns,504
+bb,,10,,,929814572.0,ns,560
