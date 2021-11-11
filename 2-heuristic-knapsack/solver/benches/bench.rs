@@ -1,3 +1,5 @@
+// ~\~ language=Rust filename=solver/benches/bench.rs
+// ~\~ begin <<lit/main.md|solver/benches/bench.rs>>[0]
 extern crate solver;
 
 use solver::*;
@@ -15,7 +17,7 @@ fn full(c: &mut Criterion) -> Result<()> {
     ]);
 
     let mut input: HashMap<u32, Vec<Instance>> = HashMap::new();
-    let ns = [4, 10];
+    let ns = [4];
     for n in ns { input.insert(n, load_input(n .. n + 1)?); }
 
     for (name, alg) in algs.iter() {
@@ -83,3 +85,4 @@ fn proxy(c: &mut Criterion) {
 
 criterion_group!(benches, proxy);
 criterion_main!(benches);
+// ~\~ end

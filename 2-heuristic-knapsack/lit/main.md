@@ -53,7 +53,7 @@ obtížné (ne-li nemožné).
 
 ### Zpráva bude obsahovat
 
-- [ ] Popis implementovaných metod.
+- [x] Popis implementovaných metod.
 - [ ] Srovnání výpočetních časů metody větví a hranic, dynamického programování
   a heuristiky cena/váha (stačí jedna). Grafy vítány.
   - Tj. závislosti výpočetních časů na velikosti instance
@@ -97,27 +97,23 @@ cargo build --release --color always
 
 ## Benchmarking
 
-Pro provedení měření výkonu programu jsem využil nástroje Hyperfine.
+Od minulého úkolu jsem kompletně přepsal funkcionalitu pro benchmarking, která
+nově spoléhá na micro benchmark knihovnu
+[`Criterion.rs`](https://crates.io/crates/criterion). Díky ní stačí pro měření
+výkonu spustit `cargo bench`. Konkrétní implementace měření výkonu je k
+nahlédnutí v [dodatku](#appendix).
 
 ``` {.zsh .eval #benchmark .bootstrap-fold}
 uname -a
 ./cpufetch --logo-short --color ibm
 mkdir -p docs/measurements/
 cd solver
-hyperfine --export-json ../docs/bench.json \
-          --parameter-list n 4,10,15 \
-          --parameter-list set NK,ZKC,ZKW \
-          --parameter-list alg bb,dpc,dpw,fptas1,fptas2,greedy,redux \
-          --min-runs 4 \
-          --style color \
-          'cargo run --release -- {alg} \
-           < ds/{set}{n}_inst.dat \
-           > ../docs/measurements/{alg}-{set}{n}.txt' 2>&1 \
-    | fold -w 120 -s
+cargo bench
 ```
 
-Měření ze spuštění Hyperfine jsou uložena v souboru `docs/bench.json`, který
-následně zpracujeme do tabulky níže.
+Výsledná měření najdeme ve složce `solver/target/criterion/`. Zahrnují jak
+hotové reporty jednotlivých algoritmů se srovnáním doby běhu přes různé hodnoty
+$n$, tak i detailní záznamy naměřených dat ve formátu JSON.
 
 ``` {.zsh .eval #json-to-csv .bootstrap-fold}
 echo "alg.,sada,\$n\$,průměr,\$\pm \sigma\$,minimum,medián,maximum" > docs/bench.csv
@@ -137,9 +133,6 @@ jq -r \
 >> docs/bench.csv
 echo ""
 ```
-
-![Měření výkonu pro různé kombinace velikosti instancí problému ($n$) a
-zvoleného algoritmu. y](docs/bench.csv)
 
 ### Srovnání algoritmů
 
@@ -243,14 +236,6 @@ for alg in df.alg.unique():
     plt.close()
 ```
 
-![Sada NR: Redux pro $n = 15$](assets/histogram-redux-NK15.svg)
-
-![Sada NR: Metoda větví a hranic pro $n = 15$](assets/histogram-bb-NK15.svg)
-
-![Sada ZR: Redux pro $n = 15$](assets/histogram-redux-ZKW15.svg)
-
-![Sada ZR: Metoda větví a hranic pro $n = 15$](assets/histogram-bb-ZKW15.svg)
-
 ### Analýza
 
 #### Vyhovují nejhorší případy očekávané závislosti?
@@ -277,8 +262,8 @@ batohu.
 
 ``` {.rust #problem-instance-definition}
 #[derive(Debug, PartialEq, Eq, Clone)]
-struct Instance {
-    id: i32, m: u32, items: Vec<(u32, u32)>
+pub struct Instance {
+    pub id: i32, m: u32, pub items: Vec<(u32, u32)>
 }
 ```
 
@@ -287,24 +272,46 @@ jsou importovány na začátku, následuje již zmíněná definice instance pro
 dále funkce `main()`, parser, definice struktury řešení a její podpůrné funkce,
 samotné algoritmy řešiče a v neposlední řadě sada automatických testů.
 
-``` {.rust file=solver/src/main.rs}
+``` {.rust file=solver/src/lib.rs}
 <<imports>>
 
 <<algorithm-map>>
 
-fn main() -> Result<()> {
-    let algorithms = get_algorithms();
-
-    let alg = {
-        <<select-algorithm>>
-    }?;
-
+pub fn solve_stream<'a, T>(
+    alg: for <'b> fn(&'b Instance) -> Solution<'b>,
+    solutions: HashMap<(u32, i32), OptimalSolution>,
+    stream: &mut T
+) -> Result<Vec<(u32, f64)>> where T: BufRead {
+    let mut results = vec![];
     loop {
-        match parse_line(&mut stdin().lock())?.as_ref().map(alg) {
-            Some(Solution { cost, .. }) => println!("{}", cost),
-            None => return Ok(())
+        match parse_line(stream)?.as_ref().map(|inst| (inst, alg(inst))) {
+            Some((inst, sln)) => {
+                let optimal = &solutions[&(inst.items.len() as u32, inst.id)];
+                let error = 1.0 - sln.cost as f64 / optimal.cost as f64;
+                results.push((sln.cost, error))
+            },
+            None => return Ok(results)
         }
     }
+}
+
+use std::result::Result as IOResult;
+pub fn list_input_files(r: Range<u32>) -> Result<Vec<IOResult<DirEntry, std::io::Error>>> {
+    let f = |res: &IOResult<DirEntry, std::io::Error> | res.as_ref().ok().filter(|f| {
+        let file_name = f.file_name();
+        let file_name = file_name.to_str().unwrap();
+        // keep only regular files
+        f.file_type().unwrap().is_file() &&
+        // ... whose names start with NK,
+        file_name.starts_with("NK") &&
+        // ... continue with an integer between 0 and 15,
+        file_name[2..]
+        .split('_').nth(0).unwrap().parse::<u32>().ok()
+        .filter(|n| r.contains(n)).is_some() &&
+        // ... and end with `_inst.dat` (for "instance").
+        file_name.ends_with("_inst.dat")
+    }).is_some();
+    Ok(read_dir("./ds/")?.filter(f).collect())
 }
 
 <<problem-instance-definition>>
@@ -337,13 +344,13 @@ problému především bit array udávající množinu předmětů v pomyslném 
 Zároveň nese informaci o počtu navštívených konfigurací při jeho výpočtu.
 
 ```{.rust #solution-definition}
-type Config = BitArr!(for 64);
+pub type Config = BitArr!(for 64);
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
-struct Solution<'a> { weight: u32, cost: u32, cfg: Config, inst: &'a Instance }
+pub struct Solution<'a> { weight: u32, pub cost: u32, cfg: Config, pub inst: &'a Instance }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-struct OptimalSolution { id: i32, cost: u32, cfg: Config }
+pub struct OptimalSolution { id: i32, pub cost: u32, cfg: Config }
 
 <<solution-helpers>>
 ```
@@ -399,7 +406,7 @@ používáme při vybírání algoritmu pomocí argumentu předaného na příka
 v testovacím kódu na testy všech implementací atp.
 
 ``` {.rust #algorithm-map}
-fn get_algorithms() -> BTreeMap<&'static str, fn(&Instance) -> Solution> {
+pub fn get_algorithms() -> BTreeMap<&'static str, fn(&Instance) -> Solution> {
     let cast = |x: fn(&Instance) -> Solution| x;
     // the BTreeMap works as a trie, maintaining alphabetic order
     BTreeMap::from([
@@ -657,7 +664,14 @@ Dodatek obsahuje nezajímavé části implementace, jako je import symbolů z
 knihoven.
 
 ``` {.rust #imports .bootstrap-fold}
-use std::{cmp, cmp::max, collections::BTreeMap, io::{stdin, BufRead}, str::FromStr};
+use std::{cmp, cmp::max,
+    ops::Range,
+    iter::Filter,
+    str::FromStr,
+    io::{BufRead, BufReader},
+    collections::{BTreeMap, HashMap},
+    fs::{read_dir, File, ReadDir, DirEntry},
+};
 use anyhow::{Context, Result, anyhow};
 use bitvec::prelude::BitArr;
 
@@ -672,7 +686,7 @@ testy je tu parser formátu souborů s optimálními řešeními.
 ``` {.rust #parser .bootstrap-fold}
 <<boilerplate>>
 
-fn parse_line<T>(stream: &mut T) -> Result<Option<Instance>> where T: BufRead {
+pub fn parse_line<T>(stream: &mut T) -> Result<Option<Instance>> where T: BufRead {
     let mut input = String::new();
     if stream.read_line(&mut input)? == 0 {
         return Ok(None)
@@ -693,7 +707,6 @@ fn parse_line<T>(stream: &mut T) -> Result<Option<Instance>> where T: BufRead {
     Ok(Some(Instance {id, m, items}))
 }
 
-#[cfg(test)]
 fn parse_solution_line<T>(mut stream: T) -> Result<Option<OptimalSolution>> where T: BufRead {
     let mut input = String::new();
     if stream.read_line(&mut input)? == 0 {
@@ -713,27 +726,28 @@ fn parse_solution_line<T>(mut stream: T) -> Result<Option<OptimalSolution>> wher
 
     Ok(Some(OptimalSolution {id, cost, cfg: items}))
 }
-```
 
-Výběr algoritmu je řízen argumentem předaným na příkazové řádce. Příslušnou
-funkci vrátíme jako hodnotu tohoto bloku:
+pub fn load_solutions() -> Result<HashMap<(u32, i32), OptimalSolution>> {
+    let mut solutions = HashMap::new();
 
-``` {.rust #select-algorithm .bootstrap-fold}
-let args: Vec<String> = std::env::args().collect();
-if args.len() == 2 {
-    let alg = &args[1][..];
-    if let Some(f) = algorithms.get(alg) {
-        Ok(f)
-    } else {
-        Err(anyhow!("\"{}\" is not a known algorithm", alg))
+    let files = read_dir("../data/constructive/")?
+        .filter(|res| res.as_ref().ok().filter(|f| {
+            let name = f.file_name().into_string().unwrap();
+            f.file_type().unwrap().is_file() &&
+            name.starts_with("NK") &&
+            name.ends_with("_sol.dat")
+        }).is_some());
+
+    for file in files {
+        let file = file?;
+        let n = file.file_name().into_string().unwrap()[2..].split('_').nth(0).unwrap().parse()?;
+        let mut stream = BufReader::new(File::open(file.path())?);
+        while let Some(opt) = parse_solution_line(&mut stream)? {
+            solutions.insert((n, opt.id), opt);
+        }
     }
-} else {
-    println!(
-        "Usage: {} <algorithm>\n\twhere <algorithm> is one of {}",
-        args[0],
-        algorithms.keys().map(ToString::to_string).collect::<Vec<_>>().join(", ")
-    );
-    Err(anyhow!("Expected 1 argument, got {}", args.len() - 1))
+
+    Ok(solutions)
 }
 ```
 
@@ -756,7 +770,152 @@ impl Boilerplate for std::str::SplitWhitespace<'_> {
 }
 ```
 
+### Měření výkonu
+
+Benchmark postavený na knihovně
+[`Criterion.rs`](https://crates.io/crates/criterion) se nachází v souboru níže.
+
+``` {.rust file=solver/benches/bench.rs}
+extern crate solver;
+
+use solver::*;
+use anyhow::{Result, anyhow};
+use std::{collections::HashMap, fs::File, io::{BufReader, Write}, ops::Range, time::Duration};
+use criterion::{criterion_group, criterion_main, Criterion, BenchmarkId};
+
+fn full(c: &mut Criterion) -> Result<()> {
+    let algs = get_algorithms();
+    let solutions = load_solutions()?;
+    let ranges = HashMap::from([
+        ("dpw", 0..=20),
+        ("dpc", 0..=15),
+        ("fptas1", 0..=15),
+    ]);
+
+    let mut input: HashMap<u32, Vec<Instance>> = HashMap::new();
+    let ns = [4];
+    for n in ns { input.insert(n, load_input(n .. n + 1)?); }
+
+    for (name, alg) in algs.iter() {
+        let mut group = c.benchmark_group(*name);
+        group.sample_size(10).warm_up_time(Duration::from_millis(200));
+
+        for n in ns {
+            if !ranges.get(*name).filter(|r| r.contains(&n)).is_some() {
+                continue;
+            }
+
+            let (max, avg) = measure(&mut group, *alg, &solutions, n, &input[&n]);
+            let avg = avg / n as f64;
+
+            let mut file = File::create(format!("../docs/measurements/{}_{}.txt", name, n))?;
+            file.write_all(format!("max,avg\n{},{}", max, avg).as_bytes())?;
+        }
+        group.finish();
+    }
+    Ok(())
+}
+
+fn measure(
+    group: &mut criterion::BenchmarkGroup<criterion::measurement::WallTime>,
+    alg: for<'a> fn(&'a Instance) -> Solution<'a>,
+    solutions: &HashMap<(u32, i32), OptimalSolution>,
+    n: u32,
+    instances: &Vec<Instance>
+) -> (f64, f64) {
+    let mut stats = (0.0, 0.0);
+    group.bench_with_input(
+        BenchmarkId::from_parameter(n),
+        instances,
+        |b, ins| b.iter(
+            || ins.iter().for_each(|inst| {
+                let sln = alg(inst);
+                let optimal = &solutions[&(n, inst.id)];
+                let error = 1.0 - sln.cost as f64 / optimal.cost as f64;
+                let (max, avg) = stats;
+                stats = (if error > max { error } else { max }, avg + error);
+            })
+        )
+    );
+
+    stats
+}
+
+fn load_input(r: Range<u32>) -> Result<Vec<Instance>> {
+    let mut instances = Vec::new();
+
+    for file in list_input_files(r)? {
+        let file = file?;
+        let mut r = BufReader::new(File::open(file.path())?);
+        while let Some(inst) = parse_line(&mut r)? {
+            instances.push(inst);
+        }
+    }
+
+    Ok(instances)
+}
+
+fn proxy(c: &mut Criterion) {
+    full(c).unwrap()
+}
+
+criterion_group!(benches, proxy);
+criterion_main!(benches);
+```
+
+### Spouštění jednotlivých řešičů
+
+Projekt podporuje sestavení spustitelného souboru schopného zpracovat libovolný
+vstup ze zadání za pomoci algoritmu zvoleného na příkazové řádce. Zdrojový kód
+tohoto rozhraní se nachází v souboru `solver/src/bin/main.rs`. Na standardní
+výstup vypisuje cenu a chybu řešení, spoléhá ovšem na to, že mezi optimálními
+řešeními najde i to pro kombinaci velikosti a ID zadané instance.
+
+``` {.rust file=solver/src/bin/main.rs}
+extern crate solver;
+
+use std::io::stdin;
+use solver::*;
+use anyhow::{Result, anyhow};
+
+fn main() -> Result<()> {
+    let algorithms = get_algorithms();
+    let solutions = load_solutions()?;
+
+    let alg = *{
+        <<select-algorithm>>
+    }?;
+
+    for (cost, error) in solve_stream(alg, solutions, &mut stdin().lock())? {
+        println!("{} {}", cost, error);
+    }
+    Ok(())
+}
+```
+
+Funkci příslušnou vybranému algoritmu vrátíme jako hodnotu tohoto bloku:
+
+``` {.rust #select-algorithm .bootstrap-fold}
+let args: Vec<String> = std::env::args().collect();
+if args.len() == 2 {
+    let alg = &args[1][..];
+    if let Some(f) = algorithms.get(alg) {
+        Ok(f)
+    } else {
+        Err(anyhow!("\"{}\" is not a known algorithm", alg))
+    }
+} else {
+    println!(
+        "Usage: {} <algorithm>\n\twhere <algorithm> is one of {}",
+        args[0],
+        algorithms.keys().map(ToString::to_string).collect::<Vec<_>>().join(", ")
+    );
+    Err(anyhow!("Expected 1 argument, got {}", args.len() - 1))
+}
+```
+
 ### Automatické testy
+
 Implementaci doplňují automatické testy k ověření správnosti, včetně
 property-based testu s knihovnou
 [quickcheck](https://github.com/BurntSushi/quickcheck).
@@ -766,7 +925,7 @@ property-based testu s knihovnou
 mod tests {
     use super::*;
     use quickcheck::{Arbitrary, Gen};
-    use std::{fs::{read_dir, ReadDir, DirEntry, File}, iter::Filter, io::BufReader, collections::HashMap};
+    use std::{fs::File, io::BufReader};
 
     impl Arbitrary for Instance {
         fn arbitrary(g: &mut Gen) -> Instance {
@@ -827,29 +986,6 @@ mod tests {
         assert_eq!(bb.cost, i.greedy().cost);
     }
 
-    fn load_solutions() -> Result<HashMap<(u32, i32), OptimalSolution>> {
-        let mut solutions = HashMap::new();
-
-        let files = read_dir("../data/constructive/")?
-            .filter(|res| res.as_ref().ok().filter(|f| {
-                let name = f.file_name().into_string().unwrap();
-                f.file_type().unwrap().is_file() &&
-                name.starts_with("NK") &&
-                name.ends_with("_sol.dat")
-            }).is_some());
-
-        for file in files {
-            let file = file?;
-            let n = file.file_name().into_string().unwrap()[2..].split('_').nth(0).unwrap().parse()?;
-            let mut stream = BufReader::new(File::open(file.path())?);
-            while let Some(opt) = parse_solution_line(&mut stream)? {
-                solutions.insert((n, opt.id), opt);
-            }
-        }
-
-        Ok(solutions)
-    }
-
     #[test]
     fn proper() -> Result<()> {
         type Solver = (&'static str, for<'a> fn(&'a Instance) -> Solution<'a>);
@@ -862,7 +998,7 @@ mod tests {
             |algs, inst|
             algs.iter().map(|(name, alg): &Solver| (*name, alg(inst))).collect();
 
-        let mut files = list_input_files()?;
+        let mut files = list_input_files(0..5)?.into_iter();
         // make sure `files` is not empty
         let first = files.next().ok_or(anyhow!("no instance files loaded"))?;
         for file in vec![first].into_iter().chain(files) {
@@ -897,7 +1033,7 @@ mod tests {
     fn fptas_is_within_bounds() -> Result<()> {
         let opts = load_solutions()?;
         for eps in [0.1, 0.01] {
-            for file in list_input_files()? {
+            for file in list_input_files(0..5)? {
                 let file = file?;
                 let mut r = BufReader::new(File::open(file.path())?);
                 while let Some(sln) = parse_line(&mut r)?.as_ref().map(|x| x.fptas(eps)) {
@@ -909,25 +1045,6 @@ mod tests {
             }
         }
         Ok(())
-    }
-
-    type FilterClosure = fn(&std::result::Result<DirEntry, std::io::Error>) -> bool;
-    fn list_input_files() -> Result<Filter<ReadDir, FilterClosure>> {
-        let f: FilterClosure = |res| res.as_ref().ok().filter(|f| {
-            let file_name = f.file_name();
-            let file_name = file_name.to_str().unwrap();
-            // keep only regular files
-            f.file_type().unwrap().is_file() &&
-            // ... whose names start with NK,
-            file_name.starts_with("NK") &&
-            // ... continue with an integer between 0 and 15,
-            file_name[2..]
-            .split('_').nth(0).unwrap().parse::<u32>().ok()
-            .filter(|n| (0..9).contains(n)).is_some() &&
-            // ... and end with `_inst.dat` (for "instance").
-            file_name.ends_with("_inst.dat")
-        }).is_some();
-        Ok(read_dir("./ds/")?.filter(f))
     }
 
     #[test]

@@ -1,3 +1,5 @@
+// ~\~ language=Rust filename=solver/src/bin/main.rs
+// ~\~ begin <<lit/main.md|solver/src/bin/main.rs>>[0]
 extern crate solver;
 
 use std::io::stdin;
@@ -34,3 +36,4 @@ fn main() -> Result<()> {
     }
     Ok(())
 }
+// ~\~ end

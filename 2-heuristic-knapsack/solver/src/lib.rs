@@ -1,5 +1,5 @@
-// ~\~ language=Rust filename=solver/src/main.rs
-// ~\~ begin <<lit/main.md|solver/src/main.rs>>[0]
+// ~\~ language=Rust filename=solver/src/lib.rs
+// ~\~ begin <<lit/main.md|solver/src/lib.rs>>[0]
 // ~\~ begin <<lit/main.md|imports>>[0]
 use std::{cmp, cmp::max,
     ops::Range,
