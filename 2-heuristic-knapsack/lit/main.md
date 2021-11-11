@@ -109,6 +109,7 @@ uname -a
 mkdir -p docs/measurements/
 cd solver
 cargo bench
+cp -r target/criterion ../docs/criterion
 ```
 
 Výsledná měření najdeme ve složce `solver/target/criterion/`. Zahrnují jak
