@@ -21,7 +21,7 @@ fn full(c: &mut Criterion) -> Result<()> {
     ]);
 
     let mut input: HashMap<(&str, u32), Vec<Instance>> = HashMap::new();
-    let ns = [4, 10, ];//15, 20, 22, 25, 27, 30, 32];
+    let ns = [4, 10, 15, 20, 22, 25, 27, 30, 32];
     let sets = ["NK", "ZKC", "ZKW"];
     for set in sets {
         solutions.insert(set, load_solutions(set)?);

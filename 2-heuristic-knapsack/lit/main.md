@@ -3,10 +3,6 @@ title: 'NI-KOP -- úkol 2'
 author: 'Ondřej Kvapil'
 ---
 
-**BEFORE SUBMISSION**:
-- fix `n` range in `bench.rs`
-- fix `cargo bench` command here
-
 # Kombinatorická optimalizace: problém batohu
 
 ## Zadání
@@ -112,7 +108,7 @@ uname -a
 ./cpufetch --logo-short --color ibm
 mkdir -p docs/measurements/
 cd solver
-# cargo bench --color always
+cargo bench --color always
 cp -r target/criterion ../docs/criterion
 ```
 
@@ -154,6 +150,11 @@ from pandas.core.tools.numeric import to_numeric
 # The mean is in the estimate.mean.point_estimate field.
 
 # TODO: keep this in a better place (duplicities between here and bench.rs)
+sets = [ "NK"
+       , "ZKC"
+       , "ZKW"
+       ]
+
 algs = [ "bb"
        , "dpc"
        , "dpw"
@@ -166,22 +167,30 @@ algs = [ "bb"
 n_values = [4, 10, 15, 20, 22, 25, 27, 30, 32]
 data = {}
 
-for alg in algs:
-    data[alg] = {}
-    for n in n_values:
-        est_file = os.path.join("solver", "target", "criterion", alg, str(n), "new", "estimates.json")
-        if os.path.exists(est_file):
-            with open(est_file, "r") as f:
-                estimates = json.load(f)
-                mean = estimates["mean"]["point_estimate"]
-                data[alg][n] = { "mean": mean / 1000 / 1000 / 1000
-                            }
-            err_file = os.path.join("docs", "measurements", alg + "_" + str(n) + ".txt")
-            with open(err_file, "r") as f:
-                measurements = pd.read_csv(f)
-                data[alg][n]["error"] = { "max": measurements["max"]
-                                        , "avg": measurements["avg"]
-                                        }
+for s in sets:
+    data[s] = {}
+    for alg in algs:
+        data[s][alg] = {}
+        for n in n_values:
+            est_file = os.path.join(
+                "solver", "target", "criterion",
+                s + "-" + alg, str(n), "new", "estimates.json"
+            )
+            if os.path.exists(est_file):
+                with open(est_file, "r") as f:
+                    estimates = json.load(f)
+                    mean = estimates["mean"]["point_estimate"]
+                    data[s][alg][n] = { "mean": mean / 1000 / 1000 / 1000
+                                      }
+                err_file = os.path.join(
+                    "docs", "measurements",
+                    s + "_" + alg + "_" + str(n) + ".txt"
+                )
+                with open(err_file, "r") as f:
+                    measurements = pd.read_csv(f)
+                    data[s][alg][n]["error"] = { "max": measurements["max"]
+                                               , "avg": measurements["avg"]
+                                               }
 
 ```
 
@@ -190,28 +199,29 @@ for alg in algs:
 # plot the mean runtimes and max errors
 
 figsize = (14, 8)
-fig, ax = plt.subplots(figsize = figsize)
-plt.title("Průměrná doba běhu")
-plt.xlabel("Velikost instance")
-plt.ylabel("Průměrná doba běhu (sec)")
-plt.xticks(n_values)
-for alg in algs:
-    plt.plot([n for n in data[alg]], [data[alg][n]["mean"] for n in data[alg]], "--o", label=alg)
-plt.legend()
-plt.savefig("docs/assets/mean_runtimes.svg")
+for s in sets:
+    fig, ax = plt.subplots(figsize = figsize)
+    plt.title("Průměrná doba běhu")
+    plt.xlabel("Velikost instance")
+    plt.ylabel("Průměrná doba běhu (sec)")
+    plt.xticks(n_values)
+    for alg in algs:
+        plt.plot([n for n in data[s][alg]], [data[s][alg][n]["mean"] for n in data[s][alg]], "--o", label=alg)
+    plt.legend()
+    plt.savefig("docs/assets/{}_mean_runtimes.svg".format(s))
 
-fig, ax = plt.subplots(figsize = figsize)
-plt.title("Závislost maximální chyby na velikosti instance")
-plt.xlabel("Velikost instance")
-plt.ylabel("Maximální chyba")
-plt.xticks(n_values)
-yticks = np.append(ax.get_yticks(), [0.1, 0.01])
-ax.set_yticks(yticks)
-ax.grid(linestyle = "dotted")
-for alg in algs:
-    plt.plot([n for n in data[alg]], [data[alg][n]["error"]["max"] for n in data[alg]], label=alg)
-plt.legend()
-plt.savefig("docs/assets/max_errors.svg")
+    fig, ax = plt.subplots(figsize = figsize)
+    plt.title("Závislost maximální chyby na velikosti instance")
+    plt.xlabel("Velikost instance")
+    plt.ylabel("Maximální chyba")
+    plt.xticks(n_values)
+    yticks = np.append(ax.get_yticks(), [0.1, 0.01])
+    ax.set_yticks(yticks)
+    ax.grid(linestyle = "dotted")
+    for alg in algs:
+        plt.plot([n for n in data[s][alg]], [data[s][alg][n]["error"]["max"] for n in data[s][alg]], label=alg)
+    plt.legend()
+    plt.savefig("docs/assets/{}_max_errors.svg".format(s))
 ```
 
 Výkon každého algoritmu byl změřen na stovce různých zadání z jedné datové sady
@@ -219,26 +229,35 @@ alespoň desetkrát za sebou (přesný počet spuštění řídí knihovna v zá
 výkonu algoritmu). Vyobrazený čas je proto stokrát vyšší, než skutečná doba
 řešení jedné instance problému dané velikosti.
 
-![Závislost doby běhu na počtu předmětů.](assets/mean_runtimes.svg)
+![NK: Závislost doby běhu na počtu předmětů.](assets/NK_mean_runtimes.svg)
+
+![ZKC: Závislost doby běhu na počtu předmětů.](assets/ZKC_mean_runtimes.svg)
+
+![ZKW: Závislost doby běhu na počtu předmětů.](assets/ZKW_mean_runtimes.svg)
 
 Graf maximální chyby zvýrazňuje hranice požadované od FPTAS algoritmu. Zajímavé
 je, že maximální chyba je relativně hluboko pod požadovanou horní mezí.
 
-![Maximální chyba řešení.](assets/max_errors.svg)
+![NK: Maximální chyba řešení.](assets/NK_max_errors.svg)
+
+![ZKC: Maximální chyba řešení.](assets/ZKC_max_errors.svg)
+
+![ZKW: Maximální chyba řešení.](assets/ZKW_max_errors.svg)
 
 ### Analýza
 
 Detailní analýza algoritmu FPTAS je rozdělená podle sady instancí a parametru
 $\varepsilon$.
 
- Sada | $\varepsilon$ | Report
-------|---------------|-------------------------------------------------------
-  NK  |    $0.1$      | [`NK-fptas1`](criterion/NK-fptas1/report/index.html)
-  NK  |    $0.01$     | [`NK-fptas2`](criterion/NK-fptas2/report/index.html)
-  ZKC |    $0.1$      | [`ZKC-fptas1`](criterion/ZKC-fptas1/report/index.html)
-  ZKC |    $0.01$     | [`ZKC-fptas2`](criterion/ZKC-fptas2/report/index.html)
-  ZKW |    $0.1$      | [`ZKW-fptas1`](criterion/ZKW-fptas1/report/index.html)
-  ZKW |    $0.01$     | [`ZKW-fptas2`](criterion/ZKW-fptas2/report/index.html)
+- sada NK
+  - $\varepsilon = 0.1$  [`NK-fptas1`](criterion/NK-fptas1/report/index.html)
+  - $\varepsilon = 0.01$ [`NK-fptas2`](criterion/NK-fptas2/report/index.html)
+- sada ZKC
+  - $\varepsilon = 0.1$  [`ZKC-fptas1`](criterion/ZKC-fptas1/report/index.html)
+  - $\varepsilon = 0.01$ [`ZKC-fptas2`](criterion/ZKC-fptas2/report/index.html)
+- sada ZKW
+  - $\varepsilon = 0.1$  [`ZKW-fptas1`](criterion/ZKW-fptas1/report/index.html)
+  - $\varepsilon = 0.01$ [`ZKW-fptas2`](criterion/ZKW-fptas2/report/index.html)
 
 #### Odpovídají obě závislosti (kvality a času) předpokladům?
 Ne. Čekal jsem, že FPTAS bude často mnohem blíže požadované hranici
@@ -295,16 +314,16 @@ pub fn solve_stream<'a, T>(
 }
 
 use std::result::Result as IOResult;
-pub fn list_input_files(r: Range<u32>) -> Result<Vec<IOResult<DirEntry, std::io::Error>>> {
+pub fn list_input_files(set: &str, r: Range<u32>) -> Result<Vec<IOResult<DirEntry, std::io::Error>>> {
     let f = |res: &IOResult<DirEntry, std::io::Error> | res.as_ref().ok().filter(|f| {
         let file_name = f.file_name();
         let file_name = file_name.to_str().unwrap();
         // keep only regular files
         f.file_type().unwrap().is_file() &&
-        // ... whose names start with NK,
-        file_name.starts_with("NK") &&
+        // ... whose names start with the set name,
+        file_name.starts_with(set) &&
         // ... continue with an integer between 0 and 15,
-        file_name[2..]
+        file_name[set.len()..]
         .split('_').nth(0).unwrap().parse::<u32>().ok()
         .filter(|n| r.contains(n)).is_some() &&
         // ... and end with `_inst.dat` (for "instance").
@@ -728,20 +747,20 @@ fn parse_solution_line<T>(mut stream: T) -> Result<Option<OptimalSolution>> wher
     Ok(Some(OptimalSolution {id, cost, cfg: items}))
 }
 
-pub fn load_solutions() -> Result<HashMap<(u32, i32), OptimalSolution>> {
+pub fn load_solutions(set: &str) -> Result<HashMap<(u32, i32), OptimalSolution>> {
     let mut solutions = HashMap::new();
 
     let files = read_dir("../data/constructive/")?
         .filter(|res| res.as_ref().ok().filter(|f| {
             let name = f.file_name().into_string().unwrap();
             f.file_type().unwrap().is_file() &&
-            name.starts_with("NK") &&
+            name.starts_with(set) &&
             name.ends_with("_sol.dat")
         }).is_some());
 
     for file in files {
         let file = file?;
-        let n = file.file_name().into_string().unwrap()[2..].split('_').nth(0).unwrap().parse()?;
+        let n = file.file_name().into_string().unwrap()[set.len()..].split('_').nth(0).unwrap().parse()?;
         let mut stream = BufReader::new(File::open(file.path())?);
         while let Some(opt) = parse_solution_line(&mut stream)? {
             solutions.insert((n, opt.id), opt);
@@ -786,53 +805,64 @@ use criterion::{criterion_group, criterion_main, Criterion, BenchmarkId};
 
 fn full(c: &mut Criterion) -> Result<()> {
     let algs = get_algorithms();
-    let solutions = load_solutions()?;
+    let mut solutions = HashMap::new();
     let ranges = HashMap::from([
         ("bb",     0..=25),
-        ("dpw",    0..=30),
+        ("dpw",    0..=32),
         ("dpc",    0..=20),
-        ("fptas1", 0..=27),
+        ("fptas1", 0..=32),
         ("fptas2", 0..=22),
         ("greedy", 0..=32),
         ("redux",  0..=32),
     ]);
 
-    let mut input: HashMap<u32, Vec<Instance>> = HashMap::new();
+    let mut input: HashMap<(&str, u32), Vec<Instance>> = HashMap::new();
     let ns = [4, 10, 15, 20, 22, 25, 27, 30, 32];
-    for n in ns {
-        input.insert(n, load_input(n .. n + 1)?
-            .into_iter()
-            .filter(|inst| inst.id > 400)
-            .collect()
-        );
+    let sets = ["NK", "ZKC", "ZKW"];
+    for set in sets {
+        solutions.insert(set, load_solutions(set)?);
+        for n in ns {
+            input.insert((set, n), load_input(set, n .. n + 1)?
+                .into_iter()
+                .filter(|inst| inst.id > 400)
+                .collect()
+            );
+        }
     }
 
-    benchmark(algs, c, &ns, ranges, solutions, input)?;
+    benchmark(algs, c, &ns, &sets, ranges, solutions, input)?;
     Ok(())
 }
 
 fn benchmark(
     algs: std::collections::BTreeMap<&str, fn(&Instance) -> Solution>,
-    c: &mut Criterion, ns: &[u32], ranges: HashMap<&str, std::ops::RangeInclusive<u32>>,
-    solutions: HashMap<(u32, i32), OptimalSolution>,
-    input: HashMap<u32, Vec<Instance>>
+    c: &mut Criterion,
+    ns: &[u32],
+    sets: &[&'static str],
+    ranges: HashMap<&str, std::ops::RangeInclusive<u32>>,
+    solutions: HashMap<&str, HashMap<(u32, i32), OptimalSolution>>,
+    input: HashMap<(&str, u32), Vec<Instance>>
 ) -> Result<(), anyhow::Error> {
-    Ok(for (name, alg) in algs.iter() {
-        let mut group = c.benchmark_group(*name);
-        group.sample_size(10).warm_up_time(Duration::from_millis(200));
+    Ok(for set in sets {
+        for (name, alg) in algs.iter() {
+            let mut group = c.benchmark_group(format!("{}-{}", set, name));
+            group.sample_size(10).warm_up_time(Duration::from_millis(200));
 
-        for n in ns {
-            if !ranges.get(*name).filter(|r| r.contains(&n)).is_some() {
-                continue;
+            for n in ns {
+                if !ranges.get(*name).filter(|r| r.contains(&n)).is_some() {
+                    continue;
+                }
+
+                let (max, avg, nonzero_n) =
+                    measure(&mut group, *alg, &solutions[set], *n, &input[&(*set, *n)]);
+                eprintln!("max: {}, avg: {}, n: {} vs real n: {}", max, avg, nonzero_n, n);
+                let avg = avg / nonzero_n as f64;
+
+                let mut file = File::create(format!("../docs/measurements/{}_{}_{}.txt", set, name, n))?;
+                file.write_all(format!("max,avg\n{},{}", max, avg).as_bytes())?;
             }
-
-            let (max, avg) = measure(&mut group, *alg, &solutions, *n, &input[&n]);
-            let avg = avg / *n as f64;
-
-            let mut file = File::create(format!("../docs/measurements/{}_{}.txt", name, n))?;
-            file.write_all(format!("max,avg\n{},{}", max, avg).as_bytes())?;
+            group.finish();
         }
-        group.finish();
     })
 }
 
@@ -842,8 +872,8 @@ fn measure(
     solutions: &HashMap<(u32, i32), OptimalSolution>,
     n: u32,
     instances: &Vec<Instance>
-) -> (f64, f64) {
-    let mut stats = (0.0, 0.0);
+) -> (f64, f64, u32) {
+    let mut stats = (0.0, 0.0, 0);
     group.bench_with_input(
         BenchmarkId::from_parameter(n),
         instances,
@@ -851,9 +881,11 @@ fn measure(
             || ins.iter().for_each(|inst| {
                 let sln = alg(inst);
                 let optimal = &solutions[&(n, inst.id)];
-                let error = 1.0 - sln.cost as f64 / optimal.cost as f64;
-                let (max, avg) = stats;
-                stats = (if error > max { error } else { max }, avg + error);
+                if optimal.cost != 0 {
+                    let error = 1.0 - sln.cost as f64 / optimal.cost as f64;
+                    let (max, avg, n) = stats;
+                    stats = (if error > max { error } else { max }, avg + error, n + 1);
+                }
             })
         )
     );
@@ -861,10 +893,10 @@ fn measure(
     stats
 }
 
-fn load_input(r: Range<u32>) -> Result<Vec<Instance>> {
+fn load_input(set: &str, r: Range<u32>) -> Result<Vec<Instance>> {
     let mut instances = Vec::new();
 
-    for file in list_input_files(r)? {
+    for file in list_input_files(set, r)? {
         let file = file?;
         let mut r = BufReader::new(File::open(file.path())?);
         while let Some(inst) = parse_line(&mut r)? {
@@ -900,7 +932,7 @@ use anyhow::{Result, anyhow};
 
 fn main() -> Result<()> {
     let algorithms = get_algorithms();
-    let solutions = load_solutions()?;
+    let solutions = load_solutions("NK")?;
 
     let alg = *{
         <<select-algorithm>>
@@ -1011,14 +1043,14 @@ mod tests {
         type Solver = (&'static str, for<'a> fn(&'a Instance) -> Solution<'a>);
         let algs = get_algorithms();
         let algs: Vec<Solver> = algs.iter().map(|(s, f)| (*s, *f)).collect();
-        let opts = load_solutions()?;
+        let opts = load_solutions("NK")?;
         println!("loaded {} optimal solutions", opts.len());
 
         let solve: for<'a> fn(&Vec<_>, &'a _) -> Vec<(&'static str, Solution<'a>)> =
             |algs, inst|
             algs.iter().map(|(name, alg): &Solver| (*name, alg(inst))).collect();
 
-        let mut files = list_input_files(0..5)?.into_iter();
+        let mut files = list_input_files("NK", 0..5)?.into_iter();
         // make sure `files` is not empty
         let first = files.next().ok_or(anyhow!("no instance files loaded"))?;
         for file in vec![first].into_iter().chain(files) {
@@ -1051,9 +1083,9 @@ mod tests {
 
     #[test]
     fn fptas_is_within_bounds() -> Result<()> {
-        let opts = load_solutions()?;
+        let opts = load_solutions("NK")?;
         for eps in [0.1, 0.01] {
-            for file in list_input_files(0..5)? {
+            for file in list_input_files("NK", 0..5)? {
                 let file = file?;
                 let mut r = BufReader::new(File::open(file.path())?);
                 while let Some(sln) = parse_line(&mut r)?.as_ref().map(|x| x.fptas(eps)) {
