@@ -108,7 +108,7 @@ uname -a
 ./cpufetch --logo-short --color ibm
 mkdir -p docs/measurements/
 cd solver
-# cargo bench --color always
+cargo bench --color always
 cp -r target/criterion ../docs/criterion
 ```
 
