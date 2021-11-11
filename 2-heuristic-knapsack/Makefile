@@ -38,7 +38,7 @@ pandoc_args += --highlight-style tango
 pandoc_args_html += --to html5
 pandoc_args_html += --mathjax
 pandoc_args_html += --toc
-pandoc_args_html += --toc-depth 2
+pandoc_args_html += --toc-depth 3
 pandoc_args_html += --template $(bootstrap_dir)/template.html
 pandoc_args_html += --css css/mods.css
 # FIXME: bootstrap after doctest leads to cell output outside of foldable blocks

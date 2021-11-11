@@ -101,7 +101,7 @@ Od minulého úkolu jsem kompletně přepsal funkcionalitu pro benchmarking, kte
 nově spoléhá na micro benchmark knihovnu
 [`Criterion.rs`](https://crates.io/crates/criterion). Díky ní stačí pro měření
 výkonu spustit `cargo bench`. Konkrétní implementace měření výkonu je k
-nahlédnutí v [dodatku](#appendix).
+nahlédnutí v [dodatku](#měření-výkonu).
 
 ``` {.zsh .eval #benchmark .bootstrap-fold}
 uname -a
@@ -115,28 +115,11 @@ Výsledná měření najdeme ve složce `solver/target/criterion/`. Zahrnují ja
 hotové reporty jednotlivých algoritmů se srovnáním doby běhu přes různé hodnoty
 $n$, tak i detailní záznamy naměřených dat ve formátu JSON.
 
-``` {.zsh .eval #json-to-csv .bootstrap-fold}
-echo "alg.,sada,\$n\$,průměr,\$\pm \sigma\$,minimum,medián,maximum" > docs/bench.csv
-jq -r \
-   '.[] | .[] | [.parameters.alg, .parameters.set, .parameters.n
-                , ([.mean, .stddev, .min, .median, .max]
-                   | map("**" + (100000 * . + 0.5
-                         | floor
-                         | . / 100
-                         | tostring
-                         | if test("\\.") then sub("\\."; "**.") else . + "**" end
-                         ) + " ms"
-                        )
-                  )
-                ] | flatten | @csv' \
-   docs/bench.json \
->> docs/bench.csv
-echo ""
-```
-
 ### Srovnání algoritmů
 
-```{.python .eval file=analysis/charts.py}
+TODO: přepracovat
+
+```{.python file=analysis/charts.py}
 <<preprocessing>>
 
 <<performance-chart>>
@@ -775,7 +758,7 @@ impl Boilerplate for std::str::SplitWhitespace<'_> {
 Benchmark postavený na knihovně
 [`Criterion.rs`](https://crates.io/crates/criterion) se nachází v souboru níže.
 
-``` {.rust file=solver/benches/bench.rs}
+``` {.rust file=solver/benches/bench.rs .bootstrap-fold}
 extern crate solver;
 
 use solver::*;
