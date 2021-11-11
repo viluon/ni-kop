@@ -11,13 +11,17 @@ fn full(c: &mut Criterion) -> Result<()> {
     let algs = get_algorithms();
     let solutions = load_solutions()?;
     let ranges = HashMap::from([
+        ("bb", 0..=20),
         ("dpw", 0..=20),
-        ("dpc", 0..=15),
-        ("fptas1", 0..=15),
+        ("dpc", 0..=20),
+        ("fptas1", 0..=20),
+        ("fptas2", 0..=20),
+        ("greedy", 0..=20),
+        ("redux", 0..=20),
     ]);
 
     let mut input: HashMap<u32, Vec<Instance>> = HashMap::new();
-    let ns = [4];
+    let ns = [4, 10, 15, 20];
     for n in ns { input.insert(n, load_input(n .. n + 1)?); }
 
     for (name, alg) in algs.iter() {
