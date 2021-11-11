@@ -108,7 +108,7 @@ uname -a
 ./cpufetch --logo-short --color ibm
 mkdir -p docs/measurements/
 cd solver
-cargo bench
+cargo bench --color always
 cp -r target/criterion ../docs/criterion
 ```
 
@@ -118,7 +118,7 @@ $n$, tak i detailní záznamy naměřených dat ve formátu JSON.
 
 ### Srovnání algoritmů
 
-```{.python file=analysis/charts.py}
+```{.python .eval file=analysis/charts.py}
 <<preprocessing>>
 
 <<performance-chart>>
@@ -200,7 +200,7 @@ plt.savefig("docs/assets/max_errors.svg")
 
 Detailní analýza algoritmu FPTAS je dostupná pro $\varepsilon = 0.1$ a
 $\varepsilon = 0.01$ v reportu [`fptas1`](criterion/fptas1/report/index.html),
-resp. [`fptas2`](criterion/fptas1/report/index.html).
+resp. [`fptas2`](criterion/fptas2/report/index.html).
 
 #### Vyhovují nejhorší případy očekávané závislosti?
 
