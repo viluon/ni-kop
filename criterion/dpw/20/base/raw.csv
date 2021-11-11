@@ -1,0 +1,11 @@
+group,function,value,throughput_num,throughput_type,sample_measured_value,unit,iteration_count
+dpw,,20,,,93189128.0,ns,2
+dpw,,20,,,186239057.0,ns,4
+dpw,,20,,,286501195.0,ns,6
+dpw,,20,,,363002401.0,ns,8
+dpw,,20,,,413917571.0,ns,10
+dpw,,20,,,506357598.0,ns,12
+dpw,,20,,,564997280.0,ns,14
+dpw,,20,,,684888044.0,ns,16
+dpw,,20,,,758909347.0,ns,18
+dpw,,20,,,827209641.0,ns,20

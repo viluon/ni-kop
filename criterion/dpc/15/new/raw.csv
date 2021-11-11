@@ -1,0 +1,11 @@
+group,function,value,throughput_num,throughput_type,sample_measured_value,unit,iteration_count
+dpc,,15,,,968187633.0,ns,1
+dpc,,15,,,980793945.0,ns,1
+dpc,,15,,,1005776868.0,ns,1
+dpc,,15,,,970100440.0,ns,1
+dpc,,15,,,965583227.0,ns,1
+dpc,,15,,,992726355.0,ns,1
+dpc,,15,,,947970807.0,ns,1
+dpc,,15,,,977072739.0,ns,1
+dpc,,15,,,963740124.0,ns,1
+dpc,,15,,,977183739.0,ns,1
