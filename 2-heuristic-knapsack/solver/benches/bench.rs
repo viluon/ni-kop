@@ -11,20 +11,36 @@ fn full(c: &mut Criterion) -> Result<()> {
     let algs = get_algorithms();
     let solutions = load_solutions()?;
     let ranges = HashMap::from([
-        ("bb", 0..=20),
-        ("dpw", 0..=20),
-        ("dpc", 0..=20),
-        ("fptas1", 0..=20),
-        ("fptas2", 0..=20),
-        ("greedy", 0..=20),
-        ("redux", 0..=20),
+        ("bb",     0..=25),
+        ("dpw",    0..=30),
+        ("dpc",    0..=20),
+        ("fptas1", 0..=27),
+        ("fptas2", 0..=22),
+        ("greedy", 0..=32),
+        ("redux",  0..=32),
     ]);
 
     let mut input: HashMap<u32, Vec<Instance>> = HashMap::new();
-    let ns = [4, 10, 15, 20];
-    for n in ns { input.insert(n, load_input(n .. n + 1)?); }
+    let ns = [4, 10, 15, 20, 22, 25, 27, 30, 32];
+    for n in ns {
+        input.insert(n, load_input(n .. n + 1)?
+            .into_iter()
+            .filter(|inst| inst.id > 400)
+            .collect()
+        );
+    }
 
-    for (name, alg) in algs.iter() {
+    benchmark(algs, c, &ns, ranges, solutions, input)?;
+    Ok(())
+}
+
+fn benchmark(
+    algs: std::collections::BTreeMap<&str, fn(&Instance) -> Solution>,
+    c: &mut Criterion, ns: &[u32], ranges: HashMap<&str, std::ops::RangeInclusive<u32>>,
+    solutions: HashMap<(u32, i32), OptimalSolution>,
+    input: HashMap<u32, Vec<Instance>>
+) -> Result<(), anyhow::Error> {
+    Ok(for (name, alg) in algs.iter() {
         let mut group = c.benchmark_group(*name);
         group.sample_size(10).warm_up_time(Duration::from_millis(200));
 
@@ -33,15 +49,14 @@ fn full(c: &mut Criterion) -> Result<()> {
                 continue;
             }
 
-            let (max, avg) = measure(&mut group, *alg, &solutions, n, &input[&n]);
-            let avg = avg / n as f64;
+            let (max, avg) = measure(&mut group, *alg, &solutions, *n, &input[&n]);
+            let avg = avg / *n as f64;
 
             let mut file = File::create(format!("../docs/measurements/{}_{}.txt", name, n))?;
             file.write_all(format!("max,avg\n{},{}", max, avg).as_bytes())?;
         }
         group.finish();
-    }
-    Ok(())
+    })
 }
 
 fn measure(

@@ -100,15 +100,15 @@ cargo build --release --color always
 Od minulého úkolu jsem kompletně přepsal funkcionalitu pro benchmarking, která
 nově spoléhá na micro benchmark knihovnu
 [`Criterion.rs`](https://crates.io/crates/criterion). Díky ní stačí pro měření
-výkonu spustit `cargo bench`. Konkrétní implementace měření výkonu je k
-nahlédnutí v [dodatku](#měření-výkonu).
+výkonu spustit `cargo bench`. Konkrétní implementace měření je k nahlédnutí v
+[dodatku](#měření-výkonu).
 
 ``` {.zsh .eval #benchmark .bootstrap-fold}
 uname -a
 ./cpufetch --logo-short --color ibm
 mkdir -p docs/measurements/
 cd solver
-cargo bench --color always
+# cargo bench --color always
 cp -r target/criterion ../docs/criterion
 ```
 
@@ -117,6 +117,19 @@ hotové reporty jednotlivých algoritmů se srovnáním doby běhu přes různé
 $n$, tak i detailní záznamy naměřených dat ve formátu JSON.
 
 ### Srovnání algoritmů
+
+Pro zjednodušení zápisu jsou algoritmy pojmenované zkráceně. Zkratka v přehledu
+níže odkazuje na podsekci popisující příslušnou implementaci.
+
+- [`bb`](#branch--bound) -- metoda větví a hranic
+- [`dpc`](#dynamické-programování) -- dynamické programování s rozkladem podle ceny
+- [`dpw`](#dynamické-programování) -- dynamické programování s rozkladem podle váhy
+- [`fptas1`](#fptas) -- FPTAS (postavený na `dpc`) pro $\varepsilon = 0.1$
+- [`fptas2`](#fptas) -- FPTAS (postavený na `dpc`) pro $\varepsilon = 0.01$
+- [`greedy`](#hladový-přístup) -- hladový algoritmus podle heuristiky poměru cena/váha
+- [`redux`](#hladový-přístup----redux) -- `greedy` + řešení pouze s nejdražším předmětem
+
+Zpracování měřených dat pro srovnávací grafy jsem provedl v Pythonu.
 
 ```{.python .eval file=analysis/charts.py}
 <<preprocessing>>
@@ -127,6 +140,7 @@ $n$, tak i detailní záznamy naměřených dat ve formátu JSON.
 ```{.python #preprocessing .bootstrap-fold}
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 import json
 import os
 from pandas.core.tools.numeric import to_numeric
@@ -135,8 +149,7 @@ from pandas.core.tools.numeric import to_numeric
 # algorithm/n/estimates.json file, where n is the size of the input.
 # The mean is in the estimate.mean.point_estimate field.
 
-# TODO: keep this stored in a better place (duplicities between here and
-# bench.rs)
+# TODO: keep this in a better place (duplicities between here and bench.rs)
 algs = [ "bb"
        , "dpc"
        , "dpw"
@@ -146,53 +159,66 @@ algs = [ "bb"
        , "redux"
        ]
 
-n_values = [4, 10, 15, 20]
+n_values = [4, 10, 15, 20, 22, 25, 27, 30, 32]
 data = {}
 
 for alg in algs:
     data[alg] = {}
     for n in n_values:
         est_file = os.path.join("solver", "target", "criterion", alg, str(n), "new", "estimates.json")
-        with open(est_file, "r") as f:
-            estimates = json.load(f)
-            mean = estimates["mean"]["point_estimate"]
-            data[alg][n] = { "mean": mean / 1000 / 1000 / 1000
-                           }
-        err_file = os.path.join("docs", "measurements", alg + "_" + str(n) + ".txt")
-        with open(err_file, "r") as f:
-            measurements = pd.read_csv(f)
-            data[alg][n]["error"] = { "max": measurements["max"]
-                                    , "avg": measurements["avg"]
-                                    }
+        if os.path.exists(est_file):
+            with open(est_file, "r") as f:
+                estimates = json.load(f)
+                mean = estimates["mean"]["point_estimate"]
+                data[alg][n] = { "mean": mean / 1000 / 1000 / 1000
+                            }
+            err_file = os.path.join("docs", "measurements", alg + "_" + str(n) + ".txt")
+            with open(err_file, "r") as f:
+                measurements = pd.read_csv(f)
+                data[alg][n]["error"] = { "max": measurements["max"]
+                                        , "avg": measurements["avg"]
+                                        }
 
 ```
 
 ```{.python #performance-chart .bootstrap-fold}
 
-# plot the mean runtimes
+# plot the mean runtimes and max errors
 
-plt.figure()
-
+figsize = (14, 8)
+fig, ax = plt.subplots(figsize = figsize)
+plt.title("Průměrná doba běhu")
+plt.xlabel("Velikost instance")
+plt.ylabel("Průměrná doba běhu (sec)")
+plt.xticks(n_values)
 for alg in algs:
-    plt.plot(n_values, [data[alg][n]["mean"] for n in n_values], "-o", label=alg)
-
-plt.xlabel("Input size")
-plt.ylabel("Mean runtime (sec)")
+    plt.plot([n for n in data[alg]], [data[alg][n]["mean"] for n in data[alg]], "--o", label=alg)
 plt.legend()
-plt.title("Mean runtimes for various algorithms")
 plt.savefig("docs/assets/mean_runtimes.svg")
 
-plt.figure()
-plt.title("Maximum error for each algorithm and n")
-plt.xlabel("n")
-plt.ylabel("error")
+fig, ax = plt.subplots(figsize = figsize)
+plt.title("Závislost maximální chyby na velikosti instance")
+plt.xlabel("Velikost instance")
+plt.ylabel("Maximální chyba")
+plt.xticks(n_values)
+yticks = np.append(ax.get_yticks(), [0.1, 0.01])
+ax.set_yticks(yticks)
+ax.grid(linestyle = "dotted")
 for alg in algs:
-    plt.plot(n_values, [data[alg][n]["error"]["max"] for n in n_values], label=alg)
+    plt.plot([n for n in data[alg]], [data[alg][n]["error"]["max"] for n in data[alg]], label=alg)
 plt.legend()
 plt.savefig("docs/assets/max_errors.svg")
 ```
 
+Výkon každého algoritmu byl změřen na stovce různých zadání z jednoho datového
+setu alespoň desetkrát za sebou (přesný počet spuštění řídí knihovna v
+závislosti na výkonu algoritmu). Vyobrazený čas je proto stokrát vyšší, než
+skutečná doba řešení jedné instance problému dané velikosti.
+
 ![Závislost doby běhu na počtu předmětů.](assets/mean_runtimes.svg)
+
+Graf maximální chyby zvýrazňuje hranice požadované od FPTAS algoritmu. Zajímavé
+je, že maximální chyba je relativně hluboko pod požadovanou horní mezí.
 
 ![Maximální chyba řešení.](assets/max_errors.svg)
 
@@ -202,22 +228,17 @@ Detailní analýza algoritmu FPTAS je dostupná pro $\varepsilon = 0.1$ a
 $\varepsilon = 0.01$ v reportu [`fptas1`](criterion/fptas1/report/index.html),
 resp. [`fptas2`](criterion/fptas2/report/index.html).
 
-#### Vyhovují nejhorší případy očekávané závislosti?
+#### Odpovídají obě závislosti (kvality a času) předpokladům?
+TODO
 
-Ano. Jak ukazují měření, s rostoucím počtem předmětů v batohu počet konfigurací
-i skutečný CPU čas velmi rychle roste. Pro $n < 15$ můžeme pozorovat jisté
-fluktuace doby běhu, pro větší instance už ale není pochyb.
+#### Je některá heuristická metoda systematicky lepší v některém kritériu?
+TODO
 
-#### Závisí střední hodnota výpočetní závislosti na sadě instancí?
+#### Jak se liší obtížnost jednotlivých sad z hlediska jednotlivých metod?
+TODO
 
-Pro hrubou sílu není znát velký rozdíl, ale rozdíly metody větví a hranic jsou
-mezi sadami dobře vidět z histogramů v předchozí podsekci. Metoda větví a hranic
-si k rychlému ukončení dopomáhá součtem cen dosud nepřidaných předmětů -- strom
-rekurzivních volání se zařízne, pokud nepřidané předměty nemohou dosáhnout ceny
-nejlepšího známého řešení. Aby tato podmínka výpočet urychlila, měly by se
-lehké, cenné předměty nacházet především na začátku seznamu. Zdá se, že sada ZR
-obsahuje méně takto vhodných instancí. Algoritmus bych chtěl do budoucna
-vylepšit předzpracováním v podobě seřazení seznamu předmětů.
+#### Jaká je závislost maximální chyby ($\varepsilon$) a času FPTAS algoritmu na zvolené přesnosti? Odpovídá předpokladům?
+TODO
 
 ## Implementace
 
@@ -753,20 +774,36 @@ fn full(c: &mut Criterion) -> Result<()> {
     let algs = get_algorithms();
     let solutions = load_solutions()?;
     let ranges = HashMap::from([
-        ("bb", 0..=20),
-        ("dpw", 0..=20),
-        ("dpc", 0..=20),
-        ("fptas1", 0..=20),
-        ("fptas2", 0..=20),
-        ("greedy", 0..=20),
-        ("redux", 0..=20),
+        ("bb",     0..=25),
+        ("dpw",    0..=30),
+        ("dpc",    0..=20),
+        ("fptas1", 0..=27),
+        ("fptas2", 0..=22),
+        ("greedy", 0..=32),
+        ("redux",  0..=32),
     ]);
 
     let mut input: HashMap<u32, Vec<Instance>> = HashMap::new();
-    let ns = [4, 10, 15, 20];
-    for n in ns { input.insert(n, load_input(n .. n + 1)?); }
+    let ns = [4, 10, 15, 20, 22, 25, 27, 30, 32];
+    for n in ns {
+        input.insert(n, load_input(n .. n + 1)?
+            .into_iter()
+            .filter(|inst| inst.id > 400)
+            .collect()
+        );
+    }
 
-    for (name, alg) in algs.iter() {
+    benchmark(algs, c, &ns, ranges, solutions, input)?;
+    Ok(())
+}
+
+fn benchmark(
+    algs: std::collections::BTreeMap<&str, fn(&Instance) -> Solution>,
+    c: &mut Criterion, ns: &[u32], ranges: HashMap<&str, std::ops::RangeInclusive<u32>>,
+    solutions: HashMap<(u32, i32), OptimalSolution>,
+    input: HashMap<u32, Vec<Instance>>
+) -> Result<(), anyhow::Error> {
+    Ok(for (name, alg) in algs.iter() {
         let mut group = c.benchmark_group(*name);
         group.sample_size(10).warm_up_time(Duration::from_millis(200));
 
@@ -775,15 +812,14 @@ fn full(c: &mut Criterion) -> Result<()> {
                 continue;
             }
 
-            let (max, avg) = measure(&mut group, *alg, &solutions, n, &input[&n]);
-            let avg = avg / n as f64;
+            let (max, avg) = measure(&mut group, *alg, &solutions, *n, &input[&n]);
+            let avg = avg / *n as f64;
 
             let mut file = File::create(format!("../docs/measurements/{}_{}.txt", name, n))?;
             file.write_all(format!("max,avg\n{},{}", max, avg).as_bytes())?;
         }
         group.finish();
-    }
-    Ok(())
+    })
 }
 
 fn measure(

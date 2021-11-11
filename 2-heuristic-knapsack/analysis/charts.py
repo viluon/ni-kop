@@ -3,6 +3,7 @@
 # ~\~ begin <<lit/main.md|preprocessing>>[0]
 import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 import json
 import os
 from pandas.core.tools.numeric import to_numeric
@@ -11,8 +12,7 @@ from pandas.core.tools.numeric import to_numeric
 # algorithm/n/estimates.json file, where n is the size of the input.
 # The mean is in the estimate.mean.point_estimate field.
 
-# TODO: keep this stored in a better place (duplicities between here and
-# bench.rs)
+# TODO: keep this in a better place (duplicities between here and bench.rs)
 algs = [ "bb"
        , "dpc"
        , "dpw"
@@ -22,48 +22,53 @@ algs = [ "bb"
        , "redux"
        ]
 
-n_values = [4, 10, 15, 20]
+n_values = [4, 10, 15, 20, 22, 25, 27, 30, 32]
 data = {}
 
 for alg in algs:
     data[alg] = {}
     for n in n_values:
         est_file = os.path.join("solver", "target", "criterion", alg, str(n), "new", "estimates.json")
-        with open(est_file, "r") as f:
-            estimates = json.load(f)
-            mean = estimates["mean"]["point_estimate"]
-            data[alg][n] = { "mean": mean / 1000 / 1000 / 1000
-                           }
-        err_file = os.path.join("docs", "measurements", alg + "_" + str(n) + ".txt")
-        with open(err_file, "r") as f:
-            measurements = pd.read_csv(f)
-            data[alg][n]["error"] = { "max": measurements["max"]
-                                    , "avg": measurements["avg"]
-                                    }
+        if os.path.exists(est_file):
+            with open(est_file, "r") as f:
+                estimates = json.load(f)
+                mean = estimates["mean"]["point_estimate"]
+                data[alg][n] = { "mean": mean / 1000 / 1000 / 1000
+                            }
+            err_file = os.path.join("docs", "measurements", alg + "_" + str(n) + ".txt")
+            with open(err_file, "r") as f:
+                measurements = pd.read_csv(f)
+                data[alg][n]["error"] = { "max": measurements["max"]
+                                        , "avg": measurements["avg"]
+                                        }
 
 # ~\~ end
 
 # ~\~ begin <<lit/main.md|performance-chart>>[0]
 
-# plot the mean runtimes
+# plot the mean runtimes and max errors
 
-plt.figure()
-
+figsize = (14, 8)
+fig, ax = plt.subplots(figsize = figsize)
+plt.title("Průměrná doba běhu")
+plt.xlabel("Velikost instance")
+plt.ylabel("Průměrná doba běhu (sec)")
+plt.xticks(n_values)
 for alg in algs:
-    plt.plot(n_values, [data[alg][n]["mean"] for n in n_values], "-o", label=alg)
-
-plt.xlabel("Input size")
-plt.ylabel("Mean runtime (sec)")
+    plt.plot([n for n in data[alg]], [data[alg][n]["mean"] for n in data[alg]], "--o", label=alg)
 plt.legend()
-plt.title("Mean runtimes for various algorithms")
 plt.savefig("docs/assets/mean_runtimes.svg")
 
-plt.figure()
-plt.title("Maximum error for each algorithm and n")
-plt.xlabel("n")
-plt.ylabel("error")
+fig, ax = plt.subplots(figsize = figsize)
+plt.title("Závislost maximální chyby na velikosti instance")
+plt.xlabel("Velikost instance")
+plt.ylabel("Maximální chyba")
+plt.xticks(n_values)
+yticks = np.append(ax.get_yticks(), [0.1, 0.01])
+ax.set_yticks(yticks)
+ax.grid(linestyle = "dotted")
 for alg in algs:
-    plt.plot(n_values, [data[alg][n]["error"]["max"] for n in n_values], label=alg)
+    plt.plot([n for n in data[alg]], [data[alg][n]["error"]["max"] for n in data[alg]], label=alg)
 plt.legend()
 plt.savefig("docs/assets/max_errors.svg")
 # ~\~ end
