@@ -1,0 +1,11 @@
+group,function,value,throughput_num,throughput_type,sample_measured_value,unit,iteration_count
+ZKC-dpc,,4,,,123055836.0,ns,3
+ZKC-dpc,,4,,,246128471.0,ns,6
+ZKC-dpc,,4,,,369235908.0,ns,9
+ZKC-dpc,,4,,,492619447.0,ns,12
+ZKC-dpc,,4,,,615417380.0,ns,15
+ZKC-dpc,,4,,,738664018.0,ns,18
+ZKC-dpc,,4,,,861829755.0,ns,21
+ZKC-dpc,,4,,,985212294.0,ns,24
+ZKC-dpc,,4,,,1107897942.0,ns,27
+ZKC-dpc,,4,,,1231029643.0,ns,30

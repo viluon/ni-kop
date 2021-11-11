@@ -1,0 +1,11 @@
+group,function,value,throughput_num,throughput_type,sample_measured_value,unit,iteration_count
+NK-dpc,,4,,,121480072.0,ns,3
+NK-dpc,,4,,,243025545.0,ns,6
+NK-dpc,,4,,,364710519.0,ns,9
+NK-dpc,,4,,,485637386.0,ns,12
+NK-dpc,,4,,,606953557.0,ns,15
+NK-dpc,,4,,,728603030.0,ns,18
+NK-dpc,,4,,,850178204.0,ns,21
+NK-dpc,,4,,,971074270.0,ns,24
+NK-dpc,,4,,,1092731944.0,ns,27
+NK-dpc,,4,,,1213800552.0,ns,30

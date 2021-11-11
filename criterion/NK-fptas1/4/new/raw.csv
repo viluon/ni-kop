@@ -1,0 +1,11 @@
+group,function,value,throughput_num,throughput_type,sample_measured_value,unit,iteration_count
+NK-fptas1,,4,,,91317303.0,ns,124
+NK-fptas1,,4,,,182595206.0,ns,248
+NK-fptas1,,4,,,273827108.0,ns,372
+NK-fptas1,,4,,,365184311.0,ns,496
+NK-fptas1,,4,,,456322913.0,ns,620
+NK-fptas1,,4,,,547546315.0,ns,744
+NK-fptas1,,4,,,638884318.0,ns,868
+NK-fptas1,,4,,,730248822.0,ns,992
+NK-fptas1,,4,,,821407423.0,ns,1116
+NK-fptas1,,4,,,912470124.0,ns,1240

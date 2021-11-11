@@ -1,0 +1,11 @@
+group,function,value,throughput_num,throughput_type,sample_measured_value,unit,iteration_count
+ZKC-fptas1,,4,,,89722897.0,ns,109
+ZKC-fptas1,,4,,,179489894.0,ns,218
+ZKC-fptas1,,4,,,269083191.0,ns,327
+ZKC-fptas1,,4,,,358788788.0,ns,436
+ZKC-fptas1,,4,,,448527884.0,ns,545
+ZKC-fptas1,,4,,,538185482.0,ns,654
+ZKC-fptas1,,4,,,628058380.0,ns,763
+ZKC-fptas1,,4,,,717571875.0,ns,872
+ZKC-fptas1,,4,,,807245072.0,ns,981
+ZKC-fptas1,,4,,,897024169.0,ns,1090

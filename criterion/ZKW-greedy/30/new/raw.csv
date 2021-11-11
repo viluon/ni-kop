@@ -1,0 +1,11 @@
+group,function,value,throughput_num,throughput_type,sample_measured_value,unit,iteration_count
+ZKW-greedy,,30,,,90049601.0,ns,2340
+ZKW-greedy,,30,,,179949101.0,ns,4680
+ZKW-greedy,,30,,,269185295.0,ns,7020
+ZKW-greedy,,30,,,358813391.0,ns,9360
+ZKW-greedy,,30,,,448802193.0,ns,11700
+ZKW-greedy,,30,,,541004315.0,ns,14040
+ZKW-greedy,,30,,,628548092.0,ns,16380
+ZKW-greedy,,30,,,718183989.0,ns,18720
+ZKW-greedy,,30,,,807426982.0,ns,21060
+ZKW-greedy,,30,,,894920074.0,ns,23400

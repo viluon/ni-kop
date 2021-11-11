@@ -1,0 +1,11 @@
+group,function,value,throughput_num,throughput_type,sample_measured_value,unit,iteration_count
+NK-redux,,4,,,89100798.0,ns,6624
+NK-redux,,4,,,178428797.0,ns,13248
+NK-redux,,4,,,267495295.0,ns,19872
+NK-redux,,4,,,356652394.0,ns,26496
+NK-redux,,4,,,446008393.0,ns,33120
+NK-redux,,4,,,535368394.0,ns,39744
+NK-redux,,4,,,628684934.0,ns,46368
+NK-redux,,4,,,716821223.0,ns,52992
+NK-redux,,4,,,806558981.0,ns,59616
+NK-redux,,4,,,895947014.0,ns,66240

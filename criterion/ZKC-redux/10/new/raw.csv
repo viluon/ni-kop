@@ -1,0 +1,11 @@
+group,function,value,throughput_num,throughput_type,sample_measured_value,unit,iteration_count
+ZKC-redux,,10,,,94757788.0,ns,2942
+ZKC-redux,,10,,,182305101.0,ns,5884
+ZKC-redux,,10,,,273332439.0,ns,8826
+ZKC-redux,,10,,,367324612.0,ns,11768
+ZKC-redux,,10,,,445731425.0,ns,14710
+ZKC-redux,,10,,,531654316.0,ns,17652
+ZKC-redux,,10,,,627896716.0,ns,20594
+ZKC-redux,,10,,,722648698.0,ns,23536
+ZKC-redux,,10,,,801635018.0,ns,26478
+ZKC-redux,,10,,,897140609.0,ns,29420
