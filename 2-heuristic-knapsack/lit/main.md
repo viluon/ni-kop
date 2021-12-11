@@ -315,7 +315,7 @@ samotné algoritmy řešiče a v neposlední řadě sada automatických testů.
 
 <<algorithm-map>>
 
-pub fn solve_stream<'a, T>(
+pub fn solve_stream<T>(
     alg: for <'b> fn(&'b Instance) -> Solution<'b>,
     solutions: HashMap<(u32, i32), OptimalSolution>,
     stream: &mut T
@@ -344,7 +344,7 @@ pub fn list_input_files(set: &str, r: Range<u32>) -> Result<Vec<IOResult<DirEntr
         file_name.starts_with(set) &&
         // ... continue with an integer between 0 and 15,
         file_name[set.len()..]
-        .split('_').nth(0).unwrap().parse::<u32>().ok()
+        .split('_').next().unwrap().parse::<u32>().ok()
         .filter(|n| r.contains(n)).is_some() &&
         // ... and end with `_inst.dat` (for "instance").
         file_name.ends_with("_inst.dat")
@@ -599,8 +599,7 @@ fn dynamic_programming_w(&self) -> Solution {
     let mut next = vec![Solution::default(self); *m as usize + 1];
     let mut last = vec![];
 
-    for i in 0..items.len() {
-        let (weight, _cost) = items[i];
+    for (i, &(weight, _cost)) in items.iter().enumerate() {
         last.clone_from(&next);
 
         for cap in 0 ..= *m as usize {
@@ -640,8 +639,7 @@ fn dynamic_programming_c(&self) -> Solution {
     let mut last = vec![];
     next[0] = Solution::default(self);
 
-    for i in 0..items.len() {
-        let (_weight, cost) = items[i];
+    for (i, &(_weight, cost)) in items.iter().enumerate() {
         last.clone_from(&next);
 
         for cap in 1 ..= max_profit * items.len() {
@@ -713,11 +711,10 @@ knihoven.
 ``` {.rust #imports .bootstrap-fold}
 use std::{cmp, cmp::max,
     ops::Range,
-    iter::Filter,
     str::FromStr,
     io::{BufRead, BufReader},
     collections::{BTreeMap, HashMap},
-    fs::{read_dir, File, ReadDir, DirEntry},
+    fs::{read_dir, File, DirEntry},
 };
 use anyhow::{Context, Result, anyhow};
 use bitvec::prelude::BitArr;
@@ -787,7 +784,7 @@ pub fn load_solutions(set: &str) -> Result<HashMap<(u32, i32), OptimalSolution>>
 
     for file in files {
         let file = file?;
-        let n = file.file_name().into_string().unwrap()[set.len()..].split('_').nth(0).unwrap().parse()?;
+        let n = file.file_name().into_string().unwrap()[set.len()..].split('_').next().unwrap().parse()?;
         let mut stream = BufReader::new(File::open(file.path())?);
         while let Some(opt) = parse_solution_line(&mut stream)? {
             solutions.insert((n, opt.id), opt);
