@@ -37,13 +37,13 @@ pub fn solve_stream<T>(
     alg: for <'b> fn(&'b Instance) -> Solution<'b>,
     solutions: HashMap<(u32, i32), OptimalSolution>,
     stream: &mut T
-) -> Result<Vec<(u32, f64)>> where T: BufRead {
+) -> Result<Vec<(u32, Option<f64>)>> where T: BufRead {
     let mut results = vec![];
     loop {
         match parse_line(stream)?.as_ref().map(|inst| (inst, alg(inst))) {
             Some((inst, sln)) => {
-                let optimal = &solutions[&(inst.items.len() as u32, inst.id)];
-                let error = 1.0 - sln.cost as f64 / optimal.cost as f64;
+                let optimal = &solutions.get(&(inst.items.len() as u32, inst.id));
+                let error = optimal.map(|opt| 1.0 - sln.cost as f64 / opt.cost as f64);
                 results.push((sln.cost, error))
             },
             None => return Ok(results)

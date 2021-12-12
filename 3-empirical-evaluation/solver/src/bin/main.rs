@@ -32,7 +32,7 @@ fn main() -> Result<()> {
     }?;
 
     for (cost, error) in solve_stream(alg, solutions, &mut stdin().lock())? {
-        println!("{} {}", cost, error);
+        println!("{} {}", cost, error.map(|e| e.to_string()).unwrap_or_default());
     }
     Ok(())
 }
