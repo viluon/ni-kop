@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
 import numpy as np
+import scipy.stats as st
 import json
 import os
 import time
@@ -16,6 +17,15 @@ from itertools import product, chain
 
 algs = ["bf", "bb", "dpc", "dpw", "redux"]
 data = []
+
+# adapted from https://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console
+def progress_bar(iteration, total, length = 60):
+    percent = ("{0:.1f}").format(100 * (iteration / float(total)))
+    filledLength = int(length * iteration // total)
+    bar = '=' * filledLength + ' ' * (length - filledLength)
+    print(f'\r[{bar}] {percent}%', end = "\r")
+    if iteration == total:
+        print()
 
 def generate(**kwargs):
     res = []
@@ -87,7 +97,7 @@ def dataset(id, **kwargs):
 
 def merge_datasets(*dss):
     return {
-        k: chain(*(ds[k] for ds in dss))
+        k: list(chain(*(ds[k] for ds in dss)))
         for k in dss[0]
     }
 
@@ -98,17 +108,17 @@ n_samples = 2 # FIXME
 # we don't want a full cartesian product (too slow to fully explore), so we'll
 # use a union of subsets, each tailored to the particular algorithm
 configs = merge_datasets(dataset(
-#     "weight range",
-#     alg = ["bf", "dpw"],
-#     max_weight = [500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000],
-# ), dataset(
-#     "cost range",
-#     alg = ["bf", "dpc"],
-#     max_cost = [500, 1000, 5000, 10000, 50000, 100000, 500000],
-# ), dataset(
-#     "n_items range",
-#     n_items = [4, 10, 15, 20, 25, 28],
-# ), dataset(
+    "weight range",
+    alg = ["bf", "dpw"],
+    max_weight = [500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000],
+), dataset(
+    "cost range",
+    alg = ["bf", "dpc"],
+    max_cost = [500, 1000, 5000, 10000, 50000, 100000, 500000],
+), dataset(
+    "n_items range",
+    n_items = [4, 10, 15, 20, 25, 28],
+), dataset(
     "granularity exploration",
     alg = ["bb", "dpc", "dpw", "redux"],
     n_runs = [n_samples],
@@ -122,12 +132,15 @@ configs = merge_datasets(dataset(
     capacity_weight_sum_ratio = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
 ))
 
+iteration = 0
+total = sum([n for n in configs["n_runs"]])
 for config in [dict(zip(configs, v)) for v in zip(*configs.values())]:
     param_iter = iter(config.values())
     next(param_iter) # skip id
     print("config in set", config["id"], "\tparams", *param_iter)
 
     for inst in generate(**config):
+        progress_bar(iteration, total)
         # measure the time taken by the call to the solver
         start = time.time()
         cost = solve(config["alg"], inst)
@@ -138,13 +151,15 @@ for config in [dict(zip(configs, v)) for v in zip(*configs.values())]:
             t = end - start,
             contents = None
         ))
+        iteration = iteration + 1
 
+print()
 
 # ~\~ end
 
 # ~\~ begin <<lit/main.md|performance-chart>>[0]
 
-# plot the mean runtimes and max errors
+# plot the measurements
 
 figsize = (14, 8)
 
@@ -174,34 +189,48 @@ def plot(x_axis, y_axis, id, title, data = data, filename = None):
         filename = id
     print("\t{}".format(title))
     fig, ax = plt.subplots(figsize = figsize)
-    # for alg in algs:
-    ds = [d for d in data if d["id"] == id] #and d["alg"] == alg]
+    ds = [d for d in data if d["id"] == id]
     # create a frame from the list
     df = pd.DataFrame(ds)
 
-    # do a violin plot grouped by the algorithm name
-    sns.violinplot(x = x_axis, y = y_axis, data = df, hue = "alg", ax = ax)
+    # do a boxplot grouped by the algorithm name
+    sns.boxplot(
+        x = x_axis,
+        y = y_axis,
+        data = df,
+        hue = "alg",
+        ax = ax,
+        linewidth = 0.8,
+    )
+
+    # render the datapoints as dots with horizontal jitter
+    sns.stripplot(
+        x = x_axis,
+        y = y_axis,
+        data = df,
+        hue = "alg",
+        ax = ax,
+        jitter = True,
+        size = 4,
+        dodge = True,
+        linewidth = 0.2,
+    )
+
     plt.title(title)
     plt.xlabel(plot_labels[x_axis])
     plt.ylabel(plot_labels[y_axis])
 
-            # plt.boxplot(
-            #     [(d[x_axis], d[y_axis]) for d in ds],
-            #     "o",
-            #     label = alg_labels[alg]
-            # )
+    handles, labels = ax.get_legend_handles_labels()
+    labels = [alg_labels[l] for l in labels]
 
-    plt.legend()
+    plt.legend(handles[0 : int(len(handles) / 2)], labels[0 : int(len(labels) / 2)])
     plt.savefig("docs/assets/{}.svg".format(filename))
 
 print("rendering plots")
-# plot("n_items",     "t", "n_items range",           "Průměrná doba běhu vzhledem k velikosti instance")
-# plot("max_weight",  "t", "weight range",            "Průměrná doba běhu vzhledem k maximální váze")
-# plot("max_cost",    "t", "cost range",              "Průměrná doba běhu vzhledem k maximální ceně")
+plot("n_items",     "t", "n_items range",           "Průměrná doba běhu vzhledem k velikosti instance")
+plot("max_weight",  "t", "weight range",            "Průměrná doba běhu vzhledem k maximální váze")
+plot("max_cost",    "t", "cost range",              "Průměrná doba běhu vzhledem k maximální ceně")
 
-# TODO: do this properly, which means
-# - do like a violin plot or at least a box plot
-# - take the light/heavy balance into account
 
 for balance in ["light", "heavy"]:
     plot(
