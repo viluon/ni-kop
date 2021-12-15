@@ -31,7 +31,7 @@ def generate(**kwargs):
     res = []
     kwargs["granularity"] = kwargs["granularity_and_light_heavy_balance"][0]
     kwargs["light_heavy_balance"] = kwargs["granularity_and_light_heavy_balance"][1]
-    for seed in range(42, 42 + kwargs["n_runs"]):
+    for seed in range(kwargs["seed"], kwargs["seed"] + kwargs["n_runs"]):
         params = dict({
             "seed": seed,
             "n_instances": 1,
@@ -50,8 +50,25 @@ def generate(**kwargs):
             -m {capacity_weight_sum_ratio} \
             ".format(**params)
         ).read()}, **params)
-        # TODO: permute the order of items in the instance
-        res.append(instance)
+
+        for p in range(0, instance["n_permutations"]):
+            kg_perm = run(
+                "gen/kg_perm \
+                -d 0 \
+                -N 1 \
+                -r {} \
+                ".format(p).split(),
+                stdout = PIPE,
+                stderr = PIPE,
+                input = instance["contents"],
+                encoding = "ascii",
+            )
+
+            res.append(dict({
+                "contents": kg_perm.stdout,
+                "perm_id": p,
+            }, **instance))
+
     return res
 
 def solve(alg, instance):
@@ -77,7 +94,10 @@ def dataset(id, **kwargs):
         # defaults
         "id": [id],
         "alg": algs,
+        "seed": [42],
         "n_runs": [1],
+        "n_permutations": [1],
+        "n_repetitions": [1],
         "n_items": [27],
         "max_weight": [5000],
         "max_cost": [5000],
@@ -108,50 +128,59 @@ n_samples = 2 # FIXME
 # we don't want a full cartesian product (too slow to fully explore), so we'll
 # use a union of subsets, each tailored to the particular algorithm
 configs = merge_datasets(dataset(
-    "weight range",
-    alg = ["bf", "dpw"],
-    max_weight = [500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000],
-), dataset(
-    "cost range",
-    alg = ["bf", "dpc"],
-    max_cost = [500, 1000, 5000, 10000, 50000, 100000, 500000],
-), dataset(
-    "n_items range",
-    n_items = [4, 10, 15, 20, 25, 28],
-), dataset(
-    "granularity exploration",
-    alg = ["bb", "dpc", "dpw", "redux"],
-    n_runs = [n_samples],
-    granularity_and_light_heavy_balance = [
-        (1, "light"), (2, "light"), (3, "light"), (1, "heavy"), (2, "heavy"), (3, "heavy")
-    ],
-), dataset(
-    "capacity weight sum ratio exploration",
-    alg = ["bb", "dpc", "dpw", "redux"],
-    n_runs = [n_samples],
-    capacity_weight_sum_ratio = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
+#     "weight range",
+#     alg = ["bf", "dpw"],
+#     max_weight = [500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000],
+# ), dataset(
+#     "cost range",
+#     alg = ["bf", "dpc"],
+#     max_cost = [500, 1000, 5000, 10000, 50000, 100000, 500000],
+# ), dataset(
+#     "n_items range",
+#     n_items = [4, 10, 15, 20, 25, 28],
+# ), dataset(
+#     "granularity exploration",
+#     alg = ["bb", "dpc", "dpw", "redux"],
+#     n_runs = [n_samples],
+#     granularity_and_light_heavy_balance = [
+#         (1, "light"), (2, "light"), (3, "light"), (1, "heavy"), (2, "heavy"), (3, "heavy")
+#     ],
+# ), dataset(
+#     "capacity weight sum ratio exploration",
+#     alg = ["bb", "dpc", "dpw", "redux"],
+#     n_runs = [n_samples],
+#     capacity_weight_sum_ratio = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
+# ), dataset(
+    "branch and bound robustness",
+    seed = [420],
+    alg = ["bb", "dpw", "redux"],
+    n_permutations = [40],
+    n_repetitions = [10],
 ))
 
 iteration = 0
-total = sum([n for n in configs["n_runs"]])
+total = sum([r * p * rep for (r, p, rep) in zip(configs["n_runs"], configs["n_permutations"], configs["n_repetitions"])])
 for config in [dict(zip(configs, v)) for v in zip(*configs.values())]:
     param_iter = iter(config.values())
     next(param_iter) # skip id
-    print("config in set", config["id"], "\tparams", *param_iter)
+    print(config["id"], "\tparams", *param_iter)
+    progress_bar(iteration, total)
 
     for inst in generate(**config):
-        progress_bar(iteration, total)
-        # measure the time taken by the call to the solver
-        start = time.time()
-        cost = solve(config["alg"], inst)
-        end = time.time()
-        data.append(dict(inst,
-            cost = cost,
-            alg = config["alg"],
-            t = end - start,
-            contents = None
-        ))
-        iteration = iteration + 1
+        for rep in range(0, config["n_repetitions"]):
+            # measure the time taken by the call to the solver
+            start = time.time()
+            cost = solve(config["alg"], inst)
+            end = time.time()
+            data.append(dict(inst,
+                cost = cost,
+                alg = config["alg"],
+                t = end - start,
+                repetition = rep,
+                contents = None
+            ))
+            iteration = iteration + 1
+            progress_bar(iteration, total)
 
 print()
 
@@ -165,6 +194,7 @@ figsize = (14, 8)
 
 plot_labels = dict(
     seed = "Seed",
+    perm_id = "ID permutace",
     t = "Doba běhu (sec)",
     n_items = "Velikost instance",
     max_cost = "Maximální cena",
@@ -214,6 +244,8 @@ def plot(x_axis, y_axis, id, title, data = data, filename = None):
         size = 4,
         dodge = True,
         linewidth = 0.2,
+        alpha = 0.4,
+        edgecolor = "white",
     )
 
     plt.title(title)
@@ -227,26 +259,33 @@ def plot(x_axis, y_axis, id, title, data = data, filename = None):
     plt.savefig("docs/assets/{}.svg".format(filename))
 
 print("rendering plots")
-plot("n_items",     "t", "n_items range",           "Průměrná doba běhu vzhledem k velikosti instance")
-plot("max_weight",  "t", "weight range",            "Průměrná doba běhu vzhledem k maximální váze")
-plot("max_cost",    "t", "cost range",              "Průměrná doba běhu vzhledem k maximální ceně")
+# plot("n_items",     "t", "n_items range",           "Průměrná doba běhu vzhledem k velikosti instance")
+# plot("max_weight",  "t", "weight range",            "Průměrná doba běhu vzhledem k maximální váze")
+# plot("max_cost",    "t", "cost range",              "Průměrná doba běhu vzhledem k maximální ceně")
 
 
-for balance in ["light", "heavy"]:
-    plot(
-        "granularity",
-        "t",
-        "granularity exploration",
-        "Doba běhu vzhledem ke granularitě (preference {})".format(balance),
-        data = [d for d in data if d["light_heavy_balance"] == balance],
-        filename = "granularity exploration {}".format(balance),
-    )
+# for balance in ["light", "heavy"]:
+#     plot(
+#         "granularity",
+#         "t",
+#         "granularity exploration",
+#         "Doba běhu vzhledem ke granularitě (preference {})".format(balance),
+#         data = [d for d in data if d["light_heavy_balance"] == balance],
+#         filename = "granularity exploration {}".format(balance),
+#     )
+
+# plot(
+#     "capacity_weight_sum_ratio",
+#     "t",
+#     "capacity weight sum ratio exploration",
+#     "Doba běhu vzhledem k poměru kapacity a součtu vah",
+# )
 
 plot(
-    "capacity_weight_sum_ratio",
+    "perm_id",
     "t",
-    "capacity weight sum ratio exploration",
-    "Doba běhu vzhledem k poměru kapacity a součtu vah",
+    "branch and bound robustness",
+    "Doba běhu přes několik permutací jedné instance"
 )
 
 # ~\~ end
