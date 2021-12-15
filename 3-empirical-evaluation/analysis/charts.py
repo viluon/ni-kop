@@ -12,6 +12,7 @@ import time
 from pandas.core.tools.numeric import to_numeric
 from subprocess import run, PIPE
 from itertools import product, chain
+import textwrap as tr
 
 # pipe the instance generator into the solver
 
@@ -128,33 +129,34 @@ n_samples = 2 # FIXME
 # we don't want a full cartesian product (too slow to fully explore), so we'll
 # use a union of subsets, each tailored to the particular algorithm
 configs = merge_datasets(dataset(
-#     "weight range",
-#     alg = ["bf", "dpw"],
-#     max_weight = [500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000],
-# ), dataset(
-#     "cost range",
-#     alg = ["bf", "dpc"],
-#     max_cost = [500, 1000, 5000, 10000, 50000, 100000, 500000],
-# ), dataset(
-#     "n_items range",
-#     n_items = [4, 10, 15, 20, 25, 28],
-# ), dataset(
-#     "granularity exploration",
-#     alg = ["bb", "dpc", "dpw", "redux"],
-#     n_runs = [n_samples],
-#     granularity_and_light_heavy_balance = [
-#         (1, "light"), (2, "light"), (3, "light"), (1, "heavy"), (2, "heavy"), (3, "heavy")
-#     ],
-# ), dataset(
-#     "capacity weight sum ratio exploration",
-#     alg = ["bb", "dpc", "dpw", "redux"],
-#     n_runs = [n_samples],
-#     capacity_weight_sum_ratio = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
-# ), dataset(
+    "weight range",
+    alg = ["bf", "dpw"],
+    max_weight = [500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000],
+), dataset(
+    "cost range",
+    alg = ["bf", "dpc"],
+    max_cost = [500, 1000, 5000, 10000, 50000, 100000, 500000],
+), dataset(
+    "n_items range",
+    n_items = [4, 10, 15, 20, 25, 28],
+), dataset(
+    "granularity exploration",
+    alg = ["bb", "dpc", "dpw", "redux"],
+    n_runs = [n_samples],
+    granularity_and_light_heavy_balance = [
+        (1, "light"), (2, "light"), (3, "light"), (1, "heavy"), (2, "heavy"), (3, "heavy")
+    ],
+), dataset(
+    "capacity weight sum ratio exploration",
+    alg = ["bb", "dpc", "dpw", "redux"],
+    n_runs = [n_samples],
+    capacity_weight_sum_ratio = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
+), dataset(
     "branch and bound robustness",
     seed = [420],
-    alg = ["bb", "dpw", "redux"],
-    n_permutations = [40],
+    n_items = [18], # FIXME
+    alg = ["bf", "bb", "dpw", "redux"],
+    n_permutations = [20],
     n_repetitions = [10],
 ))
 
@@ -163,6 +165,7 @@ total = sum([r * p * rep for (r, p, rep) in zip(configs["n_runs"], configs["n_pe
 for config in [dict(zip(configs, v)) for v in zip(*configs.values())]:
     param_iter = iter(config.values())
     next(param_iter) # skip id
+    print(end = "\033[2K") # clear the current line (to get rid of the progress bar)
     print(config["id"], "\tparams", *param_iter)
     progress_bar(iteration, total)
 
@@ -194,15 +197,15 @@ figsize = (14, 8)
 
 plot_labels = dict(
     seed = "Seed",
+    t = "Doba běhu [s]",
+    cost = "Cena řešení",
     perm_id = "ID permutace",
-    t = "Doba běhu (sec)",
     n_items = "Velikost instance",
     max_cost = "Maximální cena",
     max_weight = "Maximální váha",
     n_instances = "Počet instancí v zadání",
     granularity = "Granularita",
     light_heavy_balance = "Rozložení váhy předmětů",
-    cost = "Cena řešení",
     capacity_weight_sum_ratio = "Poměr kapacity a součtu vah",
 )
 
@@ -252,6 +255,24 @@ def plot(x_axis, y_axis, id, title, data = data, filename = None):
     plt.xlabel(plot_labels[x_axis])
     plt.ylabel(plot_labels[y_axis])
 
+    constant_columns = [
+        col for col in df.columns[df.nunique() <= 1]
+            if (col not in ["id", "n_instances", "contents"])
+    ]
+
+    caption = "\n".join(tr.wrap("Konfigurace: {}".format({
+        k: df[k][0] for k in constant_columns
+    }), width = 170))
+
+    fig.text(
+        0.09,
+        0.05,
+        caption,
+        fontsize = "small",
+        fontfamily = "monospace",
+        verticalalignment = "top",
+    )
+
     handles, labels = ax.get_legend_handles_labels()
     labels = [alg_labels[l] for l in labels]
 
@@ -259,33 +280,41 @@ def plot(x_axis, y_axis, id, title, data = data, filename = None):
     plt.savefig("docs/assets/{}.svg".format(filename))
 
 print("rendering plots")
-# plot("n_items",     "t", "n_items range",           "Průměrná doba běhu vzhledem k velikosti instance")
-# plot("max_weight",  "t", "weight range",            "Průměrná doba běhu vzhledem k maximální váze")
-# plot("max_cost",    "t", "cost range",              "Průměrná doba běhu vzhledem k maximální ceně")
+plot("n_items",     "t", "n_items range",           "Průměrná doba běhu vzhledem k velikosti instance")
+plot("max_weight",  "t", "weight range",            "Průměrná doba běhu vzhledem k maximální váze")
+plot("max_cost",    "t", "cost range",              "Průměrná doba běhu vzhledem k maximální ceně")
 
 
-# for balance in ["light", "heavy"]:
-#     plot(
-#         "granularity",
-#         "t",
-#         "granularity exploration",
-#         "Doba běhu vzhledem ke granularitě (preference {})".format(balance),
-#         data = [d for d in data if d["light_heavy_balance"] == balance],
-#         filename = "granularity exploration {}".format(balance),
-#     )
+for balance in ["light", "heavy"]:
+    plot(
+        "granularity",
+        "t",
+        "granularity exploration",
+        "Doba běhu vzhledem ke granularitě (preference {})".format(balance),
+        data = [d for d in data if d["light_heavy_balance"] == balance],
+        filename = "granularity exploration {}".format(balance),
+    )
 
-# plot(
-#     "capacity_weight_sum_ratio",
-#     "t",
-#     "capacity weight sum ratio exploration",
-#     "Doba běhu vzhledem k poměru kapacity a součtu vah",
-# )
+plot(
+    "capacity_weight_sum_ratio",
+    "t",
+    "capacity weight sum ratio exploration",
+    "Doba běhu vzhledem k poměru kapacity a součtu vah",
+)
 
 plot(
     "perm_id",
     "t",
     "branch and bound robustness",
-    "Doba běhu přes několik permutací jedné instance"
+    "Doba běhu přes několik permutací jedné instance",
+)
+
+plot(
+    "perm_id",
+    "cost",
+    "branch and bound robustness",
+    "Cena řešení přes několik permutací jedné instance",
+    filename = "branch and bound robustness - cost"
 )
 
 # ~\~ end

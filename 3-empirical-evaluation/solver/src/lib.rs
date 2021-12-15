@@ -456,6 +456,7 @@ mod tests {
         assert_eq!(bb.cost, i.greedy().cost);
     }
 
+    #[ignore]
     #[test]
     fn proper() -> Result<()> {
         type Solver = (&'static str, for<'a> fn(&'a Instance) -> Solution<'a>);
