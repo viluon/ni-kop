@@ -16,11 +16,14 @@ import textwrap as tr
 
 # pipe the instance generator into the solver
 
+show_progress = os.environ.get("JUPYTER") == None
 algs = ["bf", "bb", "dpc", "dpw", "redux"]
 data = []
 
 # adapted from https://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console
 def progress_bar(iteration, total, length = 60):
+    if not show_progress:
+        return
     percent = ("{0:.1f}").format(100 * (iteration / float(total)))
     filledLength = int(length * iteration // total)
     bar = '=' * filledLength + ' ' * (length - filledLength)
@@ -165,7 +168,8 @@ total = sum([r * p * rep for (r, p, rep) in zip(configs["n_runs"], configs["n_pe
 for config in [dict(zip(configs, v)) for v in zip(*configs.values())]:
     param_iter = iter(config.values())
     next(param_iter) # skip id
-    print(end = "\033[2K") # clear the current line (to get rid of the progress bar)
+    if show_progress:
+        print(end = "\033[2K") # clear the current line to get rid of the progress bar
     print(config["id"], "\tparams", *param_iter)
     progress_bar(iteration, total)
 
