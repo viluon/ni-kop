@@ -177,7 +177,7 @@ def solve(alg, instance):
 <<dataset-utilities>>
 
 
-n_samples = 2 # FIXME
+n_samples = 3
 
 <<datasets>>
 
@@ -197,7 +197,7 @@ def dataset(id, **kwargs):
         "seed": [42],
         "n_runs": [1],
         "n_permutations": [1],
-        "n_repetitions": [1],
+        "n_repetitions": [3],
         "n_items": [27],
         "max_weight": [5000],
         "max_cost": [5000],
@@ -251,8 +251,8 @@ configs = merge_datasets(dataset(
     capacity_weight_sum_ratio = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
 ), dataset(
     "branch and bound robustness",
-    seed = [420],
-    n_items = [18], # FIXME
+    seed = [97],
+    n_items = [20],
     alg = ["bf", "bb", "dpw", "redux"],
     n_permutations = [20],
     n_repetitions = [10],
@@ -505,70 +505,34 @@ instancí je vždy instruován k výpisu jediné instance, která je následně
 permutována jak je potřeba a nakonec předána příslušnému řešiči.
 
 
-![branch and bound robustness](assets/branch_and_bound_robustness.svg)
+![Robustnost metody větví a hranic, dynamického programování s rozkladem podle
+váhy, hrubé síly a hladové heuristiky.](assets/branch_and_bound_robustness.svg)
 
-![branch and bound robustness - cost](assets/branch_and_bound_robustness_cost.svg)
+![Robustnost výše uvedených algoritmů podle ceny řešení. Žádný z měřených
+algoritmů nevykazuje známky závislosti na zápisu
+instance.](assets/branch_and_bound_robustness_cost.svg)
 
-![capacity weight sum ratio exploration](assets/capacity_weight_sum_ratio_exploration.svg)
+![Závislost doby běhu na poměru kapacity a součtu vah předmětů. Nelineárně se
+prokazuje u metody větví a hranic, lineární závislost je zřejmá u dynamického
+programování s rozkladem podle váhy.
+](assets/capacity_weight_sum_ratio_exploration.svg)
 
-![cost range](assets/cost_range.svg)
+![Závislost doby běhu na maximální ceně předmětů. Očekávané zhoršení výkonu
+dynamického programování s rozkladem podle ceny je jasně
+vidět.](assets/cost_range.svg)
 
-![granularity exploration heavy](assets/granularity_exploration_heavy.svg)
+![Závislost doby běhu na maximální váze předmětů. Očekávané zhoršení výkonu je
+znovu vidět u dynamického programování, tentokrát s rozkladem podle
+váhy.](assets/weight_range.svg)
 
-![granularity exploration light](assets/granularity_exploration_light.svg)
+![Závislost doby běhu na granularitě s preferencí těžších
+předmětů.](assets/granularity_exploration_heavy.svg)
 
-![n_items range](assets/n_items_range.svg)
+![Závislost doby běhu na granularitě s preferencí lehčích
+předmětů.](assets/granularity_exploration_light.svg)
 
-![weight range](assets/weight_range.svg)
-
-### Analýza
-
-Detailní analýza algoritmu FPTAS je rozdělená podle sady instancí a parametru
-$\varepsilon$.
-
-- sada NK
-  - $\varepsilon = 0.1$  [`NK-fptas1`](criterion/NK-fptas1/report/index.html)
-  - $\varepsilon = 0.01$ [`NK-fptas2`](criterion/NK-fptas2/report/index.html)
-- sada ZKC
-  - $\varepsilon = 0.1$  [`ZKC-fptas1`](criterion/ZKC-fptas1/report/index.html)
-  - $\varepsilon = 0.01$ [`ZKC-fptas2`](criterion/ZKC-fptas2/report/index.html)
-- sada ZKW
-  - $\varepsilon = 0.1$  [`ZKW-fptas1`](criterion/ZKW-fptas1/report/index.html)
-  - $\varepsilon = 0.01$ [`ZKW-fptas2`](criterion/ZKW-fptas2/report/index.html)
-
-Z grafů je vidět, že (alespoň na těchto datových sadách) se dekompozice podle
-váhy vyplatí mnohem více, než dekompozice podle ceny. FPTAS sice něco z
-výpočetní náročnosti ušetří (na úkor kvality řešení), dynamické programování
-podle váhy ale stále vede.
-
-#### Odpovídají obě závislosti (kvality a času) předpokladům?
-Ne. Čekal jsem, že FPTAS bude často mnohem blíže požadované hranici
-$\varepsilon$. Varianta `fptas1` ale většinou překoná i hranici pro `fptas2`,
-přitom je mnohem rychlejší.
-
-V sadě ZKW je zároveň poměrně málo instancí, ve kterých se navíc objevují
-nečekané trendy. Ty vedou k tomu, že dynamické programování s rozkladem podle
-ceny na této sadě projevuje nemonotonní vztah mezi velikostí instance a dobou
-běhu.
-
-#### Je některá heuristická metoda systematicky lepší v některém kritériu?
-Heuristiky běží podstatně rychleji než ostatní algoritmy. Redux je navíc i
-užitečná, protože její maximální chyba je shora omezená. Naproti tomu hloupý
-hladový přístup často skončí s vysokou chybou.
-
-#### Jak se liší obtížnost jednotlivých sad z hlediska jednotlivých metod?
-Sady NK a ZKC jsou si zřejmě dost podobné. Metoda větví a hranic má trochu
-problémy v sadě ZKC, pro $n = 25$ už řešení trvalo 10 sekund (proto jsem jej z
-měření vyřadil). Sada ZKW se zdá být podstatně jednodušší pro dynamické
-programování a FPTAS na něm založený.
-
-#### Jaká je závislost maximální chyby ($\varepsilon$) a času FPTAS algoritmu na zvolené přesnosti? Odpovídá předpokladům?
-Nikoliv. `fptas1` (pro $\varepsilon = 0.1$) je překvapivě časově efektivní a
-zároveň dosahuje velmi pěkných výsledků. Kromě sady ZKW, kde má trochu problémy,
-často přesáhne mez stanovenou jeho výrazně pomalejšímu bratru `fptas2`. Na
-těchto datech se zdá být dobrým kompromisem mezi výpočetní složitostí a
-přesností výsledku, ačkoliv kvality dynamického programování podle váhy
-samozřejmě nedosahuje.
+![Závislost doby běhu na počtu předmětů v instanci. Tento vztah už důvěrně známe
+z předchozích úkolů.](assets/n_items_range.svg)
 
 ## Implementace
 
@@ -966,7 +930,10 @@ fn fptas(&self, eps: f64) -> Solution {
 
 ## Závěr
 
-TODO
+Provedená měření ukazují překvapivou robustnost implementovaných algoritmů.
+Zhoršení výkonu dynamického programování s rozkladem podle váhy a ceny byla
+očekávaná. Zajímavý je ovšem vliv poměru kapacity a součtu vah předmětů na
+metodu větví a hranic, u které se zdá, že jí nejlépe vyhovuje poměr okolo $0.4$.
 
 ## Appendix
 

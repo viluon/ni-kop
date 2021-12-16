@@ -107,7 +107,7 @@ def dataset(id, **kwargs):
         "seed": [42],
         "n_runs": [1],
         "n_permutations": [1],
-        "n_repetitions": [1],
+        "n_repetitions": [3],
         "n_items": [27],
         "max_weight": [5000],
         "max_cost": [5000],
@@ -133,7 +133,7 @@ def merge_datasets(*dss):
 # ~\~ end
 
 
-n_samples = 2 # FIXME
+n_samples = 3
 
 # ~\~ begin <<lit/main.md|datasets>>[0]
 # benchmark configurations
@@ -164,8 +164,8 @@ configs = merge_datasets(dataset(
     capacity_weight_sum_ratio = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
 ), dataset(
     "branch and bound robustness",
-    seed = [420],
-    n_items = [18], # FIXME
+    seed = [97],
+    n_items = [20],
     alg = ["bf", "bb", "dpw", "redux"],
     n_permutations = [20],
     n_repetitions = [10],
