@@ -264,6 +264,7 @@ configs = merge_datasets(dataset(
     seed = [97],
     n_items = [20],
     alg = ["bf", "bb", "dpw", "redux"],
+    n_runs = [1],
     n_permutations = [20],
     n_repetitions = [10],
 ))
