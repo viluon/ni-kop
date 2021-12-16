@@ -196,7 +196,7 @@ def dataset(id, **kwargs):
         "id": [id],
         "alg": algs,
         "seed": [42],
-        "n_runs": [1],
+        "n_runs": [3],
         "n_permutations": [1],
         "n_repetitions": [3],
         "n_items": [27],
@@ -223,8 +223,8 @@ def merge_datasets(*dss):
     }
 ```
 
-Jelikož průchod hrubou silou přes všechny možné kombinace parametrů generátoru
-by zabral zbytečně dlouho, definujeme prostor parametrů jako sjednocení
+Jelikož by průchod hrubou silou přes všechny možné kombinace parametrů
+generátoru zabral zbytečně dlouho, definujeme prostor parametrů jako sjednocení
 zajímavých podprostorů. Tyto podprostory nazýváme "datasety" -- v tomto programu
 je reprezentují slovníky, které jednotlivým parametrům generátoru, řešiče a
 podpůrné infrastruktury přiřazují seznamy možných hodnot. Každý dataset má navíc
@@ -527,8 +527,8 @@ odlehlých hodnot značených diamanty.
 
 Pod každým grafem je zároveň přehled parametrů, které jsou pro všechny
 znázorněné body konstantní. Jejich zápis není zrovna nejpřehlednější, ale názvy
-parametrů by měly být samozřejmé. Jeden z nejdůležitějších parametrů je
-`n_items` (počet předmětů v instanci).
+parametrů jsou samozřejmé. Jeden z nejdůležitějších parametrů je `n_items`
+(počet předmětů v instanci).
 
 ![Robustnost metody větví a hranic, dynamického programování s rozkladem podle
 váhy, hrubé síly a hladové heuristiky.](assets/branch_and_bound_robustness.svg)
@@ -961,6 +961,17 @@ očekávaná. Zajímavý je ovšem vliv poměru kapacity a součtu vah předmět
 metodu větví a hranic, u které se zdá, že jí nejméně vyhovuje poměr okolo $0.4$.
 Naopak pro batohy, do kterých se vejde buď téměř vše nebo téměř nic ze zadaných
 předmětů, najde tato metoda řešení velmi rychle.
+
+Granularita zřejmě nemá na zkoumané algoritmy výrazný vliv. Ačkoliv byla měřena
+jen hrubě (tři celočíselné hodnoty exponentu v lehké a těžké konfiguraci),
+spojitost hustoty pravděpodobnosti, kterou generátor používá, naznačuje, že
+rozsáhlejší průzkum by byl ztrátou času.
+
+Vyzbrojeni těmito praktickými poznatky bychom měli být schopni navrhnout
+metaheuristiku, která v závislosti na hodnotách snadno měřitelných parametrů
+instance (maximální váha a cena, poměr kapacity batohu k součtu vah, atp. -- vše
+měřitelné v $O(n)$) vybere algoritmus, který pravděpodobně vyřeší instanci
+nejrychleji.
 
 ## Appendix
 

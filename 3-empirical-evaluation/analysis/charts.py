@@ -105,7 +105,7 @@ def dataset(id, **kwargs):
         "id": [id],
         "alg": algs,
         "seed": [42],
-        "n_runs": [1],
+        "n_runs": [3],
         "n_permutations": [1],
         "n_repetitions": [3],
         "n_items": [27],
