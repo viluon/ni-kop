@@ -111,30 +111,18 @@ make all
 
 ## Benchmarking
 
-Od minulého úkolu jsem kompletně přepsal funkcionalitu pro benchmarking, která
-nově spoléhá na micro benchmark knihovnu
-[`Criterion.rs`](https://crates.io/crates/criterion). Díky ní stačí pro měření
-výkonu spustit `cargo bench`. Konkrétní implementace měření je k nahlédnutí v
-[dodatku](#měření-výkonu).
+V této úloze jsem se s měřením výkonu nespoléhal na existující Rust knihovny a
+namísto toho provedl měření v Pythonu.
 
-``` {.zsh .eval #benchmark .bootstrap-fold}
+``` {.zsh .eval #machine-info .bootstrap-fold}
 uname -a
 ./cpufetch --logo-short --color ibm
-mkdir -p docs/measurements/
-cd solver
-# TODO
-#cargo bench --color always
-#cp -r target/criterion ../docs/criterion
 ```
-
-Výsledná měření najdeme ve složce `solver/target/criterion/`. Zahrnují jak
-hotové reporty jednotlivých algoritmů se srovnáním doby běhu přes různé hodnoty
-$n$, tak i detailní záznamy naměřených dat ve formátu JSON.
 
 ### Srovnání algoritmů
 
-Pro zjednodušení zápisu jsou algoritmy pojmenované zkráceně. Zkratka v přehledu
-níže odkazuje na podsekci popisující příslušnou implementaci.
+Následující seznam poskytuje přehled implementovaných algoritmů. Jednoduchý
+hladový přístup ani žádná z variant FPTAS nebyly součástí experimentů.
 
 - [`bb`](#branch--bound) -- metoda větví a hranic
 - [`dpc`](#dynamické-programování) -- dynamické programování s rozkladem podle ceny
@@ -146,13 +134,7 @@ níže odkazuje na podsekci popisující příslušnou implementaci.
 
 Zpracování měřených dat pro srovnávací grafy jsem provedl v Pythonu.
 
-```{.python .eval file=analysis/charts.py}
-<<preprocessing>>
-
-<<performance-chart>>
-```
-
-```{.python #preprocessing .bootstrap-fold}
+```{.python #python-imports .bootstrap-fold}
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
@@ -165,8 +147,11 @@ from pandas.core.tools.numeric import to_numeric
 from subprocess import run, PIPE
 from itertools import product, chain
 import textwrap as tr
+```
 
-# pipe the instance generator into the solver
+```{.python .eval file=analysis/charts.py}
+<<python-imports>>
+
 
 show_progress = os.environ.get("JUPYTER") == None
 algs = ["bf", "bb", "dpc", "dpw", "redux"]
@@ -184,65 +169,24 @@ def progress_bar(iteration, total, length = 60):
         print()
 
 def generate(**kwargs):
-    res = []
-    kwargs["granularity"] = kwargs["granularity_and_light_heavy_balance"][0]
-    kwargs["light_heavy_balance"] = kwargs["granularity_and_light_heavy_balance"][1]
-    for seed in range(kwargs["seed"], kwargs["seed"] + kwargs["n_runs"]):
-        params = dict({
-            "seed": seed,
-            "n_instances": 1,
-        }, **kwargs)
-        # run the instance generator
-        instance = dict({"contents": os.popen(
-            "gen/kg2 \
-            -r {seed} \
-            -n {n_items} \
-            -N {n_instances} \
-            -W {max_weight} \
-            -C {max_cost} \
-            -k {granularity} \
-            -w {light_heavy_balance} \
-            -c {cost_weight_correlation} \
-            -m {capacity_weight_sum_ratio} \
-            ".format(**params)
-        ).read()}, **params)
-
-        for p in range(0, instance["n_permutations"]):
-            kg_perm = run(
-                "gen/kg_perm \
-                -d 0 \
-                -N 1 \
-                -r {} \
-                ".format(p).split(),
-                stdout = PIPE,
-                stderr = PIPE,
-                input = instance["contents"],
-                encoding = "ascii",
-            )
-
-            res.append(dict({
-                "contents": kg_perm.stdout,
-                "perm_id": p,
-            }, **instance))
-
-    return res
+    <<generate-instance>>
 
 def solve(alg, instance):
-    solver = run(
-        ["target/release/main", alg],
-        stdout = PIPE,
-        stderr = PIPE,
-        input = instance["contents"],
-        encoding = "ascii",
-        cwd = "solver/"
-    )
-    if solver.returncode != 0:
-        print(solver)
-        raise Exception("solver failed")
+    <<invoke-solver>>
 
-    # return only the cost of the solution
-    return int(solver.stdout.split()[0])
+<<dataset-utilities>>
 
+
+n_samples = 2 # FIXME
+
+<<datasets>>
+
+<<measurement-loop>>
+
+<<performance-chart>>
+```
+
+```{.python #dataset-utilities .bootstrap-fold}
 # enumerate the parameter values of a dataset for instance generation and
 # algorithm benchmarking.
 def dataset(id, **kwargs):
@@ -276,10 +220,9 @@ def merge_datasets(*dss):
         k: list(chain(*(ds[k] for ds in dss)))
         for k in dss[0]
     }
+```
 
-
-n_samples = 2 # FIXME
-
+```{.python #datasets .bootstrap-fold}
 # benchmark configurations
 # we don't want a full cartesian product (too slow to fully explore), so we'll
 # use a union of subsets, each tailored to the particular algorithm
@@ -314,7 +257,72 @@ configs = merge_datasets(dataset(
     n_permutations = [20],
     n_repetitions = [10],
 ))
+```
 
+```{.python #generate-instance .bootstrap-fold}
+res = []
+kwargs["granularity"] = kwargs["granularity_and_light_heavy_balance"][0]
+kwargs["light_heavy_balance"] = kwargs["granularity_and_light_heavy_balance"][1]
+del kwargs["granularity_and_light_heavy_balance"]
+for seed in range(kwargs["seed"], kwargs["seed"] + kwargs["n_runs"]):
+    params = dict({
+        "seed": seed,
+        "n_instances": 1,
+    }, **kwargs)
+    # run the instance generator
+    instance = dict({"contents": os.popen(
+        "gen/kg2 \
+        -r {seed} \
+        -n {n_items} \
+        -N {n_instances} \
+        -W {max_weight} \
+        -C {max_cost} \
+        -k {granularity} \
+        -w {light_heavy_balance} \
+        -c {cost_weight_correlation} \
+        -m {capacity_weight_sum_ratio} \
+        ".format(**params)
+    ).read()}, **params)
+
+    for p in range(0, instance["n_permutations"]):
+        kg_perm = run(
+            "gen/kg_perm \
+            -d 0 \
+            -N 1 \
+            -r {} \
+            ".format(p).split(),
+            stdout = PIPE,
+            stderr = PIPE,
+            input = instance["contents"],
+            encoding = "ascii",
+        )
+
+        res.append(dict({
+            "contents": kg_perm.stdout,
+            "perm_id": p,
+        }, **instance))
+
+return res
+```
+
+```{.python #invoke-solver .bootstrap-fold}
+solver = run(
+    ["target/release/main", alg],
+    stdout = PIPE,
+    stderr = PIPE,
+    input = instance["contents"],
+    encoding = "ascii",
+    cwd = "solver/"
+)
+if solver.returncode != 0:
+    print(solver)
+    raise Exception("solver failed")
+
+# return only the cost of the solution
+return int(solver.stdout.split()[0])
+```
+
+```{.python #measurement-loop .bootstrap-fold}
 iteration = 0
 total = sum([r * p * rep for (r, p, rep) in zip(configs["n_runs"], configs["n_permutations"], configs["n_repetitions"])])
 for config in [dict(zip(configs, v)) for v in zip(*configs.values())]:
@@ -342,40 +350,18 @@ for config in [dict(zip(configs, v)) for v in zip(*configs.values())]:
             progress_bar(iteration, total)
 
 print()
-
 ```
 
 ```{.python #performance-chart .bootstrap-fold}
-
 # plot the measurements
 
 figsize = (14, 8)
 
-plot_labels = dict(
-    seed = "Seed",
-    t = "Doba běhu [s]",
-    cost = "Cena řešení",
-    perm_id = "ID permutace",
-    n_items = "Velikost instance",
-    max_cost = "Maximální cena",
-    max_weight = "Maximální váha",
-    n_instances = "Počet instancí v zadání",
-    granularity = "Granularita",
-    light_heavy_balance = "Rozložení váhy předmětů",
-    capacity_weight_sum_ratio = "Poměr kapacity a součtu vah",
-)
-
-alg_labels = dict(
-    bf = "Brute force",
-    bb = "Branch & bound",
-    dpc = "Dynamic programming (cost)",
-    dpw = "Dynamic programming (weight)",
-    redux = "Greedy redux",
-)
+<<chart-labels>>
 
 def plot(x_axis, y_axis, id, title, data = data, filename = None):
     if filename is None:
-        filename = id
+        filename = id.replace(" ", "_")
     print("\t{}".format(title))
     fig, ax = plt.subplots(figsize = figsize)
     ds = [d for d in data if d["id"] == id]
@@ -383,51 +369,16 @@ def plot(x_axis, y_axis, id, title, data = data, filename = None):
     df = pd.DataFrame(ds)
 
     # do a boxplot grouped by the algorithm name
-    sns.boxplot(
-        x = x_axis,
-        y = y_axis,
-        data = df,
-        hue = "alg",
-        ax = ax,
-        linewidth = 0.8,
-    )
+    <<plot-boxplot>>
 
     # render the datapoints as dots with horizontal jitter
-    sns.stripplot(
-        x = x_axis,
-        y = y_axis,
-        data = df,
-        hue = "alg",
-        ax = ax,
-        jitter = True,
-        size = 4,
-        dodge = True,
-        linewidth = 0.2,
-        alpha = 0.4,
-        edgecolor = "white",
-    )
+    <<plot-stripplot>>
 
     plt.title(title)
     plt.xlabel(plot_labels[x_axis])
     plt.ylabel(plot_labels[y_axis])
 
-    constant_columns = [
-        col for col in df.columns[df.nunique() <= 1]
-            if (col not in ["id", "n_instances", "contents"])
-    ]
-
-    caption = "\n".join(tr.wrap("Konfigurace: {}".format({
-        k: df[k][0] for k in constant_columns
-    }), width = 170))
-
-    fig.text(
-        0.09,
-        0.05,
-        caption,
-        fontsize = "small",
-        fontfamily = "monospace",
-        verticalalignment = "top",
-    )
+    <<plot-caption>>
 
     handles, labels = ax.get_legend_handles_labels()
     labels = [alg_labels[l] for l in labels]
@@ -436,6 +387,57 @@ def plot(x_axis, y_axis, id, title, data = data, filename = None):
     plt.savefig("docs/assets/{}.svg".format(filename))
 
 print("rendering plots")
+<<plots>>
+```
+
+```{.python #plot-boxplot .bootstrap-fold}
+sns.boxplot(
+    x = x_axis,
+    y = y_axis,
+    data = df,
+    hue = "alg",
+    ax = ax,
+    linewidth = 0.8,
+)
+```
+
+```{.python #plot-stripplot .bootstrap-fold}
+sns.stripplot(
+    x = x_axis,
+    y = y_axis,
+    data = df,
+    hue = "alg",
+    ax = ax,
+    jitter = True,
+    size = 4,
+    dodge = True,
+    linewidth = 0.2,
+    alpha = 0.4,
+    edgecolor = "white",
+)
+```
+
+```{.python #plot-caption .bootstrap-fold}
+constant_columns = [
+    col for col in df.columns[df.nunique() <= 1]
+        if (col not in ["id", "n_instances", "contents"])
+]
+
+caption = "\n".join(tr.wrap("Konfigurace: {}".format({
+    k: df[k][0] for k in constant_columns
+}), width = 170))
+
+fig.text(
+    0.09,
+    0.05,
+    caption,
+    fontsize = "small",
+    fontfamily = "monospace",
+    verticalalignment = "top",
+)
+```
+
+```{.python #plots .bootstrap-fold}
 plot("n_items",     "t", "n_items range",           "Průměrná doba běhu vzhledem k velikosti instance")
 plot("max_weight",  "t", "weight range",            "Průměrná doba běhu vzhledem k maximální váze")
 plot("max_cost",    "t", "cost range",              "Průměrná doba běhu vzhledem k maximální ceně")
@@ -448,7 +450,7 @@ for balance in ["light", "heavy"]:
         "granularity exploration",
         "Doba běhu vzhledem ke granularitě (preference {})".format(balance),
         data = [d for d in data if d["light_heavy_balance"] == balance],
-        filename = "granularity exploration {}".format(balance),
+        filename = "granularity_exploration_{}".format(balance),
     )
 
 plot(
@@ -470,30 +472,54 @@ plot(
     "cost",
     "branch and bound robustness",
     "Cena řešení přes několik permutací jedné instance",
-    filename = "branch and bound robustness - cost"
+    filename = "branch_and_bound_robustness_cost"
 )
-
 ```
 
-Výkon každého algoritmu byl změřen na stovce různých zadání z jedné datové sady
-alespoň desetkrát za sebou (přesný počet spuštění řídí knihovna v závislosti na
-výkonu algoritmu). Vyobrazený čas je proto stokrát vyšší, než skutečná doba
-řešení jedné instance problému dané velikosti.
+```{.python #chart-labels .bootstrap-fold}
+plot_labels = dict(
+    seed = "Seed",
+    t = "Doba běhu [s]",
+    cost = "Cena řešení",
+    perm_id = "ID permutace",
+    n_items = "Velikost instance",
+    max_cost = "Maximální cena",
+    max_weight = "Maximální váha",
+    n_instances = "Počet instancí v zadání",
+    granularity = "Granularita",
+    light_heavy_balance = "Rozložení váhy předmětů",
+    capacity_weight_sum_ratio = "Poměr kapacity a součtu vah",
+)
 
-![NK: Závislost doby běhu na počtu předmětů.](assets/NK_mean_runtimes.svg)
+alg_labels = dict(
+    bf = "Brute force",
+    bb = "Branch & bound",
+    dpc = "Dynamic programming (cost)",
+    dpw = "Dynamic programming (weight)",
+    redux = "Greedy redux",
+)
+```
 
-![ZKC: Závislost doby běhu na počtu předmětů.](assets/ZKC_mean_runtimes.svg)
+Výkon každého algoritmu je na instancích měřen jednotlivě, tj. generátor
+instancí je vždy instruován k výpisu jediné instance, která je následně
+permutována jak je potřeba a nakonec předána příslušnému řešiči.
 
-![ZKW: Závislost doby běhu na počtu předmětů.](assets/ZKW_mean_runtimes.svg)
 
-Graf maximální chyby zvýrazňuje hranice požadované od FPTAS algoritmu. Zajímavé
-je, že maximální chyba je relativně hluboko pod požadovanou horní mezí.
+![branch and bound robustness](assets/branch_and_bound_robustness.svg)
 
-![NK: Maximální chyba řešení.](assets/NK_max_errors.svg)
+![branch and bound robustness - cost](assets/branch_and_bound_robustness_cost.svg)
 
-![ZKC: Maximální chyba řešení.](assets/ZKC_max_errors.svg)
+![capacity weight sum ratio exploration](assets/capacity_weight_sum_ratio_exploration.svg)
 
-![ZKW: Maximální chyba řešení.](assets/ZKW_max_errors.svg)
+![cost range](assets/cost_range.svg)
+
+![granularity exploration heavy](assets/granularity_exploration_heavy.svg)
+
+![granularity exploration light](assets/granularity_exploration_light.svg)
+
+![n_items range](assets/n_items_range.svg)
+
+![weight range](assets/weight_range.svg)
 
 ### Analýza
 
@@ -1055,8 +1081,9 @@ impl Boilerplate for std::str::SplitWhitespace<'_> {
 
 ### Měření výkonu
 
-Benchmark postavený na knihovně
+Benchmark z minulého úkolu postavený na knihovně
 [`Criterion.rs`](https://crates.io/crates/criterion) se nachází v souboru níže.
+Pro měření těchto experimentů ale nebyl použit.
 
 ``` {.rust file=solver/benches/bench.rs .bootstrap-fold}
 extern crate solver;

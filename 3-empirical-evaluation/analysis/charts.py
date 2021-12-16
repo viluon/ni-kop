@@ -1,6 +1,6 @@
 # ~\~ language=Python filename=analysis/charts.py
 # ~\~ begin <<lit/main.md|analysis/charts.py>>[0]
-# ~\~ begin <<lit/main.md|preprocessing>>[0]
+# ~\~ begin <<lit/main.md|python-imports>>[0]
 import matplotlib.pyplot as plt
 import pandas as pd
 import seaborn as sns
@@ -13,8 +13,8 @@ from pandas.core.tools.numeric import to_numeric
 from subprocess import run, PIPE
 from itertools import product, chain
 import textwrap as tr
+# ~\~ end
 
-# pipe the instance generator into the solver
 
 show_progress = os.environ.get("JUPYTER") == None
 algs = ["bf", "bb", "dpc", "dpw", "redux"]
@@ -32,9 +32,11 @@ def progress_bar(iteration, total, length = 60):
         print()
 
 def generate(**kwargs):
+    # ~\~ begin <<lit/main.md|generate-instance>>[0]
     res = []
     kwargs["granularity"] = kwargs["granularity_and_light_heavy_balance"][0]
     kwargs["light_heavy_balance"] = kwargs["granularity_and_light_heavy_balance"][1]
+    del kwargs["granularity_and_light_heavy_balance"]
     for seed in range(kwargs["seed"], kwargs["seed"] + kwargs["n_runs"]):
         params = dict({
             "seed": seed,
@@ -74,8 +76,10 @@ def generate(**kwargs):
             }, **instance))
 
     return res
+    # ~\~ end
 
 def solve(alg, instance):
+    # ~\~ begin <<lit/main.md|invoke-solver>>[0]
     solver = run(
         ["target/release/main", alg],
         stdout = PIPE,
@@ -90,7 +94,9 @@ def solve(alg, instance):
 
     # return only the cost of the solution
     return int(solver.stdout.split()[0])
+    # ~\~ end
 
+# ~\~ begin <<lit/main.md|dataset-utilities>>[0]
 # enumerate the parameter values of a dataset for instance generation and
 # algorithm benchmarking.
 def dataset(id, **kwargs):
@@ -124,10 +130,12 @@ def merge_datasets(*dss):
         k: list(chain(*(ds[k] for ds in dss)))
         for k in dss[0]
     }
+# ~\~ end
 
 
 n_samples = 2 # FIXME
 
+# ~\~ begin <<lit/main.md|datasets>>[0]
 # benchmark configurations
 # we don't want a full cartesian product (too slow to fully explore), so we'll
 # use a union of subsets, each tailored to the particular algorithm
@@ -162,7 +170,9 @@ configs = merge_datasets(dataset(
     n_permutations = [20],
     n_repetitions = [10],
 ))
+# ~\~ end
 
+# ~\~ begin <<lit/main.md|measurement-loop>>[0]
 iteration = 0
 total = sum([r * p * rep for (r, p, rep) in zip(configs["n_runs"], configs["n_permutations"], configs["n_repetitions"])])
 for config in [dict(zip(configs, v)) for v in zip(*configs.values())]:
@@ -190,15 +200,14 @@ for config in [dict(zip(configs, v)) for v in zip(*configs.values())]:
             progress_bar(iteration, total)
 
 print()
-
 # ~\~ end
 
 # ~\~ begin <<lit/main.md|performance-chart>>[0]
-
 # plot the measurements
 
 figsize = (14, 8)
 
+# ~\~ begin <<lit/main.md|chart-labels>>[0]
 plot_labels = dict(
     seed = "Seed",
     t = "Doba běhu [s]",
@@ -220,10 +229,11 @@ alg_labels = dict(
     dpw = "Dynamic programming (weight)",
     redux = "Greedy redux",
 )
+# ~\~ end
 
 def plot(x_axis, y_axis, id, title, data = data, filename = None):
     if filename is None:
-        filename = id
+        filename = id.replace(" ", "_")
     print("\t{}".format(title))
     fig, ax = plt.subplots(figsize = figsize)
     ds = [d for d in data if d["id"] == id]
@@ -231,6 +241,7 @@ def plot(x_axis, y_axis, id, title, data = data, filename = None):
     df = pd.DataFrame(ds)
 
     # do a boxplot grouped by the algorithm name
+    # ~\~ begin <<lit/main.md|plot-boxplot>>[0]
     sns.boxplot(
         x = x_axis,
         y = y_axis,
@@ -239,8 +250,10 @@ def plot(x_axis, y_axis, id, title, data = data, filename = None):
         ax = ax,
         linewidth = 0.8,
     )
+    # ~\~ end
 
     # render the datapoints as dots with horizontal jitter
+    # ~\~ begin <<lit/main.md|plot-stripplot>>[0]
     sns.stripplot(
         x = x_axis,
         y = y_axis,
@@ -254,11 +267,13 @@ def plot(x_axis, y_axis, id, title, data = data, filename = None):
         alpha = 0.4,
         edgecolor = "white",
     )
+    # ~\~ end
 
     plt.title(title)
     plt.xlabel(plot_labels[x_axis])
     plt.ylabel(plot_labels[y_axis])
 
+    # ~\~ begin <<lit/main.md|plot-caption>>[0]
     constant_columns = [
         col for col in df.columns[df.nunique() <= 1]
             if (col not in ["id", "n_instances", "contents"])
@@ -276,6 +291,7 @@ def plot(x_axis, y_axis, id, title, data = data, filename = None):
         fontfamily = "monospace",
         verticalalignment = "top",
     )
+    # ~\~ end
 
     handles, labels = ax.get_legend_handles_labels()
     labels = [alg_labels[l] for l in labels]
@@ -284,6 +300,7 @@ def plot(x_axis, y_axis, id, title, data = data, filename = None):
     plt.savefig("docs/assets/{}.svg".format(filename))
 
 print("rendering plots")
+# ~\~ begin <<lit/main.md|plots>>[0]
 plot("n_items",     "t", "n_items range",           "Průměrná doba běhu vzhledem k velikosti instance")
 plot("max_weight",  "t", "weight range",            "Průměrná doba běhu vzhledem k maximální váze")
 plot("max_cost",    "t", "cost range",              "Průměrná doba běhu vzhledem k maximální ceně")
@@ -296,7 +313,7 @@ for balance in ["light", "heavy"]:
         "granularity exploration",
         "Doba běhu vzhledem ke granularitě (preference {})".format(balance),
         data = [d for d in data if d["light_heavy_balance"] == balance],
-        filename = "granularity exploration {}".format(balance),
+        filename = "granularity_exploration_{}".format(balance),
     )
 
 plot(
@@ -318,8 +335,8 @@ plot(
     "cost",
     "branch and bound robustness",
     "Cena řešení přes několik permutací jedné instance",
-    filename = "branch and bound robustness - cost"
+    filename = "branch_and_bound_robustness_cost"
 )
-
+# ~\~ end
 # ~\~ end
 # ~\~ end
