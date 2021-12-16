@@ -133,19 +133,19 @@ def merge_datasets(*dss):
 # ~\~ end
 
 
+# ~\~ begin <<lit/main.md|datasets>>[0]
 n_samples = 3
 
-# ~\~ begin <<lit/main.md|datasets>>[0]
 # benchmark configurations
 # we don't want a full cartesian product (too slow to fully explore), so we'll
 # use a union of subsets, each tailored to the particular algorithm
 configs = merge_datasets(dataset(
     "weight range",
-    alg = ["bf", "dpw"],
+    alg = ["bf", "bb", "dpc", "dpw"],
     max_weight = [500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000],
 ), dataset(
     "cost range",
-    alg = ["bf", "dpc"],
+    alg = ["bf", "bb", "dpc", "dpw"],
     max_cost = [500, 1000, 5000, 10000, 50000, 100000, 500000],
 ), dataset(
     "n_items range",

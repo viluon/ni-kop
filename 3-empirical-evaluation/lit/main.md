@@ -132,8 +132,6 @@ hladový přístup ani žádná z variant FPTAS nebyly součástí experimentů.
 - [`greedy`](#hladový-přístup) -- hladový algoritmus podle heuristiky poměru cena/váha
 - [`redux`](#hladový-přístup----redux) -- `greedy` + řešení pouze s nejdražším předmětem
 
-Zpracování měřených dat pro srovnávací grafy jsem provedl v Pythonu.
-
 ```{.python #python-imports .bootstrap-fold}
 import matplotlib.pyplot as plt
 import pandas as pd
@@ -148,6 +146,11 @@ from subprocess import run, PIPE
 from itertools import product, chain
 import textwrap as tr
 ```
+
+Skript `charts.py` je zodpovědný nejen za vykreslování grafů, ale také za
+generování vstupních instancí, spouštění řešiče a měření času, který problém
+řešiči zabere. Při spuštění v terminálu skript zároveň hlásí průběžný postup
+měření.
 
 ```{.python .eval file=analysis/charts.py}
 <<python-imports>>
@@ -176,8 +179,6 @@ def solve(alg, instance):
 
 <<dataset-utilities>>
 
-
-n_samples = 3
 
 <<datasets>>
 
@@ -222,17 +223,26 @@ def merge_datasets(*dss):
     }
 ```
 
+Jelikož průchod hrubou silou přes všechny možné kombinace parametrů generátoru
+by zabral zbytečně dlouho, definujeme prostor parametrů jako sjednocení
+zajímavých podprostorů. Tyto podprostory nazýváme "datasety" -- v tomto programu
+je reprezentují slovníky, které jednotlivým parametrům generátoru, řešiče a
+podpůrné infrastruktury přiřazují seznamy možných hodnot. Každý dataset má navíc
+unikátní klíč, podle kterého jej lze identifikovat při vizualizaci.
+
 ```{.python #datasets .bootstrap-fold}
+n_samples = 3
+
 # benchmark configurations
 # we don't want a full cartesian product (too slow to fully explore), so we'll
 # use a union of subsets, each tailored to the particular algorithm
 configs = merge_datasets(dataset(
     "weight range",
-    alg = ["bf", "dpw"],
+    alg = ["bf", "bb", "dpc", "dpw"],
     max_weight = [500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000],
 ), dataset(
     "cost range",
-    alg = ["bf", "dpc"],
+    alg = ["bf", "bb", "dpc", "dpw"],
     max_cost = [500, 1000, 5000, 10000, 50000, 100000, 500000],
 ), dataset(
     "n_items range",
@@ -321,6 +331,16 @@ if solver.returncode != 0:
 # return only the cost of the solution
 return int(solver.stdout.split()[0])
 ```
+
+Hlavní smyčka pro měření jednoduše projde všechny možné konfigurace dané
+sjednocením datasetů, vygeneruje odpovídající instance a spustí na ně příslušný
+algoritmus. Parametr `n_repetitions` určuje kolikrát změřit jednu konfiguraci
+(stejná instance, stejná permutace, stejný algoritmus) -- měření provádíme
+vícekrát, abychom odhalili chyby měření.
+
+Výkon každého algoritmu je na instancích měřen jednotlivě, tj. generátor
+instancí je vždy instruován k výpisu jediné instance, která je následně
+permutována jak je potřeba a nakonec předána příslušnému řešiči.
 
 ```{.python #measurement-loop .bootstrap-fold}
 iteration = 0
@@ -500,10 +520,15 @@ alg_labels = dict(
 )
 ```
 
-Výkon každého algoritmu je na instancích měřen jednotlivě, tj. generátor
-instancí je vždy instruován k výpisu jediné instance, která je následně
-permutována jak je potřeba a nakonec předána příslušnému řešiči.
+Každý graf níže ukazuje jak přesné naměřené hodnoty (barevné kroužky) tak
+statistická data v podobě boxů značících hodnoty druhého a třetího kvartálu.
+Fousky nad a pod každým boxem znázorňují opravdový rozsah příslušných dat, vyjma
+odlehlých hodnot značených diamanty.
 
+Pod každým grafem je zároveň přehled parametrů, které jsou pro všechny
+znázorněné body konstantní. Jejich zápis není zrovna nejpřehlednější, ale názvy
+parametrů by měly být samozřejmé. Jeden z nejdůležitějších parametrů je
+`n_items` (počet předmětů v instanci).
 
 ![Robustnost metody větví a hranic, dynamického programování s rozkladem podle
 váhy, hrubé síly a hladové heuristiky.](assets/branch_and_bound_robustness.svg)
@@ -539,7 +564,7 @@ z předchozích úkolů.](assets/n_items_range.svg)
 Program začíná definicí datové struktury reprezentující instanci problému
 batohu.
 
-``` {.rust #problem-instance-definition}
+``` {.rust #problem-instance-definition .bootstrap-fold}
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Instance {
     pub id: i32, m: u32, pub items: Vec<(u32, u32)>
@@ -551,7 +576,7 @@ jsou importovány na začátku, následuje již zmíněná definice instance pro
 dále funkce `main()`, parser, definice struktury řešení a její podpůrné funkce,
 samotné algoritmy řešiče a v neposlední řadě sada automatických testů.
 
-``` {.rust file=solver/src/lib.rs}
+``` {.rust file=solver/src/lib.rs .bootstrap-fold}
 <<imports>>
 
 <<algorithm-map>>
@@ -622,7 +647,7 @@ impl Instance {
 problému především bit array udávající množinu předmětů v pomyslném batohu.
 Zároveň nese informaci o počtu navštívených konfigurací při jeho výpočtu.
 
-```{.rust #solution-definition}
+```{.rust #solution-definition .bootstrap-fold}
 pub type Config = BitArr!(for 64);
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
@@ -684,7 +709,7 @@ implementované algoritmy jsou uloženy pod svými názvy v `BTreeMap`ě. Tu
 používáme při vybírání algoritmu pomocí argumentu předaného na příkazové řádce,
 v testovacím kódu na testy všech implementací atp.
 
-``` {.rust #algorithm-map}
+``` {.rust #algorithm-map .bootstrap-fold}
 pub fn get_algorithms() -> BTreeMap<&'static str, fn(&Instance) -> Solution> {
     let cast = |x: fn(&Instance) -> Solution| x;
     // the BTreeMap works as a trie, maintaining alphabetic order
@@ -710,7 +735,7 @@ je pořadí, ve kterém předměty navštěvujeme. Proto stačí aplikovat řadi
 permutaci předmětů na posloupnost indexů, které procházíme. Přesně to dělá výraz
 `(0..items.len()).map(ord)`.
 
-``` {.rust #solver-greedy}
+``` {.rust #solver-greedy .bootstrap-fold}
 fn greedy(&self) -> Solution {
     use ::permutation::*;
     let Instance {m, items, ..} = self;
@@ -748,7 +773,7 @@ nejdražšího předmětu. K indexu nejdražšího předmětu dojdeme tak, že s
 posloupnosti indexů a předmětů, vyřadíme prvky, jejichž váha přesahuje kapacitu
 batohu a vybereme maximální prvek podle ceny.
 
-``` {.rust #solver-greedy-redux}
+``` {.rust #solver-greedy-redux .bootstrap-fold}
 fn greedy_redux(&self) -> Solution {
     let greedy = self.greedy();
     (0_usize..)
@@ -788,7 +813,7 @@ fn brute_force(&self) -> Solution {
 
 #### Branch & bound
 
-``` {.rust #solver-bb}
+``` {.rust #solver-bb .bootstrap-fold}
 fn branch_and_bound(&self) -> Solution {
     struct State<'a>(&'a Vec<(u32, u32)>, Vec<u32>);
     let prices: Vec<u32> = {
@@ -833,7 +858,7 @@ fn branch_and_bound(&self) -> Solution {
 Dynamické programování s rozkladem podle váhy jsem implementoval už v prvním
 úkolu.
 
-``` {.rust #solver-dpw}
+``` {.rust #solver-dpw .bootstrap-fold}
 fn dynamic_programming_w(&self) -> Solution {
     let Instance {m, items, ..} = self;
     let mut next = vec![Solution::default(self); *m as usize + 1];
@@ -871,7 +896,7 @@ uspořádání pro typ `Solution` řadí nejprve vzestupně podle ceny a násled
 sestupně podle váhy. V tomto případě porovnáváme vždy dvě řešení stejných cen
 (a nebo je `last[cap]` neplatné řešení s nadváhou, které má cenu $0$).
 
-``` {.rust #solver-dpc}
+``` {.rust #solver-dpc .bootstrap-fold}
 fn dynamic_programming_c(&self) -> Solution {
     let Instance {items, ..} = self;
     let max_profit = items.iter().map(|(_, c)| *c).max().unwrap() as usize;
@@ -908,7 +933,7 @@ programování s rozkladem podle ceny na upravenou instanci problému. V řešen
 stačí opravit referenci výchozí instance (`inst: self`) a přepočíst cenu podle
 vypočítané konfigurace, samotné indexy předmětů se škálováním nemění.
 
-``` {.rust #solver-fptas}
+``` {.rust #solver-fptas .bootstrap-fold}
 // TODO: are items heavier than the knapsack capacity a problem? if so, we
 // can just zero them out
 fn fptas(&self, eps: f64) -> Solution {
@@ -933,7 +958,9 @@ fn fptas(&self, eps: f64) -> Solution {
 Provedená měření ukazují překvapivou robustnost implementovaných algoritmů.
 Zhoršení výkonu dynamického programování s rozkladem podle váhy a ceny byla
 očekávaná. Zajímavý je ovšem vliv poměru kapacity a součtu vah předmětů na
-metodu větví a hranic, u které se zdá, že jí nejlépe vyhovuje poměr okolo $0.4$.
+metodu větví a hranic, u které se zdá, že jí nejméně vyhovuje poměr okolo $0.4$.
+Naopak pro batohy, do kterých se vejde buď téměř vše nebo téměř nic ze zadaných
+předmětů, najde tato metoda řešení velmi rychle.
 
 ## Appendix
 
