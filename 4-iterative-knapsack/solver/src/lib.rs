@@ -117,13 +117,22 @@ impl <'a> Ord for Solution<'a> {
 
 impl <'a> Solution<'a> {
     fn with(mut self, i: usize) -> Solution<'a> {
+        self.set(i, true)
+    }
+
+    fn without(mut self, i: usize) -> Solution<'a> {
+        self.set(i, false)
+    }
+
+    fn set(&mut self, i: usize, set: bool) -> Solution<'a> {
         let (w, c) = self.inst.items[i];
-        if !self.cfg[i] {
-            self.cfg.set(i, true);
-            self.weight += w;
-            self.cost += c;
+        let k = if set { 1 } else { -1 };
+        if self.cfg[i] != set {
+            self.cfg.set(i, set);
+            self.weight = (self.weight as i32 + k * w as i32) as u32;
+            self.cost   = (self.cost   as i32 + k * c as i32) as u32;
         }
-        self
+        *self
     }
 
     fn default(inst: &'a Instance) -> Solution<'a> {
@@ -218,6 +227,23 @@ pub fn load_solutions(set: &str) -> Result<HashMap<(u32, i32), OptimalSolution>>
     Ok(solutions)
 }
 // ~\~ end
+
+trait IteratorRandomWeighted: Iterator + Sized + Clone {
+    fn choose_weighted<Rng: ?Sized, W>(&mut self, rng: &mut Rng, f: fn(Self::Item) -> W) -> Option<Self::Item>
+    where
+        Rng: rand::Rng,
+        W: for<'a> core::ops::AddAssign<&'a W>
+         + rand::distributions::uniform::SampleUniform
+         + std::cmp::PartialOrd
+         + Default
+         + Clone {
+        use rand::prelude::*;
+        let dist = rand::distributions::WeightedIndex::new(self.clone().map(f)).ok()?;
+        self.nth(dist.sample(rng))
+    }
+}
+
+impl<I> IteratorRandomWeighted for I where I: Iterator + Sized + Clone {}
 
 impl Instance {
     // ~\~ begin <<lit/main.md|solver-dpw>>[0]
@@ -402,14 +428,16 @@ impl Instance {
 
     pub fn simulated_annealing<R>(&self, rng: &mut R, max_iterations: u32) -> Solution
     where R: rand::Rng + ?Sized {
-        let initial_temperature = max_iterations as f64;
+        let initial_temperature = self.items.iter().map(|(_, c)| *c as f64).sum::<f64>() / 100.0;
         let mut sln = Solution::default(self);
         for iteration in 0..max_iterations {
             let temperature = (initial_temperature * (1.0 - iteration as f64 / max_iterations as f64)) as u32;
-            use rand::seq::IteratorRandom;
+            if iteration % 1000 == 9 {
+                println!("    temp {}", temperature);
+            }
             let next_sln = (0..self.items.len())
                 // construct the set of neighbouring solutions
-                .map(|i| (&sln).with(i))
+                .map(|i| sln.clone().set(i, !sln.cfg[i]))
                 // penalise overweight solutions
                 .map(|s| Solution {
                     cost: if s.weight > self.m { 0 } else { s.cost }, ..s
@@ -417,10 +445,13 @@ impl Instance {
                 // filter out neighbours with a cost below sln.cost / temperature
                 .filter(|&s| s.cost * temperature >= sln.cost)
                 // select a neighbour at random
-                .choose(rng);
+                .choose_weighted(rng, |s| f64::exp2(s.cost as f64 / 1000.0));
             match next_sln {
                 Some(s) => sln = s,
-                None => return sln,
+                None => {
+                    println!("  early return @ {}, temp {}", iteration, temperature);
+                    return sln
+                },
             }
         }
 
