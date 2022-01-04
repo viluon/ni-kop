@@ -34,7 +34,7 @@ jobs:
             texlive-xetex \
             wget
 
-          cd 3-empirical-evaluation/
+          cd 4-iterative-knapsack/
           wget -O cpufetch https://github.com/Dr-Noob/cpufetch/releases/download/v1.00/cpufetch_x86-64_linux
           chmod +x cpufetch
           ./ci.sh
@@ -42,13 +42,13 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: docs
-          path: 3-empirical-evaluation/docs/
+          path: 4-iterative-knapsack/docs/
       - name: test
         run: |
-          cd 3-empirical-evaluation/solver/
+          cd 4-iterative-knapsack/solver/
           RUST_BACKTRACE=1 QUICKCHECK_TESTS=2000 cargo test --release -- --show-output
       - name: deploy
         uses: JamesIves/github-pages-deploy-action@4.1.4
         with:
           branch: gh-pages
-          folder: 3-empirical-evaluation/docs/
+          folder: 4-iterative-knapsack/docs/
