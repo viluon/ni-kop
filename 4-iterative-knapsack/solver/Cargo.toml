@@ -11,6 +11,8 @@ bitvec = "0.22.3"
 permutation = "0.2.5"
 quickcheck = "1"
 quickcheck_macros = "1"
+rand = "0.8.4"
+rand_chacha = "0.3.1"
 
 [dev-dependencies]
 criterion = "0.3"

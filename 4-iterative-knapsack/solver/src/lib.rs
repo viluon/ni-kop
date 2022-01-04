@@ -51,6 +51,17 @@ pub fn solve_stream<T>(
     }
 }
 
+pub fn load_instances<T>(stream: &mut T) -> Result<Vec<Instance>>
+where T: BufRead {
+    let mut instances = vec![];
+    loop {
+        match parse_line(stream)? {
+            Some(inst) => instances.push(inst),
+            None => return Ok(instances)
+        }
+    }
+}
+
 use std::result::Result as IOResult;
 pub fn list_input_files(set: &str, r: Range<u32>) -> Result<Vec<IOResult<DirEntry, std::io::Error>>> {
     let f = |res: &IOResult<DirEntry, std::io::Error> | res.as_ref().ok().filter(|f| {
@@ -388,6 +399,34 @@ impl Instance {
         go(&self.items, Solution::default(self), 0, self.m)
     }
     // ~\~ end
+
+    pub fn simulated_annealing<R>(&self, rng: &mut R, max_iterations: u32) -> Solution
+    where R: rand::Rng + ?Sized {
+        let initial_temperature = max_iterations as f64;
+        let mut sln = Solution::default(self);
+        for iteration in 0..max_iterations {
+            let temperature = (initial_temperature * (1.0 - iteration as f64 / max_iterations as f64)) as u32;
+            use rand::seq::IteratorRandom;
+            let next_sln = (0..self.items.len())
+                // construct the set of neighbouring solutions
+                .map(|i| (&sln).with(i))
+                // penalise overweight solutions
+                .map(|s| Solution {
+                    cost: if s.weight > self.m { 0 } else { s.cost }, ..s
+                })
+                // filter out neighbours with a cost below sln.cost / temperature
+                .filter(|&s| s.cost * temperature >= sln.cost)
+                // select a neighbour at random
+                .choose(rng);
+            match next_sln {
+                Some(s) => sln = s,
+                None => return sln,
+            }
+        }
+
+        println!("  iteration limit exhausted");
+        sln
+    }
 }
 
 // ~\~ begin <<lit/main.md|tests>>[0]
