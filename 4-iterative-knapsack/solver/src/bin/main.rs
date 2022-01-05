@@ -39,7 +39,7 @@ fn main() -> Result<()> {
             Some(f) => (Instant::now(), f(&inst)),
             None => {
                 let mut rng: rand_chacha::ChaCha8Rng = rand::SeedableRng::seed_from_u64(42);
-                (Instant::now(), inst.simulated_annealing(&mut rng, 10_000))
+                (Instant::now(), inst.simulated_annealing(&mut rng, 2_000))
             },
         };
         println!("took {} ms", now.elapsed().as_millis());

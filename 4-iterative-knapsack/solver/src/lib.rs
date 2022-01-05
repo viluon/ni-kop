@@ -429,39 +429,47 @@ impl Instance {
     pub fn simulated_annealing<Rng>(&self, rng: &mut Rng, max_iterations: u32) -> Solution
     where Rng: rand::Rng + ?Sized {
         let initial_temperature = self.items.iter().map(|(_, c)| *c as f64).sum::<f64>();
-        let mut sln = Solution::default(self);
-        let mut last_temperature = initial_temperature;
+        let equilibrium_length = 2 * self.items.len() as u32;
+        let mut current = Solution::default(self);
+        let mut best = current;
+        let mut temperature = 500.0;
+        let mut temp = temperature;
 
         for iteration in 0..max_iterations {
-            let temperature = last_temperature;
-            println!("    {} {}", sln.cost, temperature);
+            use rand::prelude::IteratorRandom;
+            if iteration % equilibrium_length == 0 { temp = temperature }
+            println!("    {} {} {}", current.cost, best.cost, temp);
 
             let next_sln = (0..self.items.len())
                 // construct the set of neighbouring solutions
-                .map(|i| sln.clone().set(i, !sln.cfg[i]))
-                // penalise overweight solutions
-                .map(|s| Solution {
-                    cost: if s.weight > self.m { 0 } else { s.cost }, ..s
-                })
-                // filter out neighbours with a cost below sln.cost / temperature
-                .filter(|&s| s.cost as f64 * temperature >= sln.cost as f64)
+                .map(|i| current.clone().set(i, !current.cfg[i]))
+                // filter out neighbours with a cost below sln.cost / temp
+                // .filter(|&s| s.cost as f64 * temp >= sln.cost as f64)
                 // select a neighbour at random
-                // FIXME: this isn't how the algorithm should work. We should
-                // probabilistically *consider* changing the current solution
-                // rather than always replace it.
-                .choose_weighted(rng, |s| f64::exp2(s.cost as f64 / 1000.0));
+                .choose(rng);
             match next_sln {
-                Some(s) => sln = s,
+                Some(s) => {
+                    let delta = (s.cost - current.cost) as f64;
+                    if s.weight < self.m &&
+                        (delta > 0.0 // the new state is better, accept it right away
+                         || // otherwise accept with probability proportional to the cost delta and the temp
+                         rng.gen_range(0.0 .. 1.0) > (delta / temp).exp()) {
+                        current = s;
+                        if current.cost > best.cost {
+                            best = current;
+                        }
+                    }
+                },
                 None => {
-                    println!("  early return @ {}, temp {}", iteration, temperature);
-                    return sln
+                    println!("  early return @ {}, temp {}", iteration, temp);
+                    return best
                 },
             }
-            last_temperature = 0.98 * temperature;
+            temperature *= 0.9;
         }
 
         println!("  iteration limit exhausted");
-        sln
+        best
     }
 }
 

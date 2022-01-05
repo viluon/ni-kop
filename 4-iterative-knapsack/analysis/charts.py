@@ -54,10 +54,11 @@ for instance in input.split("\n")[:8]:
     plt.style.use("dark_background")
     fig, ax = plt.subplots(figsize = figsize)
     ax.plot(range(len(cost_temperature_progression)), [entry[0] for entry in cost_temperature_progression], label = "cost")
-    ax.plot(range(len(cost_temperature_progression)), [entry[1] for entry in cost_temperature_progression], label = "temperature")
+    ax.plot(range(len(cost_temperature_progression)), [entry[1] for entry in cost_temperature_progression], label = "best cost")
+    ax.plot(range(len(cost_temperature_progression)), [entry[2] for entry in cost_temperature_progression], label = "temperature")
     ax.set_xlabel("iteration")
     ax.set_title(f"{id}")
-    ax.legend()
+    ax.legend(loc = "lower right")
 
     plt.savefig("docs/assets/whitebox-{}.svg".format(id))
     plt.close()
