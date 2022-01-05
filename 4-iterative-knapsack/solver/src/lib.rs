@@ -426,15 +426,16 @@ impl Instance {
     }
     // ~\~ end
 
-    pub fn simulated_annealing<R>(&self, rng: &mut R, max_iterations: u32) -> Solution
-    where R: rand::Rng + ?Sized {
-        let initial_temperature = self.items.iter().map(|(_, c)| *c as f64).sum::<f64>() / 100.0;
+    pub fn simulated_annealing<Rng>(&self, rng: &mut Rng, max_iterations: u32) -> Solution
+    where Rng: rand::Rng + ?Sized {
+        let initial_temperature = self.items.iter().map(|(_, c)| *c as f64).sum::<f64>();
         let mut sln = Solution::default(self);
+        let mut last_temperature = initial_temperature;
+
         for iteration in 0..max_iterations {
-            let temperature = (initial_temperature * (1.0 - iteration as f64 / max_iterations as f64)) as u32;
-            if iteration % 1000 == 9 {
-                println!("    temp {}", temperature);
-            }
+            let temperature = last_temperature;
+            println!("    {} {}", sln.cost, temperature);
+
             let next_sln = (0..self.items.len())
                 // construct the set of neighbouring solutions
                 .map(|i| sln.clone().set(i, !sln.cfg[i]))
@@ -443,8 +444,11 @@ impl Instance {
                     cost: if s.weight > self.m { 0 } else { s.cost }, ..s
                 })
                 // filter out neighbours with a cost below sln.cost / temperature
-                .filter(|&s| s.cost * temperature >= sln.cost)
+                .filter(|&s| s.cost as f64 * temperature >= sln.cost as f64)
                 // select a neighbour at random
+                // FIXME: this isn't how the algorithm should work. We should
+                // probabilistically *consider* changing the current solution
+                // rather than always replace it.
                 .choose_weighted(rng, |s| f64::exp2(s.cost as f64 / 1000.0));
             match next_sln {
                 Some(s) => sln = s,
@@ -453,6 +457,7 @@ impl Instance {
                     return sln
                 },
             }
+            last_temperature = 0.98 * temperature;
         }
 
         println!("  iteration limit exhausted");

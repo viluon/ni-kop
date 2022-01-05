@@ -144,72 +144,7 @@ měření.
 ```{.python .eval file=analysis/charts.py}
 <<python-imports>>
 
-
-show_progress = os.environ.get("JUPYTER") == None
-algs = ["bf", "bb", "dpc", "dpw", "redux"]
-data = []
-
-# adapted from https://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console
-def progress_bar(iteration, total, length = 60):
-    if not show_progress:
-        return
-    percent = ("{0:.1f}").format(100 * (iteration / float(total)))
-    filledLength = int(length * iteration // total)
-    bar = '=' * filledLength + ' ' * (length - filledLength)
-    print(f'\r[{bar}] {percent}%', end = "\r")
-    if iteration == total:
-        print()
-
-def generate(**kwargs):
-    <<generate-instance>>
-
-def solve(alg, instance):
-    <<invoke-solver>>
-
-<<dataset-utilities>>
-
-
-<<datasets>>
-
-<<measurement-loop>>
-
 <<performance-chart>>
-```
-
-```{.python #dataset-utilities .bootstrap-fold}
-# enumerate the parameter values of a dataset for instance generation and
-# algorithm benchmarking.
-def dataset(id, **kwargs):
-    params = dict({
-        # defaults
-        "id": [id],
-        "alg": algs,
-        "seed": [42],
-        "n_runs": [3],
-        "n_permutations": [1],
-        "n_repetitions": [3],
-        "n_items": [27],
-        "max_weight": [5000],
-        "max_cost": [5000],
-        "granularity_and_light_heavy_balance": [(1, "bal")],
-        "capacity_weight_sum_ratio": [0.8],
-        "cost_weight_correlation": ["uni"],
-    }, **kwargs)
-
-    key_order = [k for k in params]
-    cartesian = list(product(
-        *[params[key] for key in key_order]
-    ))
-
-    return {
-        key: [row[key_order.index(key)] for row in cartesian] for key in params
-    }
-
-def merge_datasets(*dss):
-    return {
-        k: list(chain(*(ds[k] for ds in dss)))
-        for k in dss[0]
-    }
 ```
 
 Jelikož by průchod hrubou silou přes všechny možné kombinace parametrů
@@ -218,109 +153,6 @@ zajímavých podprostorů. Tyto podprostory nazýváme "datasety" -- v tomto pro
 je reprezentují slovníky, které jednotlivým parametrům generátoru, řešiče a
 podpůrné infrastruktury přiřazují seznamy možných hodnot. Každý dataset má navíc
 unikátní klíč, podle kterého jej lze identifikovat při vizualizaci.
-
-```{.python #datasets .bootstrap-fold}
-n_samples = 3
-
-# benchmark configurations
-# we don't want a full cartesian product (too slow to fully explore), so we'll
-# use a union of subsets, each tailored to the particular algorithm
-configs = merge_datasets(dataset(
-    "weight range",
-    alg = ["bf", "bb", "dpc", "dpw"],
-    max_weight = [500, 1000, 5000, 10000, 50000, 100000, 500000, 1000000],
-), dataset(
-    "cost range",
-    alg = ["bf", "bb", "dpc", "dpw"],
-    max_cost = [500, 1000, 5000, 10000, 50000, 100000, 500000],
-), dataset(
-    "n_items range",
-    n_items = [4, 10, 15, 20, 25, 28],
-), dataset(
-    "granularity exploration",
-    alg = ["bb", "dpc", "dpw", "redux"],
-    n_runs = [n_samples],
-    granularity_and_light_heavy_balance = [
-        (1, "light"), (2, "light"), (3, "light"), (1, "heavy"), (2, "heavy"), (3, "heavy")
-    ],
-), dataset(
-    "capacity weight sum ratio exploration",
-    alg = ["bb", "dpc", "dpw", "redux"],
-    n_runs = [n_samples],
-    capacity_weight_sum_ratio = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9],
-), dataset(
-    "branch and bound robustness",
-    seed = [97],
-    n_items = [20],
-    alg = ["bf", "bb", "dpw", "redux"],
-    n_runs = [1],
-    n_permutations = [20],
-    n_repetitions = [10],
-))
-```
-
-```{.python #generate-instance .bootstrap-fold}
-res = []
-kwargs["granularity"] = kwargs["granularity_and_light_heavy_balance"][0]
-kwargs["light_heavy_balance"] = kwargs["granularity_and_light_heavy_balance"][1]
-del kwargs["granularity_and_light_heavy_balance"]
-for seed in range(kwargs["seed"], kwargs["seed"] + kwargs["n_runs"]):
-    params = dict({
-        "seed": seed,
-        "n_instances": 1,
-    }, **kwargs)
-    # run the instance generator
-    instance = dict({"contents": os.popen(
-        "gen/kg2 \
-        -r {seed} \
-        -n {n_items} \
-        -N {n_instances} \
-        -W {max_weight} \
-        -C {max_cost} \
-        -k {granularity} \
-        -w {light_heavy_balance} \
-        -c {cost_weight_correlation} \
-        -m {capacity_weight_sum_ratio} \
-        ".format(**params)
-    ).read()}, **params)
-
-    for p in range(0, instance["n_permutations"]):
-        kg_perm = run(
-            "gen/kg_perm \
-            -d 0 \
-            -N 1 \
-            -r {} \
-            ".format(p).split(),
-            stdout = PIPE,
-            stderr = PIPE,
-            input = instance["contents"],
-            encoding = "ascii",
-        )
-
-        res.append(dict({
-            "contents": kg_perm.stdout,
-            "perm_id": p,
-        }, **instance))
-
-return res
-```
-
-```{.python #invoke-solver .bootstrap-fold}
-solver = run(
-    ["target/release/main", alg],
-    stdout = PIPE,
-    stderr = PIPE,
-    input = instance["contents"],
-    encoding = "ascii",
-    cwd = "solver/"
-)
-if solver.returncode != 0:
-    print(solver)
-    raise Exception("solver failed")
-
-# return only the cost of the solution
-return int(solver.stdout.split()[0])
-```
 
 Hlavní smyčka pro měření jednoduše projde všechny možné konfigurace dané
 sjednocením datasetů, vygeneruje odpovídající instance a spustí na ně příslušný
@@ -332,182 +164,53 @@ Výkon každého algoritmu je na instancích měřen jednotlivě, tj. generátor
 instancí je vždy instruován k výpisu jediné instance, která je následně
 permutována jak je potřeba a nakonec předána příslušnému řešiči.
 
-```{.python #measurement-loop .bootstrap-fold}
-iteration = 0
-total = sum([r * p * rep for (r, p, rep) in zip(configs["n_runs"], configs["n_permutations"], configs["n_repetitions"])])
-for config in [dict(zip(configs, v)) for v in zip(*configs.values())]:
-    param_iter = iter(config.values())
-    next(param_iter) # skip id
-    if show_progress:
-        print(end = "\033[2K") # clear the current line to get rid of the progress bar
-    print(config["id"], "\tparams", *param_iter)
-    progress_bar(iteration, total)
-
-    for inst in generate(**config):
-        for rep in range(0, config["n_repetitions"]):
-            # measure the time taken by the call to the solver
-            start = time.time()
-            cost = solve(config["alg"], inst)
-            end = time.time()
-            data.append(dict(inst,
-                cost = cost,
-                alg = config["alg"],
-                t = end - start,
-                repetition = rep,
-                contents = None
-            ))
-            iteration = iteration + 1
-            progress_bar(iteration, total)
-
-print()
-```
-
 ```{.python #performance-chart .bootstrap-fold}
 # plot the measurements
 
 figsize = (14, 8)
 
-<<chart-labels>>
-
-def plot(x_axis, y_axis, id, title, data = data, filename = None):
-    if filename is None:
-        filename = id.replace(" ", "_")
-    print("\t{}".format(title))
-    fig, ax = plt.subplots(figsize = figsize)
-    ds = [d for d in data if d["id"] == id]
-    # create a frame from the list
-    df = pd.DataFrame(ds)
-
-    # do a boxplot grouped by the algorithm name
-    <<plot-boxplot>>
-
-    # render the datapoints as dots with horizontal jitter
-    <<plot-stripplot>>
-
-    plt.title(title)
-    plt.xlabel(plot_labels[x_axis])
-    plt.ylabel(plot_labels[y_axis])
-
-    <<plot-caption>>
-
-    handles, labels = ax.get_legend_handles_labels()
-    labels = [alg_labels[l] for l in labels]
-
-    plt.legend(handles[0 : int(len(handles) / 2)], labels[0 : int(len(labels) / 2)])
-    plt.savefig("docs/assets/{}.svg".format(filename))
-
-print("rendering plots")
-<<plots>>
-```
-
-```{.python #plot-boxplot .bootstrap-fold}
-sns.boxplot(
-    x = x_axis,
-    y = y_axis,
-    data = df,
-    hue = "alg",
-    ax = ax,
-    linewidth = 0.8,
-)
-```
-
-```{.python #plot-stripplot .bootstrap-fold}
-sns.stripplot(
-    x = x_axis,
-    y = y_axis,
-    data = df,
-    hue = "alg",
-    ax = ax,
-    jitter = True,
-    size = 4,
-    dodge = True,
-    linewidth = 0.2,
-    alpha = 0.4,
-    edgecolor = "white",
-)
-```
-
-```{.python #plot-caption .bootstrap-fold}
-constant_columns = [
-    col for col in df.columns[df.nunique() <= 1]
-        if (col not in ["id", "n_instances", "contents"])
-]
-
-caption = "\n".join(tr.wrap("Konfigurace: {}".format({
-    k: df[k][0] for k in constant_columns
-}), width = 170))
-
-fig.text(
-    0.09,
-    0.05,
-    caption,
-    fontsize = "small",
-    fontfamily = "monospace",
-    verticalalignment = "top",
-)
-```
-
-```{.python #plots .bootstrap-fold}
-plot("n_items",     "t", "n_items range",           "Průměrná doba běhu vzhledem k velikosti instance")
-plot("max_weight",  "t", "weight range",            "Průměrná doba běhu vzhledem k maximální váze")
-plot("max_cost",    "t", "cost range",              "Průměrná doba běhu vzhledem k maximální ceně")
-
-
-for balance in ["light", "heavy"]:
-    plot(
-        "granularity",
-        "t",
-        "granularity exploration",
-        "Doba běhu vzhledem ke granularitě (preference {})".format(balance),
-        data = [d for d in data if d["light_heavy_balance"] == balance],
-        filename = "granularity_exploration_{}".format(balance),
+def invoke_solver(input):
+    solver = run(
+        ["target/release/main", "sa"],
+        stdout = PIPE,
+        stderr = PIPE,
+        input = input,
+        encoding = "ascii",
+        cwd = "solver/"
     )
+    if solver.returncode != 0:
+        print(solver)
+        raise Exception("solver failed")
 
-plot(
-    "capacity_weight_sum_ratio",
-    "t",
-    "capacity weight sum ratio exploration",
-    "Doba běhu vzhledem k poměru kapacity a součtu vah",
-)
+    lines = solver.stdout.split("\n")
+    [_, time, _] = lines[-3].split()
+    [cost, err]  = lines[-2].split()
+    cost_temperature_progression = [list(map(float, entry.split())) for entry in lines[:-4]]
+    return (float(time), float(cost), float(err), cost_temperature_progression)
 
-plot(
-    "perm_id",
-    "t",
-    "branch and bound robustness",
-    "Doba běhu přes několik permutací jedné instance",
-)
+# load the input
+input = None
+with open("solver/ds/NK15_inst.dat", "r") as f:
+    input = f.read()
 
-plot(
-    "perm_id",
-    "cost",
-    "branch and bound robustness",
-    "Cena řešení přes několik permutací jedné instance",
-    filename = "branch_and_bound_robustness_cost"
-)
-```
+for instance in input.split("\n")[:8]:
+    id = instance.split()[0]
+    (t, cost, err, cost_temperature_progression) = invoke_solver(instance)
+    # plot the cost / temperature progression:
+    # we have two line graphs in a single plot
+    # the x axis is just the index in the list
 
-```{.python #chart-labels .bootstrap-fold}
-plot_labels = dict(
-    seed = "Seed",
-    t = "Doba běhu [s]",
-    cost = "Cena řešení",
-    perm_id = "ID permutace",
-    n_items = "Velikost instance",
-    max_cost = "Maximální cena",
-    max_weight = "Maximální váha",
-    n_instances = "Počet instancí v zadání",
-    granularity = "Granularita",
-    light_heavy_balance = "Rozložení váhy předmětů",
-    capacity_weight_sum_ratio = "Poměr kapacity a součtu vah",
-)
+    plt.style.use("dark_background")
+    fig, ax = plt.subplots(figsize = figsize)
+    ax.plot(range(len(cost_temperature_progression)), [entry[0] for entry in cost_temperature_progression], label = "cost")
+    ax.plot(range(len(cost_temperature_progression)), [entry[1] for entry in cost_temperature_progression], label = "temperature")
+    ax.set_xlabel("iteration")
+    ax.set_title(f"{id}")
+    ax.legend()
 
-alg_labels = dict(
-    bf = "Brute force",
-    bb = "Branch & bound",
-    dpc = "Dynamic programming (cost)",
-    dpw = "Dynamic programming (weight)",
-    redux = "Greedy redux",
-)
+    plt.savefig("docs/assets/whitebox-{}.svg".format(id))
+    plt.close()
+
 ```
 
 Každý graf níže ukazuje jak přesné naměřené hodnoty (barevné kroužky) tak
@@ -589,6 +292,17 @@ pub fn solve_stream<T>(
     }
 }
 
+pub fn load_instances<T>(stream: &mut T) -> Result<Vec<Instance>>
+where T: BufRead {
+    let mut instances = vec![];
+    loop {
+        match parse_line(stream)? {
+            Some(inst) => instances.push(inst),
+            None => return Ok(instances)
+        }
+    }
+}
+
 use std::result::Result as IOResult;
 pub fn list_input_files(set: &str, r: Range<u32>) -> Result<Vec<IOResult<DirEntry, std::io::Error>>> {
     let f = |res: &IOResult<DirEntry, std::io::Error> | res.as_ref().ok().filter(|f| {
@@ -614,6 +328,23 @@ pub fn list_input_files(set: &str, r: Range<u32>) -> Result<Vec<IOResult<DirEntr
 
 <<parser>>
 
+trait IteratorRandomWeighted: Iterator + Sized + Clone {
+    fn choose_weighted<Rng: ?Sized, W>(&mut self, rng: &mut Rng, f: fn(Self::Item) -> W) -> Option<Self::Item>
+    where
+        Rng: rand::Rng,
+        W: for<'a> core::ops::AddAssign<&'a W>
+         + rand::distributions::uniform::SampleUniform
+         + std::cmp::PartialOrd
+         + Default
+         + Clone {
+        use rand::prelude::*;
+        let dist = rand::distributions::WeightedIndex::new(self.clone().map(f)).ok()?;
+        self.nth(dist.sample(rng))
+    }
+}
+
+impl<I> IteratorRandomWeighted for I where I: Iterator + Sized + Clone {}
+
 impl Instance {
     <<solver-dpw>>
 
@@ -628,6 +359,44 @@ impl Instance {
     <<solver-bb>>
 
     <<solver-bf>>
+
+    pub fn simulated_annealing<Rng>(&self, rng: &mut Rng, max_iterations: u32) -> Solution
+    where Rng: rand::Rng + ?Sized {
+        let initial_temperature = self.items.iter().map(|(_, c)| *c as f64).sum::<f64>();
+        let mut sln = Solution::default(self);
+        let mut last_temperature = initial_temperature;
+
+        for iteration in 0..max_iterations {
+            let temperature = last_temperature;
+            println!("    {} {}", sln.cost, temperature);
+
+            let next_sln = (0..self.items.len())
+                // construct the set of neighbouring solutions
+                .map(|i| sln.clone().set(i, !sln.cfg[i]))
+                // penalise overweight solutions
+                .map(|s| Solution {
+                    cost: if s.weight > self.m { 0 } else { s.cost }, ..s
+                })
+                // filter out neighbours with a cost below sln.cost / temperature
+                .filter(|&s| s.cost as f64 * temperature >= sln.cost as f64)
+                // select a neighbour at random
+                // FIXME: this isn't how the algorithm should work. We should
+                // probabilistically *consider* changing the current solution
+                // rather than always replace it.
+                .choose_weighted(rng, |s| f64::exp2(s.cost as f64 / 1000.0));
+            match next_sln {
+                Some(s) => sln = s,
+                None => {
+                    println!("  early return @ {}, temp {}", iteration, temperature);
+                    return sln
+                },
+            }
+            last_temperature = 0.98 * temperature;
+        }
+
+        println!("  iteration limit exhausted");
+        sln
+    }
 }
 
 <<tests>>
@@ -673,13 +442,22 @@ impl <'a> Ord for Solution<'a> {
 
 impl <'a> Solution<'a> {
     fn with(mut self, i: usize) -> Solution<'a> {
+        self.set(i, true)
+    }
+
+    fn without(mut self, i: usize) -> Solution<'a> {
+        self.set(i, false)
+    }
+
+    fn set(&mut self, i: usize, set: bool) -> Solution<'a> {
         let (w, c) = self.inst.items[i];
-        if !self.cfg[i] {
-            self.cfg.set(i, true);
-            self.weight += w;
-            self.cost += c;
+        let k = if set { 1 } else { -1 };
+        if self.cfg[i] != set {
+            self.cfg.set(i, set);
+            self.weight = (self.weight as i32 + k * w as i32) as u32;
+            self.cost   = (self.cost   as i32 + k * c as i32) as u32;
         }
-        self
+        *self
     }
 
     fn default(inst: &'a Instance) -> Solution<'a> {
@@ -1205,12 +983,23 @@ fn main() -> Result<()> {
     let algorithms = get_algorithms();
     let solutions = load_solutions("NK")?;
 
-    let alg = *{
+    let alg = {
         <<select-algorithm>>
     }?;
 
-    for (cost, error) in solve_stream(alg, solutions, &mut stdin().lock())? {
-        println!("{} {}", cost, error.map(|e| e.to_string()).unwrap_or_default());
+    for inst in load_instances(&mut stdin().lock())? {
+        use std::time::Instant;
+        let (now, sln) = match alg {
+            Some(f) => (Instant::now(), f(&inst)),
+            None => {
+                let mut rng: rand_chacha::ChaCha8Rng = rand::SeedableRng::seed_from_u64(42);
+                (Instant::now(), inst.simulated_annealing(&mut rng, 10_000))
+            },
+        };
+        println!("took {} ms", now.elapsed().as_millis());
+        let optimal = &solutions.get(&(inst.items.len() as u32, inst.id));
+        let error = optimal.map(|opt| 1.0 - sln.cost as f64 / opt.cost as f64);
+        println!("{} {}", sln.cost, error.map(|e| e.to_string()).unwrap_or_default());
     }
     Ok(())
 }
@@ -1222,14 +1011,16 @@ Funkci příslušnou vybranému algoritmu vrátíme jako hodnotu tohoto bloku:
 let args: Vec<String> = std::env::args().collect();
 if args.len() == 2 {
     let alg = &args[1][..];
-    if let Some(f) = algorithms.get(alg) {
-        Ok(f)
+    if let Some(&f) = algorithms.get(alg) {
+        Ok(Some(f))
+    } else if alg == "sa" { // simulated annealing
+        Ok(None)
     } else {
         Err(anyhow!("\"{}\" is not a known algorithm", alg))
     }
 } else {
     println!(
-        "Usage: {} <algorithm>\n\twhere <algorithm> is one of {}",
+        "Usage: {} <algorithm>\n\twhere <algorithm> is one of {}\n\tor 'sa' for simulated annealing.",
         args[0],
         algorithms.keys().map(ToString::to_string).collect::<Vec<_>>().join(", ")
     );
@@ -1266,6 +1057,7 @@ mod tests {
 
         fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
             let data = self.clone();
+            #[allow(clippy::needless_collect)]
             let chain: Vec<Instance> = quickcheck::empty_shrinker()
                 .chain(self.id   .shrink().map(|id   | Instance {id,    ..(&data).clone()}))
                 .chain(self.m    .shrink().map(|m    | Instance {m,     ..(&data).clone()}))
@@ -1282,7 +1074,7 @@ mod tests {
             let Instance { m, items, .. } = inst;
 
             let (computed_weight, computed_cost) = items
-                .into_iter()
+                .iter()
                 .zip(cfg)
                 .map(|((w, c), b)| {
                     if *b { (*w, *c) } else { (0, 0) }
@@ -1324,7 +1116,7 @@ mod tests {
 
         let mut files = list_input_files("NK", 0..5)?.into_iter();
         // make sure `files` is not empty
-        let first = files.next().ok_or(anyhow!("no instance files loaded"))?;
+        let first = files.next().ok_or_else(|| anyhow!("no instance files loaded"))?;
         for file in vec![first].into_iter().chain(files) {
             let file = file?;
             println!("Testing {}", file.file_name().to_str().unwrap());
