@@ -173,7 +173,6 @@ def invoke_solver(input):
     solver = run(
         ["target/release/main", "sa"],
         stdout = PIPE,
-        stderr = PIPE,
         input = input,
         encoding = "ascii",
         cwd = "solver/"
@@ -190,26 +189,36 @@ def invoke_solver(input):
 
 # load the input
 input = None
-with open("solver/ds/NK15_inst.dat", "r") as f:
+with open("solver/ds/NK35_inst.dat", "r") as f:
     input = f.read()
 
+errors = []
 for instance in input.split("\n")[:8]:
     id = instance.split()[0]
     (t, cost, err, cost_temperature_progression) = invoke_solver(instance)
+    errors.append(err)
+    print("took", t, "ms")
+
     # plot the cost / temperature progression:
     # we have two line graphs in a single plot
     # the x axis is just the index in the list
 
     plt.style.use("dark_background")
     fig, ax = plt.subplots(figsize = figsize)
-    ax.plot(range(len(cost_temperature_progression)), [entry[0] for entry in cost_temperature_progression], label = "cost")
-    ax.plot(range(len(cost_temperature_progression)), [entry[1] for entry in cost_temperature_progression], label = "temperature")
+    for (i, label) in zip(range(42), ["cost", "best cost", "temperature"]):
+        ax.plot(
+            range(len(cost_temperature_progression)),
+            [entry[i] for entry in cost_temperature_progression],
+            label = label,
+        )
     ax.set_xlabel("iteration")
-    ax.set_title(f"{id}")
-    ax.legend()
+    ax.set_title(f"instance {id} with error {err}")
+    ax.legend(loc = "lower right")
 
     plt.savefig("docs/assets/whitebox-{}.svg".format(id))
     plt.close()
+
+print(*errors, sep = "\n")
 
 ```
 
@@ -362,40 +371,75 @@ impl Instance {
 
     pub fn simulated_annealing<Rng>(&self, rng: &mut Rng, max_iterations: u32) -> Solution
     where Rng: rand::Rng + ?Sized {
-        let initial_temperature = self.items.iter().map(|(_, c)| *c as f64).sum::<f64>();
-        let mut sln = Solution::default(self);
-        let mut last_temperature = initial_temperature;
+        let total_cost = self.items.iter().map(|(_, c)| c).sum::<u32>() as f64;
+        let mut current = self.greedy_redux();
+        let mut best = current;
+        let mut temperature = self.greedy_redux().cost as f64;
+        let scaling_factor = 0.995;
 
-        for iteration in 0..max_iterations {
-            let temperature = last_temperature;
-            println!("    {} {}", sln.cost, temperature);
+        let mut iteration = 0;
+        let frozen = |t| t < 0.00001;
+        let equilibrium = |i| i % (self.items.len() as u32 / 4) == 0;
 
-            let next_sln = (0..self.items.len())
-                // construct the set of neighbouring solutions
-                .map(|i| sln.clone().set(i, !sln.cfg[i]))
-                // penalise overweight solutions
-                .map(|s| Solution {
-                    cost: if s.weight > self.m { 0 } else { s.cost }, ..s
-                })
-                // filter out neighbours with a cost below sln.cost / temperature
-                .filter(|&s| s.cost as f64 * temperature >= sln.cost as f64)
-                // select a neighbour at random
-                // FIXME: this isn't how the algorithm should work. We should
-                // probabilistically *consider* changing the current solution
-                // rather than always replace it.
-                .choose_weighted(rng, |s| f64::exp2(s.cost as f64 / 1000.0));
-            match next_sln {
-                Some(s) => sln = s,
-                None => {
-                    println!("  early return @ {}, temp {}", iteration, temperature);
-                    return sln
-                },
+        while !frozen(temperature) {
+            let temp = temperature;
+            loop {
+                use rand::prelude::IteratorRandom;
+                println!("    {} {} {}", current.cost, best.cost, temp);
+
+                let next_sln = (0..self.items.len())
+                    // construct the set of neighbouring solutions: generate n
+                    // solutions, each with one item different to the current
+                    // solution (included or excluded)
+                    .map(|i| current.clone().set(i, !current.cfg[i]))
+                    // also add a complete flip as an option
+                    .chain(std::iter::once(current.invert()))
+                    // select a neighbour at random
+                    .choose(rng);
+                match next_sln {
+                    Some(new) if new.weight <= self.m => {
+                        let delta = (new.cost as f64 - current.cost as f64) / total_cost;
+                        let rnd = rng.gen_range(0.0 .. 1.0);
+                        let threshold = (delta / temp).exp();
+                        if delta <= 0.0 {
+                            eprintln!(
+                                "considering {} (current {}),\tdelta {}, rnd {}, temp {},\t(will {} against {})",
+                                new.cost,
+                                current.cost,
+                                delta,
+                                rnd,
+                                temp,
+                                if rnd < threshold { "succeed" } else { "fail" },
+                                threshold,
+                            );
+                        }
+
+                        if  delta > 0.0 // the new state is better, accept it right away
+                        || // otherwise accept with probability proportional to the cost delta and the temp
+                           rnd < threshold {
+                            current = new;
+                            if current.cost > best.cost {
+                                best = current;
+                            }
+                        }
+                    },
+                    None => {
+                        println!("  early return @ {}, temp {}", iteration, temp);
+                        return best
+                    },
+                    _ => ()
+                };
+                iteration += 1;
+                temperature *= scaling_factor;
+                if iteration >= max_iterations {
+                    println!("  iteration limit exhausted");
+                    return best
+                } else if equilibrium(iteration) { break }
             }
-            last_temperature = 0.98 * temperature;
         }
 
-        println!("  iteration limit exhausted");
-        sln
+        println!("  frozen @ {}, temp {}", iteration, temperature / scaling_factor);
+        best
     }
 }
 
@@ -447,6 +491,13 @@ impl <'a> Solution<'a> {
 
     fn without(mut self, i: usize) -> Solution<'a> {
         self.set(i, false)
+    }
+
+    fn invert(mut self) -> Solution<'a> {
+        for i in 0..self.inst.items.len() {
+            self.set(i, !self.cfg[i]);
+        }
+        self
     }
 
     fn set(&mut self, i: usize, set: bool) -> Solution<'a> {

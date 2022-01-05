@@ -124,6 +124,13 @@ impl <'a> Solution<'a> {
         self.set(i, false)
     }
 
+    fn invert(mut self) -> Solution<'a> {
+        for i in 0..self.inst.items.len() {
+            self.set(i, !self.cfg[i]);
+        }
+        self
+    }
+
     fn set(&mut self, i: usize, set: bool) -> Solution<'a> {
         let (w, c) = self.inst.items[i];
         let k = if set { 1 } else { -1 };
@@ -428,47 +435,74 @@ impl Instance {
 
     pub fn simulated_annealing<Rng>(&self, rng: &mut Rng, max_iterations: u32) -> Solution
     where Rng: rand::Rng + ?Sized {
-        let initial_temperature = self.items.iter().map(|(_, c)| *c as f64).sum::<f64>();
-        let equilibrium_length = 2 * self.items.len() as u32;
-        let mut current = Solution::default(self);
+        let total_cost = self.items.iter().map(|(_, c)| c).sum::<u32>() as f64;
+        let mut current = self.greedy_redux();
         let mut best = current;
-        let mut temperature = 500.0;
-        let mut temp = temperature;
+        let mut temperature = self.greedy_redux().cost as f64;
+        let scaling_factor = 0.995;
 
-        for iteration in 0..max_iterations {
-            use rand::prelude::IteratorRandom;
-            if iteration % equilibrium_length == 0 { temp = temperature }
-            println!("    {} {} {}", current.cost, best.cost, temp);
+        let mut iteration = 0;
+        let frozen = |t| t < 0.00001;
+        let equilibrium = |i| i % (self.items.len() as u32 / 4) == 0;
 
-            let next_sln = (0..self.items.len())
-                // construct the set of neighbouring solutions
-                .map(|i| current.clone().set(i, !current.cfg[i]))
-                // filter out neighbours with a cost below sln.cost / temp
-                // .filter(|&s| s.cost as f64 * temp >= sln.cost as f64)
-                // select a neighbour at random
-                .choose(rng);
-            match next_sln {
-                Some(s) => {
-                    let delta = (s.cost - current.cost) as f64;
-                    if s.weight < self.m &&
-                        (delta > 0.0 // the new state is better, accept it right away
-                         || // otherwise accept with probability proportional to the cost delta and the temp
-                         rng.gen_range(0.0 .. 1.0) > (delta / temp).exp()) {
-                        current = s;
-                        if current.cost > best.cost {
-                            best = current;
+        while !frozen(temperature) {
+            let temp = temperature;
+            loop {
+                use rand::prelude::IteratorRandom;
+                println!("    {} {} {}", current.cost, best.cost, temp);
+
+                let next_sln = (0..self.items.len())
+                    // construct the set of neighbouring solutions: generate n
+                    // solutions, each with one item different to the current
+                    // solution (included or excluded)
+                    .map(|i| current.clone().set(i, !current.cfg[i]))
+                    // also add a complete flip as an option
+                    .chain(std::iter::once(current.invert()))
+                    // select a neighbour at random
+                    .choose(rng);
+                match next_sln {
+                    Some(new) if new.weight <= self.m => {
+                        let delta = (new.cost as f64 - current.cost as f64) / total_cost;
+                        let rnd = rng.gen_range(0.0 .. 1.0);
+                        let threshold = (delta / temp).exp();
+                        if delta <= 0.0 {
+                            eprintln!(
+                                "considering {} (current {}),\tdelta {}, rnd {}, temp {},\t(will {} against {})",
+                                new.cost,
+                                current.cost,
+                                delta,
+                                rnd,
+                                temp,
+                                if rnd < threshold { "succeed" } else { "fail" },
+                                threshold,
+                            );
                         }
-                    }
-                },
-                None => {
-                    println!("  early return @ {}, temp {}", iteration, temp);
+
+                        if  delta > 0.0 // the new state is better, accept it right away
+                        || // otherwise accept with probability proportional to the cost delta and the temp
+                           rnd < threshold {
+                            current = new;
+                            if current.cost > best.cost {
+                                best = current;
+                            }
+                        }
+                    },
+                    None => {
+                        println!("  early return @ {}, temp {}", iteration, temp);
+                        return best
+                    },
+                    _ => ()
+                };
+                iteration += 1;
+                temperature *= scaling_factor;
+                if iteration >= max_iterations {
+                    println!("  iteration limit exhausted");
                     return best
-                },
+                } else if equilibrium(iteration) { break }
             }
-            temperature *= 0.9;
         }
 
-        println!("  iteration limit exhausted");
+        println!("  frozen @ {}, temp {}", iteration, temperature / scaling_factor);
         best
     }
 }

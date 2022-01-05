@@ -24,7 +24,6 @@ def invoke_solver(input):
     solver = run(
         ["target/release/main", "sa"],
         stdout = PIPE,
-        stderr = PIPE,
         input = input,
         encoding = "ascii",
         cwd = "solver/"
@@ -41,27 +40,36 @@ def invoke_solver(input):
 
 # load the input
 input = None
-with open("solver/ds/NK15_inst.dat", "r") as f:
+with open("solver/ds/NK35_inst.dat", "r") as f:
     input = f.read()
 
+errors = []
 for instance in input.split("\n")[:8]:
     id = instance.split()[0]
     (t, cost, err, cost_temperature_progression) = invoke_solver(instance)
+    errors.append(err)
+    print("took", t, "ms")
+
     # plot the cost / temperature progression:
     # we have two line graphs in a single plot
     # the x axis is just the index in the list
 
     plt.style.use("dark_background")
     fig, ax = plt.subplots(figsize = figsize)
-    ax.plot(range(len(cost_temperature_progression)), [entry[0] for entry in cost_temperature_progression], label = "cost")
-    ax.plot(range(len(cost_temperature_progression)), [entry[1] for entry in cost_temperature_progression], label = "best cost")
-    ax.plot(range(len(cost_temperature_progression)), [entry[2] for entry in cost_temperature_progression], label = "temperature")
+    for (i, label) in zip(range(42), ["cost", "best cost", "temperature"]):
+        ax.plot(
+            range(len(cost_temperature_progression)),
+            [entry[i] for entry in cost_temperature_progression],
+            label = label,
+        )
     ax.set_xlabel("iteration")
-    ax.set_title(f"{id}")
+    ax.set_title(f"instance {id} with error {err}")
     ax.legend(loc = "lower right")
 
     plt.savefig("docs/assets/whitebox-{}.svg".format(id))
     plt.close()
+
+print(*errors, sep = "\n")
 
 # ~\~ end
 # ~\~ end
