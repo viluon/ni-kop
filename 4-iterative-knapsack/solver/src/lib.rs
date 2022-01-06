@@ -433,13 +433,12 @@ impl Instance {
     }
     // ~\~ end
 
-    pub fn simulated_annealing<Rng>(&self, rng: &mut Rng, max_iterations: u32) -> Solution
+    pub fn simulated_annealing<Rng>(&self, rng: &mut Rng, (max_iterations, scaling_factor): (u32, f64)) -> Solution
     where Rng: rand::Rng + ?Sized {
         let total_cost = self.items.iter().map(|(_, c)| c).sum::<u32>() as f64;
         let mut current = self.greedy_redux();
         let mut best = current;
         let mut temperature = self.greedy_redux().cost as f64;
-        let scaling_factor = 0.995;
 
         let mut iteration = 0;
         let frozen = |t| t < 0.00001;

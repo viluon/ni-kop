@@ -10,16 +10,22 @@ fn main() -> Result<()> {
     let algorithms = get_algorithms();
     let solutions = load_solutions("NK")?;
 
+    enum Either<A, B> { Left(A), Right(B) }
+    use  Either::*;
+
     let alg = {
         // ~\~ begin <<lit/main.md|select-algorithm>>[0]
         let args: Vec<String> = std::env::args().collect();
-        if args.len() == 2 {
+        if args.len() >= 2 {
             let alg = &args[1][..];
             if let Some(&f) = algorithms.get(alg) {
-                Ok(Some(f))
-            } else if alg == "sa" { // simulated annealing
-                Ok(None)
-            } else {
+                Ok(Right(f))
+            } else if alg == "sa" { #[allow(clippy::or_fun_call)] { // simulated annealing
+                let mut iter = args[2..].iter().map(|str| &str[..]);
+                let max_iterations = iter.next().ok_or(anyhow!("not enough params"))?.parse()?;
+                let scaling_factor = iter.next().ok_or(anyhow!("not enough params"))?.parse()?;
+                Ok(Left((max_iterations, scaling_factor)))
+            } } else {
                 Err(anyhow!("\"{}\" is not a known algorithm", alg))
             }
         } else {
@@ -36,10 +42,10 @@ fn main() -> Result<()> {
     for inst in load_instances(&mut stdin().lock())? {
         use std::time::Instant;
         let (now, sln) = match alg {
-            Some(f) => (Instant::now(), f(&inst)),
-            None => {
+            Right(f) => (Instant::now(), f(&inst)),
+            Left(cfg) => {
                 let mut rng: rand_chacha::ChaCha8Rng = rand::SeedableRng::seed_from_u64(42);
-                (Instant::now(), inst.simulated_annealing(&mut rng, 10_000))
+                (Instant::now(), inst.simulated_annealing(&mut rng, cfg))
             },
         };
         println!("took {} ms", now.elapsed().as_millis());
