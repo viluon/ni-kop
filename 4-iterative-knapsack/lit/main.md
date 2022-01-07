@@ -26,7 +26,7 @@ Nepočítejte s tím, že kromě kódu přeberete i konkrétní hodnoty parametr
 
 ### Algoritmy k výběru
 
-- Simulované ochlazování
+- **Simulované ochlazování**
 - Genetické algoritmy
 - Tabu search
 
@@ -82,6 +82,8 @@ dokument obsahuje veškerý zdrojový kód nutný k reprodukci mojí práce. Vý
 je dostupný online jako statická [webová stránka](http://viluon.me/ni-kop/) a
 [ke stažení v PDF](http://viluon.me/ni-kop/report.pdf).
 
+Pro tento úkol jsem zvolil algoritmus simulovaného žíhání (taktéž ochlazování).
+
 ## Instrukce k sestavení programu
 Program využívá standardních nástrojů jazyka Rust. O sestavení stačí požádat
 `cargo`.
@@ -100,26 +102,18 @@ make all
 
 ## Benchmarking
 
-V této úloze jsem se s měřením výkonu nespoléhal na existující Rust knihovny a
-namísto toho provedl měření v Pythonu.
+Stejně jako v předchozí úloze jsem se ani tentokrát s měřením výkonu nespoléhal
+na existující Rust knihovny a namísto toho provedl měření v Pythonu.
 
 ``` {.zsh .eval #machine-info .bootstrap-fold}
 uname -a
 ./cpufetch --logo-short --color ibm
 ```
 
-### Srovnání algoritmů
+### White box: průzkum chování algoritmu
 
-Následující seznam poskytuje přehled implementovaných algoritmů. Jednoduchý
-hladový přístup ani žádná z variant FPTAS nebyly součástí experimentů.
-
-- [`bb`](#branch--bound) -- metoda větví a hranic
-- [`dpc`](#dynamické-programování) -- dynamické programování s rozkladem podle ceny
-- [`dpw`](#dynamické-programování) -- dynamické programování s rozkladem podle váhy
-- [`fptas1`](#fptas) -- FPTAS (postavený na `dpc`) pro $\varepsilon = 0.1$
-- [`fptas2`](#fptas) -- FPTAS (postavený na `dpc`) pro $\varepsilon = 0.01$
-- [`greedy`](#hladový-přístup) -- hladový algoritmus podle heuristiky poměru cena/váha
-- [`redux`](#hladový-přístup----redux) -- `greedy` + řešení pouze s nejdražším předmětem
+Průzkumná fáze práce má za cíl odhalit vztahy mezi jednotlivými parametry
+algoritmu a najít pro ně vhodné hodnoty.
 
 ```{.python #python-imports .bootstrap-fold}
 import matplotlib.pyplot as plt
@@ -137,9 +131,8 @@ import textwrap as tr
 ```
 
 Skript `charts.py` je zodpovědný nejen za vykreslování grafů, ale také za
-generování vstupních instancí, spouštění řešiče a měření času, který problém
-řešiči zabere. Při spuštění v terminálu skript zároveň hlásí průběžný postup
-měření.
+načítání vstupních instancí, spouštění řešiče a měření času, který problém
+řešiči zabere.
 
 ```{.python .eval file=analysis/charts.py}
 <<python-imports>>
@@ -160,9 +153,8 @@ algoritmus. Parametr `n_repetitions` určuje kolikrát změřit jednu konfigurac
 (stejná instance, stejná permutace, stejný algoritmus) -- měření provádíme
 vícekrát, abychom odhalili chyby měření.
 
-Výkon každého algoritmu je na instancích měřen jednotlivě, tj. generátor
-instancí je vždy instruován k výpisu jediné instance, která je následně
-permutována jak je potřeba a nakonec předána příslušnému řešiči.
+Výkon každého algoritmu je na instancích měřen jednotlivě, tj. řešiči předáme
+jedinou instanci.
 
 ```{.python #performance-chart .bootstrap-fold}
 # plot the measurements
@@ -195,16 +187,16 @@ with open("solver/ds/NK35_inst.dat", "r") as f:
 errors = []
 for cfg in product(
     # max iterations
-    # ["15000"],
-    ["3000"],
+    # ["18000"],
+    ["8000"],
     # scaling factor
-    ["0.85", "0.9", "0.95", "0.99", "0.991", "0.992", "0.993", "0.994", "0.995", "0.997"],
+    ["0.85", "0.9", "0.95", "0.99", "0.992", "0.994", "0.996", "0.997", "0.998", "0.999"],
     # temperature modifier
-    ["1"],
+    ["0.7"],
 ):
     print(cfg)
     params = '-'.join(cfg)
-    for instance in input.split("\n")[:10]:
+    for instance in input.split("\n")[:20]:
         id = instance.split()[0]
         (t, cost, err, cost_temperature_progression) = invoke_solver(instance, cfg)
         errors.append({"scaling factor": cfg[1], "error": err})
@@ -238,7 +230,7 @@ df["mean error"] = df["scaling factor"].map(series)
 # plot the error distributions for each scaling factor
 plt.style.use("default")
 sns.set_theme(style = "white", rc = {"axes.facecolor": (0, 0, 0, 0)})
-pal = sns.color_palette("crest", n_colors = len(set([e["scaling factor"] for e in errors])))
+pal = sns.color_palette("crest", n_colors = len(df["scaling factor"].unique()))
 
 # set up the layout
 g = sns.FacetGrid(
@@ -260,8 +252,8 @@ g.map(plt.axhline, y = 0, lw = 2, clip_on = False)
 g.fig.subplots_adjust(hspace = -0.3)
 
 for i, ax in enumerate(g.axes.flat):
-    ax.text(-0.125, 1, df["scaling factor"].unique()[i],
-            fontsize = 15, color = ax.lines[-1].get_color())
+    ax.text(-0.125, 2, df["scaling factor"].unique()[i],
+            fontsize = 15, color = ax.lines[-1].get_color(), va = "baseline")
 
 # remove titles, y ticks, spines
 g.set_titles("")
@@ -275,50 +267,13 @@ g.set_ylabels("")
 
 g.savefig("docs/assets/whitebox-error-distributions.svg")
 
-# sns.kdeplot([100 * e for e in errors], shade = True)
-# plt.savefig(f"docs/assets/whitebox-overview-{params}.svg")
-# plt.close()
-
 ```
 
-Každý graf níže ukazuje jak přesné naměřené hodnoty (barevné kroužky) tak
-statistická data v podobě boxů značících hodnoty druhého a třetího kvartálu.
-Fousky nad a pod každým boxem znázorňují opravdový rozsah příslušných dat, vyjma
-odlehlých hodnot značených diamanty.
 
-Pod každým grafem je zároveň přehled parametrů, které jsou pro všechny
-znázorněné body konstantní. Jejich zápis není zrovna nejpřehlednější, ale názvy
-parametrů jsou samozřejmé. Jeden z nejdůležitějších parametrů je `n_items`
-(počet předmětů v instanci).
 
-![Robustnost metody větví a hranic, dynamického programování s rozkladem podle
-váhy, hrubé síly a hladové heuristiky.](assets/branch_and_bound_robustness.svg)
+### Black box: vyhodnocení hustoty chyb
 
-![Robustnost výše uvedených algoritmů podle ceny řešení. Žádný z měřených
-algoritmů nevykazuje známky závislosti na zápisu
-instance.](assets/branch_and_bound_robustness_cost.svg)
 
-![Závislost doby běhu na poměru kapacity a součtu vah předmětů. Nelineárně se
-prokazuje u metody větví a hranic, lineární závislost je zřejmá u dynamického
-programování s rozkladem podle váhy.
-](assets/capacity_weight_sum_ratio_exploration.svg)
-
-![Závislost doby běhu na maximální ceně předmětů. Očekávané zhoršení výkonu
-dynamického programování s rozkladem podle ceny je jasně
-vidět.](assets/cost_range.svg)
-
-![Závislost doby běhu na maximální váze předmětů. Očekávané zhoršení výkonu je
-znovu vidět u dynamického programování, tentokrát s rozkladem podle
-váhy.](assets/weight_range.svg)
-
-![Závislost doby běhu na granularitě s preferencí těžších
-předmětů.](assets/granularity_exploration_heavy.svg)
-
-![Závislost doby běhu na granularitě s preferencí lehčích
-předmětů.](assets/granularity_exploration_light.svg)
-
-![Závislost doby běhu na počtu předmětů v instanci. Tento vztah už důvěrně známe
-z předchozích úkolů.](assets/n_items_range.svg)
 
 ## Implementace
 
@@ -842,7 +797,14 @@ fn fptas(&self, eps: f64) -> Solution {
 
 ## Závěr
 
-**TODO**
+Implementoval jsem metodu simulovaného žíhání (alias ochlazování) a prozkoumal
+jsem její pro a proti. S vhodným nastavením parametrů nachází výrazně lepší
+řešení než hladové heuristiky a lze využít pro iterativní zlepšování
+existujících řešení (např. z greedy redux). Počáteční teplota a hranice
+maximálního počtu iterací navíc dovolují vhodně omezit výpočetní náročnost na
+úkor kvality nalezených řešení. Je ovšem třeba dát si pozor na interakci
+jednotlivých parametrů, např. aby nízký koeficient chlazení nevedl k předčasnému
+ukončení algoritmu.
 
 ## Appendix
 

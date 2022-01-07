@@ -46,16 +46,16 @@ with open("solver/ds/NK35_inst.dat", "r") as f:
 errors = []
 for cfg in product(
     # max iterations
-    # ["15000"],
-    ["3000"],
+    # ["18000"],
+    ["8000"],
     # scaling factor
-    ["0.85", "0.9", "0.95", "0.99", "0.991", "0.992", "0.993", "0.994", "0.995", "0.997"],
+    ["0.85", "0.9", "0.95", "0.99", "0.992", "0.994", "0.996", "0.997", "0.998", "0.999"],
     # temperature modifier
-    ["1"],
+    ["0.7"],
 ):
     print(cfg)
     params = '-'.join(cfg)
-    for instance in input.split("\n")[:10]:
+    for instance in input.split("\n")[:20]:
         id = instance.split()[0]
         (t, cost, err, cost_temperature_progression) = invoke_solver(instance, cfg)
         errors.append({"scaling factor": cfg[1], "error": err})
@@ -89,7 +89,7 @@ df["mean error"] = df["scaling factor"].map(series)
 # plot the error distributions for each scaling factor
 plt.style.use("default")
 sns.set_theme(style = "white", rc = {"axes.facecolor": (0, 0, 0, 0)})
-pal = sns.color_palette("crest", n_colors = len(set([e["scaling factor"] for e in errors])))
+pal = sns.color_palette("crest", n_colors = len(df["scaling factor"].unique()))
 
 # set up the layout
 g = sns.FacetGrid(
@@ -111,8 +111,8 @@ g.map(plt.axhline, y = 0, lw = 2, clip_on = False)
 g.fig.subplots_adjust(hspace = -0.3)
 
 for i, ax in enumerate(g.axes.flat):
-    ax.text(-0.125, 1, df["scaling factor"].unique()[i],
-            fontsize = 15, color = ax.lines[-1].get_color())
+    ax.text(-0.125, 2, df["scaling factor"].unique()[i],
+            fontsize = 15, color = ax.lines[-1].get_color(), va = "baseline")
 
 # remove titles, y ticks, spines
 g.set_titles("")
@@ -125,10 +125,6 @@ g.set_xlabels("Chyba oproti optimálnímu řešení [%]")
 g.set_ylabels("")
 
 g.savefig("docs/assets/whitebox-error-distributions.svg")
-
-# sns.kdeplot([100 * e for e in errors], shade = True)
-# plt.savefig(f"docs/assets/whitebox-overview-{params}.svg")
-# plt.close()
 
 # ~\~ end
 # ~\~ end
