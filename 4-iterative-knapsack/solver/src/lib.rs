@@ -149,6 +149,12 @@ impl <'a> Solution<'a> {
     fn overweight(inst: &'a Instance) -> Solution<'a> {
         Solution { weight: u32::MAX, cost: 0, cfg: Config::default(), inst }
     }
+
+    fn trim<Rng: ?Sized>(&mut self, rng: &mut Rng) where Rng: rand::Rng {
+        while self.weight > self.inst.m {
+            self.set(rng.gen_range(0..self.inst.items.len()), false);
+        }
+    }
 }
 // ~\~ end
 // ~\~ end
@@ -433,12 +439,16 @@ impl Instance {
     }
     // ~\~ end
 
-    pub fn simulated_annealing<Rng>(&self, rng: &mut Rng, (max_iterations, scaling_factor): (u32, f64)) -> Solution
+    pub fn simulated_annealing<Rng>(
+        &self,
+        rng: &mut Rng,
+        (max_iterations, scaling_factor, temp_modifier): (u32, f64, f64)
+    ) -> Solution
     where Rng: rand::Rng + ?Sized {
         let total_cost = self.items.iter().map(|(_, c)| c).sum::<u32>() as f64;
         let mut current = self.greedy_redux();
         let mut best = current;
-        let mut temperature = self.greedy_redux().cost as f64;
+        let mut temperature = temp_modifier * self.greedy_redux().cost as f64;
 
         let mut iteration = 0;
         let frozen = |t| t < 0.00001;
@@ -460,7 +470,8 @@ impl Instance {
                     // select a neighbour at random
                     .choose(rng);
                 match next_sln {
-                    Some(new) if new.weight <= self.m => {
+                    Some(mut new) => {
+                        new.trim(rng);
                         let delta = (new.cost as f64 - current.cost as f64) / total_cost;
                         let rnd = rng.gen_range(0.0 .. 1.0);
                         let threshold = (delta / temp).exp();
@@ -490,7 +501,6 @@ impl Instance {
                         println!("  early return @ {}, temp {}", iteration, temp);
                         return best
                     },
-                    _ => ()
                 };
                 iteration += 1;
                 temperature *= scaling_factor;

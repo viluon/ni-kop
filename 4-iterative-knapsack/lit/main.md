@@ -169,9 +169,9 @@ permutována jak je potřeba a nakonec předána příslušnému řešiči.
 
 figsize = (14, 8)
 
-def invoke_solver(input):
+def invoke_solver(input, cfg):
     solver = run(
-        ["target/release/main", "sa"],
+        ["target/release/main", "sa"] + list(cfg),
         stdout = PIPE,
         input = input,
         encoding = "ascii",
@@ -193,32 +193,91 @@ with open("solver/ds/NK35_inst.dat", "r") as f:
     input = f.read()
 
 errors = []
-for instance in input.split("\n")[:8]:
-    id = instance.split()[0]
-    (t, cost, err, cost_temperature_progression) = invoke_solver(instance)
-    errors.append(err)
-    print("took", t, "ms")
+for cfg in product(
+    # max iterations
+    # ["15000"],
+    ["3000"],
+    # scaling factor
+    ["0.85", "0.9", "0.95", "0.99", "0.991", "0.992", "0.993", "0.994", "0.995", "0.997"],
+    # temperature modifier
+    ["1"],
+):
+    print(cfg)
+    params = '-'.join(cfg)
+    for instance in input.split("\n")[:10]:
+        id = instance.split()[0]
+        (t, cost, err, cost_temperature_progression) = invoke_solver(instance, cfg)
+        errors.append({"scaling factor": cfg[1], "error": err})
+        print("took", t, "ms")
 
-    # plot the cost / temperature progression:
-    # we have two line graphs in a single plot
-    # the x axis is just the index in the list
+        # plot the cost / temperature progression:
+        # we have two line graphs in a single plot
+        # the x axis is just the index in the list
 
-    plt.style.use("dark_background")
-    fig, ax = plt.subplots(figsize = figsize)
-    for (i, label) in zip(range(42), ["cost", "best cost", "temperature"]):
-        ax.plot(
-            range(len(cost_temperature_progression)),
-            [entry[i] for entry in cost_temperature_progression],
-            label = label,
-        )
-    ax.set_xlabel("iteration")
-    ax.set_title(f"instance {id} with error {err}")
-    ax.legend(loc = "lower right")
+        plt.style.use("dark_background")
+        fig, ax = plt.subplots(figsize = figsize)
+        for (i, label) in zip(range(42), ["cost", "best cost", "temperature"]):
+            ax.plot(
+                range(len(cost_temperature_progression)),
+                [entry[i] for entry in cost_temperature_progression],
+                label = label,
+            )
+        ax.set_xlabel("iteration")
+        ax.set_title(f"instance {id} with error {err}")
+        ax.legend(loc = "lower right")
 
-    plt.savefig("docs/assets/whitebox-{}.svg".format(id))
-    plt.close()
+        plt.savefig(f"docs/assets/whitebox-{params}-{id}.svg")
+        plt.close()
 
 print(*errors, sep = "\n")
+
+df = pd.DataFrame(errors)
+series = df.groupby("scaling factor")["error"].mean()
+df["mean error"] = df["scaling factor"].map(series)
+
+# plot the error distributions for each scaling factor
+plt.style.use("default")
+sns.set_theme(style = "white", rc = {"axes.facecolor": (0, 0, 0, 0)})
+pal = sns.color_palette("crest", n_colors = len(set([e["scaling factor"] for e in errors])))
+
+# set up the layout
+g = sns.FacetGrid(
+    df,
+    row = "scaling factor",
+    hue = "mean error",
+    palette = pal,
+    height = 0.75,
+    aspect = 15,
+)
+plt.xlim(-0.1, 1.0)
+# distributions
+g.map(sns.kdeplot, "error", clip = (-0.1, 1.0), bw_adjust = 1, clip_on = False, fill = True, alpha = 1, linewidth = 0.1)
+# contours
+g.map(sns.kdeplot, "error", clip = (-0.1, 1.0), bw_adjust = 1, clip_on = False, color = "w", lw = 1)
+# horizontal lines
+g.map(plt.axhline, y = 0, lw = 2, clip_on = False)
+# overlap
+g.fig.subplots_adjust(hspace = -0.3)
+
+for i, ax in enumerate(g.axes.flat):
+    ax.text(-0.125, 1, df["scaling factor"].unique()[i],
+            fontsize = 15, color = ax.lines[-1].get_color())
+
+# remove titles, y ticks, spines
+g.set_titles("")
+g.set(yticks = [])
+g.despine(left = True, bottom = True)
+g.fig.suptitle("Vliv koeficientu chlazení na hustotu chyb", fontsize = 20, ha = "right")
+for ax in g.axes.flat:
+    ax.xaxis.set_major_formatter(lambda x, pos: f"{x * 100:.0f}")
+g.set_xlabels("Chyba oproti optimálnímu řešení [%]")
+g.set_ylabels("")
+
+g.savefig("docs/assets/whitebox-error-distributions.svg")
+
+# sns.kdeplot([100 * e for e in errors], shade = True)
+# plt.savefig(f"docs/assets/whitebox-overview-{params}.svg")
+# plt.close()
 
 ```
 
@@ -369,13 +428,16 @@ impl Instance {
 
     <<solver-bf>>
 
-    pub fn simulated_annealing<Rng>(&self, rng: &mut Rng, max_iterations: u32) -> Solution
+    pub fn simulated_annealing<Rng>(
+        &self,
+        rng: &mut Rng,
+        (max_iterations, scaling_factor, temp_modifier): (u32, f64, f64)
+    ) -> Solution
     where Rng: rand::Rng + ?Sized {
         let total_cost = self.items.iter().map(|(_, c)| c).sum::<u32>() as f64;
         let mut current = self.greedy_redux();
         let mut best = current;
-        let mut temperature = self.greedy_redux().cost as f64;
-        let scaling_factor = 0.995;
+        let mut temperature = temp_modifier * self.greedy_redux().cost as f64;
 
         let mut iteration = 0;
         let frozen = |t| t < 0.00001;
@@ -397,7 +459,8 @@ impl Instance {
                     // select a neighbour at random
                     .choose(rng);
                 match next_sln {
-                    Some(new) if new.weight <= self.m => {
+                    Some(mut new) => {
+                        new.trim(rng);
                         let delta = (new.cost as f64 - current.cost as f64) / total_cost;
                         let rnd = rng.gen_range(0.0 .. 1.0);
                         let threshold = (delta / temp).exp();
@@ -427,7 +490,6 @@ impl Instance {
                         println!("  early return @ {}, temp {}", iteration, temp);
                         return best
                     },
-                    _ => ()
                 };
                 iteration += 1;
                 temperature *= scaling_factor;
@@ -517,6 +579,12 @@ impl <'a> Solution<'a> {
 
     fn overweight(inst: &'a Instance) -> Solution<'a> {
         Solution { weight: u32::MAX, cost: 0, cfg: Config::default(), inst }
+    }
+
+    fn trim<Rng: ?Sized>(&mut self, rng: &mut Rng) where Rng: rand::Rng {
+        while self.weight > self.inst.m {
+            self.set(rng.gen_range(0..self.inst.items.len()), false);
+        }
     }
 }
 ```
@@ -1034,6 +1102,9 @@ fn main() -> Result<()> {
     let algorithms = get_algorithms();
     let solutions = load_solutions("NK")?;
 
+    enum Either<A, B> { Left(A), Right(B) }
+    use  Either::*;
+
     let alg = {
         <<select-algorithm>>
     }?;
@@ -1041,10 +1112,10 @@ fn main() -> Result<()> {
     for inst in load_instances(&mut stdin().lock())? {
         use std::time::Instant;
         let (now, sln) = match alg {
-            Some(f) => (Instant::now(), f(&inst)),
-            None => {
+            Right(f) => (Instant::now(), f(&inst)),
+            Left(cfg) => {
                 let mut rng: rand_chacha::ChaCha8Rng = rand::SeedableRng::seed_from_u64(42);
-                (Instant::now(), inst.simulated_annealing(&mut rng, 10_000))
+                (Instant::now(), inst.simulated_annealing(&mut rng, cfg))
             },
         };
         println!("took {} ms", now.elapsed().as_millis());
@@ -1060,13 +1131,17 @@ Funkci příslušnou vybranému algoritmu vrátíme jako hodnotu tohoto bloku:
 
 ``` {.rust #select-algorithm .bootstrap-fold}
 let args: Vec<String> = std::env::args().collect();
-if args.len() == 2 {
+if args.len() >= 2 {
     let alg = &args[1][..];
     if let Some(&f) = algorithms.get(alg) {
-        Ok(Some(f))
-    } else if alg == "sa" { // simulated annealing
-        Ok(None)
-    } else {
+        Ok(Right(f))
+    } else if alg == "sa" { #[allow(clippy::or_fun_call)] { // simulated annealing
+        let mut iter = args[2..].iter().map(|str| &str[..]);
+        let max_iterations = iter.next().ok_or(anyhow!("not enough params"))?.parse()?;
+        let scaling_factor = iter.next().ok_or(anyhow!("not enough params"))?.parse()?;
+        let temp_modifier = iter.next().ok_or(anyhow!("not enough params"))?.parse()?;
+        Ok(Left((max_iterations, scaling_factor, temp_modifier)))
+    } } else {
         Err(anyhow!("\"{}\" is not a known algorithm", alg))
     }
 } else {

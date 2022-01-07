@@ -24,7 +24,8 @@ fn main() -> Result<()> {
                 let mut iter = args[2..].iter().map(|str| &str[..]);
                 let max_iterations = iter.next().ok_or(anyhow!("not enough params"))?.parse()?;
                 let scaling_factor = iter.next().ok_or(anyhow!("not enough params"))?.parse()?;
-                Ok(Left((max_iterations, scaling_factor)))
+                let temp_modifier = iter.next().ok_or(anyhow!("not enough params"))?.parse()?;
+                Ok(Left((max_iterations, scaling_factor, temp_modifier)))
             } } else {
                 Err(anyhow!("\"{}\" is not a known algorithm", alg))
             }
