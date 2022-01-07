@@ -659,6 +659,7 @@ mod tests {
         a.branch_and_bound().assert_valid();
     }
 
+    #[ignore]
     #[test]
     fn bb_is_correct() -> Result<()> {
         use std::fs::File;
