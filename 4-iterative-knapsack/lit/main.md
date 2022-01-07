@@ -140,21 +140,8 @@ načítání vstupních instancí, spouštění řešiče a měření času, kte
 <<performance-chart>>
 ```
 
-Jelikož by průchod hrubou silou přes všechny možné kombinace parametrů
-generátoru zabral zbytečně dlouho, definujeme prostor parametrů jako sjednocení
-zajímavých podprostorů. Tyto podprostory nazýváme "datasety" -- v tomto programu
-je reprezentují slovníky, které jednotlivým parametrům generátoru, řešiče a
-podpůrné infrastruktury přiřazují seznamy možných hodnot. Každý dataset má navíc
-unikátní klíč, podle kterého jej lze identifikovat při vizualizaci.
-
-Hlavní smyčka pro měření jednoduše projde všechny možné konfigurace dané
-sjednocením datasetů, vygeneruje odpovídající instance a spustí na ně příslušný
-algoritmus. Parametr `n_repetitions` určuje kolikrát změřit jednu konfiguraci
-(stejná instance, stejná permutace, stejný algoritmus) -- měření provádíme
-vícekrát, abychom odhalili chyby měření.
-
-Výkon každého algoritmu je na instancích měřen jednotlivě, tj. řešiči předáme
-jedinou instanci.
+Výkon každého algoritmu je na instancích měřen jednotlivě, tj. vstupní soubor
+rozdělíme na řádky a řešiči předáme jedinou instanci.
 
 ```{.python #performance-chart .bootstrap-fold}
 # plot the measurements
@@ -269,11 +256,35 @@ g.savefig("docs/assets/whitebox-error-distributions.svg")
 
 ```
 
+Koeficient chlazení má na průběh hledání zásadní vliv. Přehled různých nastavení
+tohoto parametru je vidět v grafu níže.
 
+![Vliv koeficientu chlazení na hustotu
+chyb](assets/whitebox-error-distributions.svg)
+
+Rychlé chlazení vede k nedostatečné diversifikaci řešení. Algoritmus nemá
+možnost projít skrz řešení nízké ceny aby se dostal z oblasti lokálního minima.
+Nevyzkouší mnoho možností a skončí s vysokou chybou.
+
+![Nedostatečná diversifikace rychlého
+chlazení](assets/whitebox-8000-0.85-0.7-9.svg)
+
+U velmi pomalého chlazení dochází k předčasnému vyčerpání limitu iterací.
+Algoritmus skončí dříve, než teplota klesne natolik, aby začala intensifikace.
+
+![Nedostatečná intensifikace pomalého
+chlazení](assets/whitebox-8000-0.999-0.7-9.svg)
+
+Koeficient $0.996$ je ideální volbou pro toto konkrétní nastavení ostatních
+parametrů. Řešení se blíží optimu s maximální chybou $\approx 2.43%$ a průměrnou
+$\approx 0.36%$.
+
+![Fáze diversifikace i intensifikace ve vhodném
+poměru](assets/whitebox-8000-0.996-0.7-9.svg)
 
 ### Black box: vyhodnocení hustoty chyb
 
-
+**TODO**
 
 ## Implementace
 
