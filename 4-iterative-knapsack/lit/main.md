@@ -174,6 +174,7 @@ def invoke_solver(input, cfg):
             str(cfg["max_iterations"]),
             str(cfg["scaling_factor"]),
             str(cfg["temperature_modifier"]),
+            str(cfg["equilibrium_width"]),
         ],
         stdout = PIPE,
         input = input,
@@ -194,10 +195,12 @@ def dataset(id, **kwargs):
     params = dict({
         # defaults
         "id": [id],
-        "n_instances": [20],
+        "precise_plot": [True],
+        "n_instances": [6], # FIXME: this is not a good default
         "max_iterations": [8000],
         "scaling_factor": [0.996],
         "temperature_modifier": [0.7],
+        "equilibrium_width": [10],
     }, **kwargs)
 
     key_order = [k for k in params]
@@ -218,6 +221,19 @@ def merge_datasets(*dss):
 configs = merge_datasets(dataset(
     "scaling factor exploration",
     scaling_factor = [0.85, 0.9, 0.95, 0.99, 0.992, 0.994, 0.996, 0.997, 0.998, 0.999],
+), dataset(
+    "temperature modifier exploration",
+    n_instances = [30],
+    temperature_modifier = [0.0001, 0.01, 1, 100, 10000],
+), dataset(
+    "equilibrium width exploration",
+    n_instances = [40],
+    precise_plot = [False],
+    equilibrium_width = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
+), dataset(
+    "black box",
+    precise_plot = [False],
+    n_instances = [500],
 ))
 
 # load the input
@@ -242,29 +258,28 @@ for config in cfgs:
         (t, cost, err, cost_temperature_progression) = invoke_solver(instance, config)
         errors.append(dict(config, error = err))
 
-        # plot the cost / temperature progression:
-        # we have two line graphs in a single plot
-        # the x axis is just the index in the list
+        if config["precise_plot"]:
+            # plot the cost / temperature progression:
+            # we have two line graphs in a single plot
+            # the x axis is just the index in the list
 
-        plt.style.use("dark_background")
-        fig, ax = plt.subplots(figsize = figsize)
-        for (i, label) in zip(range(42), ["cost", "best cost", "temperature"]):
-            ax.plot(
-                range(len(cost_temperature_progression)),
-                [entry[i] for entry in cost_temperature_progression],
-                label = label,
-            )
-        ax.set_xlabel("iteration")
-        ax.set_title(f"instance {id} with error {err}")
-        ax.legend(loc = "lower right")
+            plt.style.use("dark_background")
+            fig, ax = plt.subplots(figsize = figsize)
+            for (i, label) in zip(range(42), ["cost", "best cost", "temperature"]):
+                ax.plot(
+                    range(len(cost_temperature_progression)),
+                    [entry[i] for entry in cost_temperature_progression],
+                    label = label,
+                )
+            ax.set_xlabel("iteration")
+            ax.set_title(f"instance {id} with error {err}")
+            ax.legend(loc = "lower right")
 
-        plt.savefig(f"docs/assets/whitebox-{params}-{id}.svg")
-        plt.close()
+            plt.savefig(f"docs/assets/whitebox-{params}-{id}.svg")
+            plt.close()
 
         iteration = iteration + 1
         progress_bar(iteration, total)
-
-print(*errors, sep = "\n")
 
 data = pd.DataFrame(errors)
 def ridgeline(id, title, col, filename, x_label = "Chyba oproti optimálnímu řešení [%]"):
@@ -311,6 +326,7 @@ def ridgeline(id, title, col, filename, x_label = "Chyba oproti optimálnímu ř
     g.set_ylabels("")
 
     g.savefig(f"docs/assets/{filename}")
+    plt.close()
 
 ridgeline(
     "scaling factor exploration",
@@ -318,6 +334,27 @@ ridgeline(
     "scaling_factor",
     "whitebox-error-distributions.svg",
 )
+
+ridgeline(
+    "temperature modifier exploration",
+    "Vliv koeficientu počáteční teploty na hustotu chyb",
+    "temperature_modifier",
+    "whitebox-error-distributions-temperature.svg",
+)
+
+ridgeline(
+    "equilibrium width exploration",
+    "Vliv šířky ekvilibria na hustotu chyb",
+    "equilibrium_width",
+    "whitebox-error-distributions-equilibrium-width.svg",
+)
+
+# plot the error distribution
+sns.kdeplot(
+    data = data[data["id"] == "black box"],
+    x = "error",
+)
+plt.savefig("docs/assets/blackbox-error-distribution.svg")
 
 ```
 
@@ -348,9 +385,27 @@ $\approx 0.36\%$.
 ![Fáze diversifikace i intensifikace ve vhodném
 poměru](assets/whitebox-8000-0.996-0.7-9.svg)
 
+Vliv parametrů počáteční teploty a šířky ekvilibria na hustotu chyb jsem změřil
+podobným způsobem, tyto parametry zřejmě kvalitu řešení zdaleka neovlivňují
+tolik.
+
+Pro připomenutí, koeficient počáteční teploty násobí cenu řešení greedy redux,
+toto číslo udává počáteční teplotu.
+
+![Vliv koeficientu počáteční teploty na hustotu
+chyb](assets/whitebox-error-distributions-temperature.svg)
+
+Šířka ekvilibria určuje počet iterací při kterých algoritmus setrvá v jedné
+teplotě, nikoliv však jak rychle se teplota mění.
+
+![Vliv šířky ekvilibria na hustotu
+chyb](assets/whitebox-error-distributions-equilibrium-width.svg)
+
 ### Black box: vyhodnocení hustoty chyb
 
-**TODO**
+Pro black box vyhodnocení jsem použil celou sadu NK35 a změřil hustotu chyb.
+
+![Hustota chyb přes 500 instancí](assets/blackbox-error-distribution.svg)
 
 ## Implementace
 
@@ -821,7 +876,7 @@ náhodné předměty dokud váha řešení neklesne pod danou mez.
 pub fn simulated_annealing<Rng>(
     &self,
     rng: &mut Rng,
-    (max_iterations, scaling_factor, temp_modifier): (u32, f64, f64)
+    (max_iterations, scaling_factor, temp_modifier, equilibrium_width): (u32, f64, f64, u8)
 ) -> Solution
 where Rng: rand::Rng + ?Sized {
     let total_cost = self.items.iter().map(|(_, c)| c).sum::<u32>() as f64;
@@ -831,7 +886,7 @@ where Rng: rand::Rng + ?Sized {
 
     let mut iteration = 0;
     let frozen = |t| t < 0.00001;
-    let equilibrium = |i| i % (self.items.len() as u32 / 4) == 0;
+    let equilibrium = |i| i % equilibrium_width as u32 == 0;
 
     while !frozen(temperature) {
         let temp = temperature;
@@ -855,16 +910,16 @@ where Rng: rand::Rng + ?Sized {
                     let rnd = rng.gen_range(0.0 .. 1.0);
                     let threshold = (delta / temp).exp();
                     if delta <= 0.0 {
-                        eprintln!(
-                            "considering {} (current {}),\tdelta {}, rnd {}, temp {},\t(will {} against {})",
-                            new.cost,
-                            current.cost,
-                            delta,
-                            rnd,
-                            temp,
-                            if rnd < threshold { "succeed" } else { "fail" },
-                            threshold,
-                        );
+                        // eprintln!(
+                        //     "considering {} (current {}),\tdelta {}, rnd {}, temp {},\t(will {} against {})",
+                        //     new.cost,
+                        //     current.cost,
+                        //     delta,
+                        //     rnd,
+                        //     temp,
+                        //     if rnd < threshold { "succeed" } else { "fail" },
+                        //     threshold,
+                        // );
                     }
 
                     if  delta > 0.0 // the new state is better, accept it right away
@@ -1202,7 +1257,8 @@ if args.len() >= 2 {
         let max_iterations = iter.next().ok_or(anyhow!("not enough params"))?.parse()?;
         let scaling_factor = iter.next().ok_or(anyhow!("not enough params"))?.parse()?;
         let temp_modifier = iter.next().ok_or(anyhow!("not enough params"))?.parse()?;
-        Ok(Left((max_iterations, scaling_factor, temp_modifier)))
+        let equilibrium_width = iter.next().ok_or(anyhow!("not enough params"))?.parse()?;
+        Ok(Left((max_iterations, scaling_factor, temp_modifier, equilibrium_width)))
     } } else {
         Err(anyhow!("\"{}\" is not a known algorithm", alg))
     }

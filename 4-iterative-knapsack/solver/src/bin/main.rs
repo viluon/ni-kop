@@ -25,7 +25,8 @@ fn main() -> Result<()> {
                 let max_iterations = iter.next().ok_or(anyhow!("not enough params"))?.parse()?;
                 let scaling_factor = iter.next().ok_or(anyhow!("not enough params"))?.parse()?;
                 let temp_modifier = iter.next().ok_or(anyhow!("not enough params"))?.parse()?;
-                Ok(Left((max_iterations, scaling_factor, temp_modifier)))
+                let equilibrium_width = iter.next().ok_or(anyhow!("not enough params"))?.parse()?;
+                Ok(Left((max_iterations, scaling_factor, temp_modifier, equilibrium_width)))
             } } else {
                 Err(anyhow!("\"{}\" is not a known algorithm", alg))
             }

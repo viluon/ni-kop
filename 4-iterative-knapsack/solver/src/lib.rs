@@ -443,7 +443,7 @@ impl Instance {
     pub fn simulated_annealing<Rng>(
         &self,
         rng: &mut Rng,
-        (max_iterations, scaling_factor, temp_modifier): (u32, f64, f64)
+        (max_iterations, scaling_factor, temp_modifier, equilibrium_width): (u32, f64, f64, u8)
     ) -> Solution
     where Rng: rand::Rng + ?Sized {
         let total_cost = self.items.iter().map(|(_, c)| c).sum::<u32>() as f64;
@@ -453,7 +453,7 @@ impl Instance {
 
         let mut iteration = 0;
         let frozen = |t| t < 0.00001;
-        let equilibrium = |i| i % (self.items.len() as u32 / 4) == 0;
+        let equilibrium = |i| i % equilibrium_width as u32 == 0;
 
         while !frozen(temperature) {
             let temp = temperature;
@@ -477,16 +477,16 @@ impl Instance {
                         let rnd = rng.gen_range(0.0 .. 1.0);
                         let threshold = (delta / temp).exp();
                         if delta <= 0.0 {
-                            eprintln!(
-                                "considering {} (current {}),\tdelta {}, rnd {}, temp {},\t(will {} against {})",
-                                new.cost,
-                                current.cost,
-                                delta,
-                                rnd,
-                                temp,
-                                if rnd < threshold { "succeed" } else { "fail" },
-                                threshold,
-                            );
+                            // eprintln!(
+                            //     "considering {} (current {}),\tdelta {}, rnd {}, temp {},\t(will {} against {})",
+                            //     new.cost,
+                            //     current.cost,
+                            //     delta,
+                            //     rnd,
+                            //     temp,
+                            //     if rnd < threshold { "succeed" } else { "fail" },
+                            //     threshold,
+                            // );
                         }
 
                         if  delta > 0.0 // the new state is better, accept it right away
