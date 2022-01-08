@@ -196,7 +196,7 @@ def dataset(id, **kwargs):
         # defaults
         "id": [id],
         "precise_plot": [True],
-        "n_instances": [6], # FIXME: this is not a good default
+        "n_instances": [15],
         "max_iterations": [8000],
         "scaling_factor": [0.996],
         "temperature_modifier": [0.7],
