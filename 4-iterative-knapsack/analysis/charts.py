@@ -20,9 +20,28 @@ import textwrap as tr
 
 figsize = (14, 8)
 
+show_progress = os.environ.get("JUPYTER") == None
+
+# adapted from https://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console
+def progress_bar(iteration, total, length = 60):
+    if not show_progress:
+        return
+    percent = ("{0:.1f}").format(100 * (iteration / float(total)))
+    filledLength = int(length * iteration // total)
+    bar = '=' * filledLength + ' ' * (length - filledLength)
+    print(f'\r[{bar}] {percent}%', end = "\r")
+    if iteration == total:
+        print()
+
 def invoke_solver(input, cfg):
     solver = run(
-        ["target/release/main", "sa"] + list(cfg),
+        [
+            "target/release/main",
+            "sa",
+            str(cfg["max_iterations"]),
+            str(cfg["scaling_factor"]),
+            str(cfg["temperature_modifier"]),
+        ],
         stdout = PIPE,
         input = input,
         encoding = "ascii",
@@ -38,28 +57,57 @@ def invoke_solver(input, cfg):
     cost_temperature_progression = [list(map(float, entry.split())) for entry in lines[:-4]]
     return (float(time), float(cost), float(err), cost_temperature_progression)
 
+def dataset(id, **kwargs):
+    params = dict({
+        # defaults
+        "id": [id],
+        "n_instances": [20],
+        "max_iterations": [8000],
+        "scaling_factor": [0.996],
+        "temperature_modifier": [0.7],
+    }, **kwargs)
+
+    key_order = [k for k in params]
+    cartesian = list(product(
+        *[params[key] for key in key_order]
+    ))
+
+    return {
+        key: [row[key_order.index(key)] for row in cartesian] for key in params
+    }
+
+def merge_datasets(*dss):
+    return {
+        k: list(chain(*(ds[k] for ds in dss)))
+        for k in dss[0]
+    }
+
+configs = merge_datasets(dataset(
+    "scaling factor exploration",
+    scaling_factor = [0.85, 0.9, 0.95, 0.99, 0.992, 0.994, 0.996, 0.997, 0.998, 0.999],
+))
+
 # load the input
 input = None
 with open("solver/ds/NK35_inst.dat", "r") as f:
     input = f.read()
 
 errors = []
-for cfg in product(
-    # max iterations
-    # ["18000"],
-    ["8000"],
-    # scaling factor
-    ["0.85", "0.9", "0.95", "0.99", "0.992", "0.994", "0.996", "0.997", "0.998", "0.999"],
-    # temperature modifier
-    ["0.7"],
-):
-    print(cfg)
-    params = '-'.join(cfg)
-    for instance in input.split("\n")[:20]:
+cfgs = [dict(zip(configs, v)) for v in zip(*configs.values())]
+iteration = 0
+total = sum([cfg["n_instances"] for cfg in cfgs])
+
+for config in cfgs:
+    if show_progress:
+        print(end = "\033[2K")
+    print(config)
+    progress_bar(iteration, total)
+
+    params = "-".join([str(v) for _, v in config.items()])
+    for instance in input.split("\n")[:config["n_instances"]]:
         id = instance.split()[0]
-        (t, cost, err, cost_temperature_progression) = invoke_solver(instance, cfg)
-        errors.append({"scaling factor": cfg[1], "error": err})
-        print("took", t, "ms")
+        (t, cost, err, cost_temperature_progression) = invoke_solver(instance, config)
+        errors.append(dict(config, error = err))
 
         # plot the cost / temperature progression:
         # we have two line graphs in a single plot
@@ -80,51 +128,63 @@ for cfg in product(
         plt.savefig(f"docs/assets/whitebox-{params}-{id}.svg")
         plt.close()
 
+        iteration = iteration + 1
+        progress_bar(iteration, total)
+
 print(*errors, sep = "\n")
 
-df = pd.DataFrame(errors)
-series = df.groupby("scaling factor")["error"].mean()
-df["mean error"] = df["scaling factor"].map(series)
+data = pd.DataFrame(errors)
+def ridgeline(id, title, col, filename, x_label = "Chyba oproti optimálnímu řešení [%]"):
+    df = data[data["id"] == id]
+    series = df.groupby(col)["error"].mean()
+    df["mean error"] = df[col].map(series)
 
-# plot the error distributions for each scaling factor
-plt.style.use("default")
-sns.set_theme(style = "white", rc = {"axes.facecolor": (0, 0, 0, 0)})
-pal = sns.color_palette("crest", n_colors = len(df["scaling factor"].unique()))
+    # plot the error distributions for each value of col
+    plt.style.use("default")
+    sns.set_theme(style = "white", rc = {"axes.facecolor": (0, 0, 0, 0)})
+    pal = sns.color_palette("crest", n_colors = len(df[col].unique()))
 
-# set up the layout
-g = sns.FacetGrid(
-    df,
-    row = "scaling factor",
-    hue = "mean error",
-    palette = pal,
-    height = 0.75,
-    aspect = 15,
+    # set up the layout
+    g = sns.FacetGrid(
+        df,
+        row = col,
+        hue = "mean error",
+        palette = pal,
+        height = 0.75,
+        aspect = 15,
+    )
+    plt.xlim(-0.1, 1.0)
+    # distributions
+    g.map(sns.kdeplot, "error", clip = (-0.1, 1.0), bw_adjust = 1, clip_on = False, fill = True, alpha = 1, linewidth = 0.1)
+    # contours
+    g.map(sns.kdeplot, "error", clip = (-0.1, 1.0), bw_adjust = 1, clip_on = False, color = "w", lw = 1)
+    # horizontal lines
+    g.map(plt.axhline, y = 0, lw = 2, clip_on = False)
+    # overlap
+    g.fig.subplots_adjust(hspace = -0.3)
+
+    for i, ax in enumerate(g.axes.flat):
+        ax.text(-0.125, 5, df[col].unique()[i],
+                fontsize = 15, color = ax.lines[-1].get_color(), va = "baseline")
+
+    # remove titles, y ticks, spines
+    g.set_titles("")
+    g.set(yticks = [])
+    g.despine(left = True, bottom = True)
+    g.fig.suptitle(title, fontsize = 20, ha = "right")
+    for ax in g.axes.flat:
+        ax.xaxis.set_major_formatter(lambda x, pos: f"{x * 100:.0f}")
+    g.set_xlabels(x_label)
+    g.set_ylabels("")
+
+    g.savefig(f"docs/assets/{filename}")
+
+ridgeline(
+    "scaling factor exploration",
+    "Vliv koeficientu chlazení na hustotu chyb",
+    "scaling_factor",
+    "whitebox-error-distributions.svg",
 )
-plt.xlim(-0.1, 1.0)
-# distributions
-g.map(sns.kdeplot, "error", clip = (-0.1, 1.0), bw_adjust = 1, clip_on = False, fill = True, alpha = 1, linewidth = 0.1)
-# contours
-g.map(sns.kdeplot, "error", clip = (-0.1, 1.0), bw_adjust = 1, clip_on = False, color = "w", lw = 1)
-# horizontal lines
-g.map(plt.axhline, y = 0, lw = 2, clip_on = False)
-# overlap
-g.fig.subplots_adjust(hspace = -0.3)
-
-for i, ax in enumerate(g.axes.flat):
-    ax.text(-0.125, 2, df["scaling factor"].unique()[i],
-            fontsize = 15, color = ax.lines[-1].get_color(), va = "baseline")
-
-# remove titles, y ticks, spines
-g.set_titles("")
-g.set(yticks = [])
-g.despine(left = True, bottom = True)
-g.fig.suptitle("Vliv koeficientu chlazení na hustotu chyb", fontsize = 20, ha = "right")
-for ax in g.axes.flat:
-    ax.xaxis.set_major_formatter(lambda x, pos: f"{x * 100:.0f}")
-g.set_xlabels("Chyba oproti optimálnímu řešení [%]")
-g.set_ylabels("")
-
-g.savefig("docs/assets/whitebox-error-distributions.svg")
 
 # ~\~ end
 # ~\~ end

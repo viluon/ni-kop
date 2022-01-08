@@ -439,6 +439,7 @@ impl Instance {
     }
     // ~\~ end
 
+    // ~\~ begin <<lit/main.md|solver-sa>>[0]
     pub fn simulated_annealing<Rng>(
         &self,
         rng: &mut Rng,
@@ -490,7 +491,7 @@ impl Instance {
 
                         if  delta > 0.0 // the new state is better, accept it right away
                         || // otherwise accept with probability proportional to the cost delta and the temp
-                           rnd < threshold {
+                            rnd < threshold {
                             current = new;
                             if current.cost > best.cost {
                                 best = current;
@@ -514,6 +515,7 @@ impl Instance {
         println!("  frozen @ {}, temp {}", iteration, temperature / scaling_factor);
         best
     }
+    // ~\~ end
 }
 
 // ~\~ begin <<lit/main.md|tests>>[0]
