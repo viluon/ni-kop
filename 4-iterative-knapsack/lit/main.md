@@ -219,7 +219,7 @@ def merge_datasets(*dss):
     }
 
 configs = merge_datasets(dataset(
-    "scaling factor exploration",
+    "scaling_factor_exploration",
     scaling_factor = [0.85, 0.9, 0.95, 0.99, 0.992, 0.994, 0.996, 0.997, 0.998, 0.999],
 ), dataset(
     "temperature modifier exploration",
@@ -329,7 +329,7 @@ def ridgeline(id, title, col, filename, x_label = "Chyba oproti optimálnímu ř
     plt.close()
 
 ridgeline(
-    "scaling factor exploration",
+    "scaling_factor_exploration",
     "Vliv koeficientu chlazení na hustotu chyb",
     "scaling_factor",
     "whitebox-error-distributions.svg",
@@ -370,20 +370,20 @@ Protože ukončovací podmínka závisí na teplotě, tento postup nevyzkouší 
 možností a už po pár desítkách iterací skončí -- s vysokou chybou.
 
 ![Nedostatečná diversifikace rychlého
-chlazení](assets/whitebox-8000-0.85-0.7-9.svg)
+chlazení](assets/whitebox-scaling_factor_exploration-True-6-8000-0.85-0.7-10-9.svg)
 
 U velmi pomalého chlazení dochází k předčasnému vyčerpání limitu iterací.
 Algoritmus skončí dříve, než teplota klesne natolik, aby začala intensifikace.
 
 ![Nedostatečná intensifikace pomalého
-chlazení](assets/whitebox-8000-0.999-0.7-9.svg)
+chlazení](assets/whitebox-scaling_factor_exploration-True-6-8000-0.999-0.7-10-9.svg)
 
 Koeficient $0.996$ je ideální volbou pro toto konkrétní nastavení ostatních
 parametrů. Řešení se blíží optimu s maximální chybou $\approx 2.43\%$ a průměrnou
 $\approx 0.36\%$.
 
 ![Fáze diversifikace i intensifikace ve vhodném
-poměru](assets/whitebox-8000-0.996-0.7-9.svg)
+poměru](assets/whitebox-scaling_factor_exploration-True-6-8000-0.996-0.7-10-9.svg)
 
 Vliv parametrů počáteční teploty a šířky ekvilibria na hustotu chyb jsem změřil
 podobným způsobem, tyto parametry zřejmě kvalitu řešení zdaleka neovlivňují

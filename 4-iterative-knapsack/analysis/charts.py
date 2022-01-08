@@ -86,7 +86,7 @@ def merge_datasets(*dss):
     }
 
 configs = merge_datasets(dataset(
-    "scaling factor exploration",
+    "scaling_factor_exploration",
     scaling_factor = [0.85, 0.9, 0.95, 0.99, 0.992, 0.994, 0.996, 0.997, 0.998, 0.999],
 ), dataset(
     "temperature modifier exploration",
@@ -196,7 +196,7 @@ def ridgeline(id, title, col, filename, x_label = "Chyba oproti optimálnímu ř
     plt.close()
 
 ridgeline(
-    "scaling factor exploration",
+    "scaling_factor_exploration",
     "Vliv koeficientu chlazení na hustotu chyb",
     "scaling_factor",
     "whitebox-error-distributions.svg",
