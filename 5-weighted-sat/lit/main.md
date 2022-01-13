@@ -7,71 +7,89 @@ author: 'Ondřej Kvapil'
 
 ## Zadání
 
-### Účel
-
-V této úloze si budete moci vyzkoušet nasazení pokročilé iterativní techniky "v
-malém", na řešení jednoduchého problému (problém batohu). Proto by jak seznámení
-se s heuristikou samotnou, tak white box a black box fáze měly být snadné.
-Techniky experimentálního vyhodnocení, které jste si osvojili v předchozích
-úlohách, zde použijete k ověření, zda Vaše nasazení heuristiky je dostatečně
-kvalitní. V poslední úloze (jejíž hodnocení bude součástí hodnocení zkoušky)
-budete řešit složitější problém touto pokročilou technikou, tudíž "osahání si"
-těchto algoritmů a jejich nasazení na jednodušší úloze bude pro Vás přínosem.
-Krok od 4. úlohy k 5. bude pak malý: pouze upravíte konfiguraci a optimalizační
-kritérium pro jiný typ problému. Seznámíte se s reakcí algoritmu na manipulaci s
-parametry.
-
-Problém 5. úlohy má ovšem podstatně jiné vlastnosti, než problém batohu.
-Nepočítejte s tím, že kromě kódu přeberete i konkrétní hodnoty parametrů.
-
-### Algoritmy k výběru
-
-- **Simulované ochlazování**
-- Genetické algoritmy
-- Tabu search
-
-### Úkol
-
-- Zvolte si heuristiku, kterou budete řešit problém vážené splnitelnosti
-  booleovské formule (simulované ochlazování, simulovaná evoluce, tabu
-  prohledávání)
-- Tuto heuristiku použijte pro řešení problému batohu. Můžete použít dostupné
-  instance problému (instance zde, popis zde), anebo si vygenerujte své instance
-  pomocí generátoru. Používejte instance s větším počtem věcí (>30).
-- Hlavním cílem domácí práce je seznámit se s danou heuristikou, zejména se
-  způsobem, jakým se nastavují její parametry (rozvrh ochlazování, selekční
-  tlak, tabu lhůta...) a modifikace (zjištění počáteční teploty, mechanismus
-  selekce, tabu atributy...). Není-li Vám cokoli jasné, prosíme, ptejte se na
-  cvičeních.
-- Proveďte obě fáze nasazení (white box, black box) a podejte o nich zprávu.
-
 ### Pokyny
 
-Problém batohu není příliš obtížný, většinou budete mít k dispozici globální
-maxima (exaktní řešení) z předchozích prací, například z dynamického
-programování. Při správném nastavení parametrů byste měli vždy dosáhnout těchto
-optim, případně pouze velice malých chyb. Doba výpočtu může ovšem být relativně
-větší. Závěrečná úloha je co do nastavení a požadovaného výkonu heuristiky
-podstatně náročnější a může vyžadovat zcela jiné nastavení parametrů.
+Problém řešte některou z pokročilých heuristik:
 
-Zpráva by měla dokumentovat, že jste si při nasazení počínali racionálně.
-Obsahovat by měla:
+- simulované ochlazování
+- genetický algoritmus
+- tabu prohledávání
 
-- Stručný popis zvoleného algoritmu.
-- Popis white box fáze. Postup nastavení parametrů, výsledky experimentů s
-  různými nastaveními parametrů, které vedly k určitému rozhodnutí, typicky
-  vývoj řešení (populace u GA) v průběhu běhu algoritmu. Graf může dobře
-  ilustrovat závěr, který z dat děláte.
-- Popis black box fáze. Výsledek měření = čas výpočtu a rel. chyba. Pokud nejste
-  schopni vypočítat rel. chybu, stačí uvést vývoj výsledné ceny (počáteční →
-  koncová)
-- Pokuste se vyvodit nějaké závěry
+Po nasazení heuristiky ověřte její vlastnosti experimentálním vyhodnocením,
+které přesvědčivě doloží, jakou třídu (rozsah, velikosti...) instancí heuristika
+zpracovává. Zejména v případě použití nestandardních, např. originálních technik
+doložte jejich účinnost experimentálně (což vyloučí případné diskuse o jejich
+vhodnosti).
 
-### Poznámka
+Zpráva by měla dokládat Váš racionální přístup k řešení problému, tedy celý
+pracovní postup. Ve zprávě prosím také popište obě fáze nasazení heuristiky, jak
+nastavení, (white box fáze), tak závěrečné vyhodnocení heuristiky (black box
+fáze). Prosím používejte definované formáty pro instance a řešení, usnadníte tak
+lepší přizpůsobení zkušebních instancí.
 
-- Hodnocení této úlohy bude odpovídat účelu úlohy - tj. prozkoumat chování
-  příslušné pokročilé heuristiky. Hodnocení tedy bude velice benevolentní co se
-  dosažených výsledků týče, méně už v případě postupu nasazení.
+### Hodnocení
+
+Tato úloha je součástí hodnocení zkoušky - až 30 bodů ze 100 za předmět celkem.
+Práce by měla doložit Vaši schopnost nasadit pokročilé heuristiky na netriviální
+optimalizační problém. Nasazená heuristika by měla zpracovávat rozumně široké
+spektrum instancí s rozumnou chybou. Co je "rozumně", bychom se měli dočíst v
+závěru Vaší práce.
+
+V hodnocení je kladen důraz na racionální postup celé práce. Pokud postup
+vyhovuje, méně uspokojivé výsledky heuristiky příliš nevadí, vzhledem k tomu, že
+řešený problém (jak jistě víte) patří k nejtěžším ve třídě NPO. Proto
+potřebujeme znát jak pracovní postup ve white box fázi, tak výsledky a závěr
+black box fáze.
+
+Hodnocení je rozděleno do tří kategorií:
+
+- Algoritmus a implementace (5 pt.)
+  - Byly použity techniky (algoritmy, datové struktury) adekvátní problému?
+  - Byly použity pokročilé techniky? (např. adaptační mechanismy)
+  - Jsou některé postupy originálním přínosem autora?
+- Nastavení heuristiky (13 pt.)
+  - Jakou metodou autor hledal nastavení parametrů?
+  - Jak byly plánovány experimenty a jaké byly jejich otázky?
+  - Jestliže byl proveden faktorový návrh (což příliš nedoporučujeme), jak
+    kompletní byl (změna vždy jen jednoho parametru nestačí)?
+  - Na jak velkých instancích je heuristika schopna pracovat?
+  - Jestliže práce heuristiky není uspokojivá, jak systematické byly snahy
+    autora zjednat nápravu?
+- Experimentální vyhodnocení heuristiky (12 pt.)
+  - Jak dalece jsou závěry vyhodnocení doloženy experimentálně?
+  - Je interpretace experimentů přesvědčivá?
+  - Pokud je algoritmus randomizovaný, byla tato skutečnost vzata v úvahu při
+    plánování experimentů?
+  - Je možno z experimentů usoudit na iterativní sílu heuristiky?
+  - Byly nestandardní postupy experimentálně porovnány se standardními?
+  - Jsou výsledky experimentů srozumitelně prezentovány (grafy, tabulky,
+    statistické metody)?
+
+Práce bez experimentální části nemůže být přijata k hodnocení.
+
+### Instance
+
+- SAT instance lze generovat náhodně. Klíčovým parametrem je poměr počtu
+  klauzulí k počtu proměnných pro 3-SAT (viz ai-phys1.pdf - doporučujeme). Váhy
+  lze generovat náhodně. V takovém případě je vhodné prokázat, že instance, kde
+  všechny váhy byly vynásobeny velkým číslem, jsou zpracovávány stejně úspěšně.
+- Lze vyjít z [DIMACS](http://www.cs.ubc.ca/~hoos/SATLIB/benchm.html) SAT
+  instancí. Nemají váhy, jejich generování viz výše.Tyto instance jsou na hraně
+  fázového přechodu, jsou tedy značně obtížné. Obtížnost můžete snížit zkrácením
+  (vynechání klauzulí).
+- Připravili jsme sady zkušebních instancí. Vycházejí z instancí SATLIB, jsou
+  ale zkráceny tak, aby měly co nejvíce řešení (počty řešení přikládáme). Váhy
+  nejsou náhodné, mají ale náhodnou složku. Za upozornění na chyby,
+  nekonzistence atd. budeme vděčni.
+  - `wuf-M` a `wuf-N`: Váhy by měly podporovat nalezení řešení. Heuristika,
+    která řeší určitou instanci v sadě `wuf-M`, by měla řešit odpovídající
+    instanci v sadě `wuf-N` stejně snadno. Vzhledem k počtu řešení jednotlivých
+    instací (až 108), není možné efektivně najít optimální řešení
+  - `wuf-Q` a `wuf-R`: Jako výše, váhy ale vytvářejí (mírně) zavádějící úlohu.
+  - `wuf-A`: z dílny prof. Zlomyslného. Instance vycházejí z nezkrácených (nebo
+    jen mírně zkrácených) instancí, takže jsou obtížné. Váhy vytvářejí
+    zavádějící úlohu. Nicméně, malý počet řešení dovoluje ve většině případů
+    uvést optimální řešení.
 
 ## Řešení
 
@@ -82,8 +100,6 @@ dokument obsahuje veškerý zdrojový kód nutný k reprodukci mojí práce. Vý
 je dostupný online jako statická [webová stránka](http://viluon.me/ni-kop/) a
 [ke stažení v PDF](http://viluon.me/ni-kop/report.pdf).
 
-Pro tento úkol jsem zvolil algoritmus simulovaného žíhání (taktéž ochlazování).
-
 ## Instrukce k sestavení programu
 Program využívá standardních nástrojů jazyka Rust. O sestavení stačí požádat
 `cargo`.
@@ -91,13 +107,6 @@ Program využívá standardních nástrojů jazyka Rust. O sestavení stačí po
 ``` {.zsh .eval .bootstrap-fold #build-instructions}
 cd solver
 cargo build --release --color always
-```
-
-Následně připravíme ještě generátor instancí.
-
-``` {.zsh .eval .bootstrap-fold #build-generator}
-cd gen
-make all
 ```
 
 ## Benchmarking
