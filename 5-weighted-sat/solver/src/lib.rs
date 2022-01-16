@@ -7,9 +7,11 @@ use std::{cmp, cmp::max,
     io::{BufRead, BufReader},
     collections::{BTreeMap, HashMap},
     fs::{read_dir, File, DirEntry},
+    num::NonZeroU16,
 };
 use anyhow::{Context, Result, anyhow};
 use bitvec::prelude::BitArr;
+use arrayvec::ArrayVec;
 
 #[cfg(test)]
 #[macro_use(quickcheck)]
@@ -17,50 +19,7 @@ extern crate quickcheck_macros;
 // ~\~ end
 
 // ~\~ begin <<lit/main.md|algorithm-map>>[0]
-pub fn get_algorithms() -> BTreeMap<&'static str, fn(&Instance) -> Solution> {
-    let cast = |x: fn(&Instance) -> Solution| x;
-    // the BTreeMap works as a trie, maintaining alphabetic order
-    BTreeMap::from([
-        ("bf",     cast(Instance::brute_force)),
-        ("bb",     cast(Instance::branch_and_bound)),
-        ("dpc",    cast(Instance::dynamic_programming_c)),
-        ("dpw",    cast(Instance::dynamic_programming_w)),
-        ("fptas1", cast(|inst| inst.fptas(10f64.powi(-1)))),
-        ("fptas2", cast(|inst| inst.fptas(10f64.powi(-2)))),
-        ("greedy", cast(Instance::greedy)),
-        ("redux",  cast(Instance::greedy_redux)),
-    ])
-}
 // ~\~ end
-
-pub fn solve_stream<T>(
-    alg: for <'b> fn(&'b Instance) -> Solution<'b>,
-    solutions: HashMap<(u32, i32), OptimalSolution>,
-    stream: &mut T
-) -> Result<Vec<(u32, Option<f64>)>> where T: BufRead {
-    let mut results = vec![];
-    loop {
-        match parse_line(stream)?.as_ref().map(|inst| (inst, alg(inst))) {
-            Some((inst, sln)) => {
-                let optimal = &solutions.get(&(inst.items.len() as u32, inst.id));
-                let error = optimal.map(|opt| 1.0 - sln.cost as f64 / opt.cost as f64);
-                results.push((sln.cost, error))
-            },
-            None => return Ok(results)
-        }
-    }
-}
-
-pub fn load_instances<T>(stream: &mut T) -> Result<Vec<Instance>>
-where T: BufRead {
-    let mut instances = vec![];
-    loop {
-        match parse_line(stream)? {
-            Some(inst) => instances.push(inst),
-            None => return Ok(instances)
-        }
-    }
-}
 
 use std::result::Result as IOResult;
 pub fn list_input_files(set: &str, r: Range<u32>) -> Result<Vec<IOResult<DirEntry, std::io::Error>>> {
@@ -82,30 +41,61 @@ pub fn list_input_files(set: &str, r: Range<u32>) -> Result<Vec<IOResult<DirEntr
 }
 
 // ~\~ begin <<lit/main.md|problem-instance-definition>>[0]
+type Id = NonZeroU16;
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub struct Literal(bool, Id);
+pub type Clause = ArrayVec<Literal, 3>;
+
+const MAX_CLAUSES: usize = 512;
+const MAX_VARIABLES: usize = 256;
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Instance {
-    pub id: i32, m: u32, pub items: Vec<(u32, u32)>
+    pub id: i32,
+    pub weights: ArrayVec<Id, MAX_VARIABLES>,
+    pub clauses: ArrayVec<Clause, MAX_CLAUSES>,
 }
+
 // ~\~ end
 
 // ~\~ begin <<lit/main.md|solution-definition>>[0]
-pub type Config = BitArr!(for 64);
+pub type Config = BitArr!(for MAX_VARIABLES);
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
-pub struct Solution<'a> { weight: u32, pub cost: u32, cfg: Config, pub inst: &'a Instance }
+pub struct Solution<'a> { weight: u32, cfg: Config, pub inst: &'a Instance }
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct OptimalSolution { id: i32, pub cost: u32, cfg: Config }
+pub struct OptimalSolution {
+    pub id: String,
+    pub weight: u32,
+    pub cfg: Config,
+    pub params: InstanceParams,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct InstanceParams {
+    variables: u8,
+    clauses: u16,
+}
+
+impl From<Instance> for InstanceParams {
+    fn from(inst: Instance) -> Self {
+        InstanceParams {
+            variables: inst.weights.len() as u8,
+            clauses:   inst.clauses.len() as u16,
+        }
+    }
+}
+
+impl From<OptimalSolution> for InstanceParams {
+    fn from(opt: OptimalSolution) -> Self {
+        opt.params
+    }
+}
 
 // ~\~ begin <<lit/main.md|solution-helpers>>[0]
 impl <'a> PartialOrd for Solution<'a> {
     fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
-        use cmp::Ordering;
-        let Solution {weight, cost, ..} = self;
-        Some(match cost.cmp(&other.cost) {
-            Ordering::Equal => weight.cmp(&other.weight).reverse(),
-            other => other,
-        })
+        Some(self.weight.cmp(&other.weight))
     }
 }
 
@@ -125,35 +115,24 @@ impl <'a> Solution<'a> {
     }
 
     fn invert(mut self) -> Solution<'a> {
-        for i in 0..self.inst.items.len() {
+        for i in 0..self.inst.weights.len() {
             self.set(i, !self.cfg[i]);
         }
         self
     }
 
     fn set(&mut self, i: usize, set: bool) -> Solution<'a> {
-        let (w, c) = self.inst.items[i];
+        let w = self.inst.weights[i];
         let k = if set { 1 } else { -1 };
         if self.cfg[i] != set {
             self.cfg.set(i, set);
-            self.weight = (self.weight as i32 + k * w as i32) as u32;
-            self.cost   = (self.cost   as i32 + k * c as i32) as u32;
+            self.weight = (self.weight as i32 + k * w.get() as i32) as u32;
         }
         *self
     }
 
     fn default(inst: &'a Instance) -> Solution<'a> {
-        Solution { weight: 0, cost: 0, cfg: Config::default(), inst }
-    }
-
-    fn overweight(inst: &'a Instance) -> Solution<'a> {
-        Solution { weight: u32::MAX, cost: 0, cfg: Config::default(), inst }
-    }
-
-    fn trim<Rng: ?Sized>(&mut self, rng: &mut Rng) where Rng: rand::Rng {
-        while self.weight > self.inst.m {
-            self.set(rng.gen_range(0..self.inst.items.len()), false);
-        }
+        Solution { weight: 0, cfg: Config::default(), inst }
     }
 }
 // ~\~ end
@@ -176,64 +155,69 @@ impl Boilerplate for std::str::SplitWhitespace<'_> {
 }
 // ~\~ end
 
-pub fn parse_line<T>(stream: &mut T) -> Result<Option<Instance>> where T: BufRead {
+pub fn parse_clauses<T: BufRead>(stream: &mut T) -> Result<ArrayVec<Clause, MAX_CLAUSES>> {
+    let to_literal: fn(i16) -> Result<Literal> = |n| Ok(Literal(
+        n.is_positive(), NonZeroU16::new(n.abs() as u16).ok_or_else(|| anyhow!("variables start from 1"))?
+    ));
+    let mut clauses = ArrayVec::new();
+    let mut input = String::new();
+
+    while stream.read_line(&mut input)? != 0 {
+        let mut numbers = input.split_whitespace();
+        clauses.push(ArrayVec::from([
+            to_literal(numbers.parse_next()?)?,
+            to_literal(numbers.parse_next()?)?,
+            to_literal(numbers.parse_next()?)?,
+        ]));
+    }
+
+    Ok(clauses)
+}
+
+fn parse_solution_line<T: BufRead>(mut stream: T, params: InstanceParams) -> Result<Option<OptimalSolution>> {
     let mut input = String::new();
     if stream.read_line(&mut input)? == 0 {
         return Ok(None)
     }
 
-    let mut  numbers = input.split_whitespace();
+    let mut numbers = input.split_whitespace();
     let id = numbers.parse_next()?;
-    let  n = numbers.parse_next()?;
-    let  m = numbers.parse_next()?;
+    let weight = numbers.parse_next()?;
 
-    let mut items: Vec<(u32, u32)> = Vec::with_capacity(n);
-    for _ in 0..n {
-        let w = numbers.parse_next()?;
-        let c = numbers.parse_next()?;
-        items.push((w, c));
+    let mut cfg = Config::default();
+    let mut i = 0;
+    loop {
+        let a: i16 = numbers.parse_next()?;
+        if a == 0 { break }
+        cfg.set(i, a.is_positive());
+        i += 1;
     }
 
-    Ok(Some(Instance {id, m, items}))
+    Ok(Some(OptimalSolution {id, weight, cfg, params}))
 }
 
-fn parse_solution_line<T>(mut stream: T) -> Result<Option<OptimalSolution>> where T: BufRead {
-    let mut input = String::new();
-    if stream.read_line(&mut input)? == 0 {
-        return Ok(None)
-    }
-
-    let mut    numbers = input.split_whitespace();
-    let   id = numbers.parse_next()?;
-    let    n = numbers.parse_next()?;
-    let cost = numbers.parse_next()?;
-
-    let mut items = Config::default();
-    for i in 0..n {
-        let a: u8 = numbers.parse_next()?;
-        items.set(i, a == 1);
-    }
-
-    Ok(Some(OptimalSolution {id, cost, cfg: items}))
-}
-
-pub fn load_solutions(set: &str) -> Result<HashMap<(u32, i32), OptimalSolution>> {
+pub fn load_solutions(set: char) -> Result<HashMap<InstanceParams, OptimalSolution>> {
     let mut solutions = HashMap::new();
 
-    let files = read_dir("../data/constructive/")?
+    let files = read_dir("../data/")?
         .filter(|res| res.as_ref().ok().filter(|f| {
             let name = f.file_name().into_string().unwrap();
             f.file_type().unwrap().is_file() &&
-            name.starts_with(set) &&
-            name.ends_with("_sol.dat")
+            name.ends_with(&(set.to_string() + "-opt.dat"))
         }).is_some());
 
     for file in files {
         let file = file?;
-        let n = file.file_name().into_string().unwrap()[set.len()..].split('_').next().unwrap().parse()?;
+        let filename = file.file_name().into_string().expect("FS error");
+
+        let mut params = filename[3..].split('-').take(2).map(|n| n.parse::<u16>());
+        let variables = params.next().unwrap()? as u8;
+        let clauses = params.next().unwrap()?;
+        let params = InstanceParams { variables, clauses };
+
         let mut stream = BufReader::new(File::open(file.path())?);
-        while let Some(opt) = parse_solution_line(&mut stream)? {
-            solutions.insert((n, opt.id), opt);
+        while let Some(opt) = parse_solution_line(&mut stream, params)? {
+            solutions.insert(params, opt);
         }
     }
 
@@ -260,261 +244,27 @@ impl<I> IteratorRandomWeighted for I where I: Iterator + Sized + Clone {}
 
 impl Instance {
     // ~\~ begin <<lit/main.md|solver-dpw>>[0]
-    fn dynamic_programming_w(&self) -> Solution {
-        let Instance {m, items, ..} = self;
-        let mut next = vec![Solution::default(self); *m as usize + 1];
-        let mut last = vec![];
-
-        for (i, &(weight, _cost)) in items.iter().enumerate() {
-            last.clone_from(&next);
-
-            for cap in 0 ..= *m as usize {
-                let s = if (cap as u32) < weight {
-                        last[cap]
-                    } else {
-                        let rem_weight = max(0, cap as isize - weight as isize) as usize;
-                        max(last[cap], last[rem_weight].with(i))
-                    };
-                next[cap] = s;
-            }
-        }
-
-        *next.last().unwrap()
-    }
     // ~\~ end
 
     // ~\~ begin <<lit/main.md|solver-dpc>>[0]
-    fn dynamic_programming_c(&self) -> Solution {
-        let Instance {items, ..} = self;
-        let max_profit = items.iter().map(|(_, c)| *c).max().unwrap() as usize;
-        let mut next = vec![Solution::overweight(self); max_profit * items.len() + 1];
-        let mut last = vec![];
-        next[0] = Solution::default(self);
-
-        for (i, &(_weight, cost)) in items.iter().enumerate() {
-            last.clone_from(&next);
-
-            for cap in 1 ..= max_profit * items.len() {
-                let s = if (cap as u32) < cost {
-                        last[cap]
-                    } else {
-                        let rem_cost = (cap as isize - cost as isize) as usize;
-                        let lightest_for_cost = if last[rem_cost].weight == u32::MAX {
-                            last[0] // replace the overweight solution with the empty one
-                        } else { last[rem_cost] };
-
-                        max(last[cap], lightest_for_cost.with(i))
-                    };
-                next[cap] = s;
-            }
-        }
-
-        *next.iter().filter(|sln| sln.weight <= self.m).last().unwrap()
-    }
     // ~\~ end
 
     // ~\~ begin <<lit/main.md|solver-fptas>>[0]
-    // TODO: are items heavier than the knapsack capacity a problem? if so, we
-    // can just zero them out
-    fn fptas(&self, eps: f64) -> Solution {
-        let Instance {m: _, items, ..} = self;
-        let max_profit = items.iter().map(|(_, c)| *c).max().unwrap();
-        let scaling_factor = eps * max_profit as f64 / items.len() as f64;
-        let items: Vec<(u32, u32)> = items.iter().map(|(w, c)|
-            (*w, (*c as f64 / scaling_factor).floor() as u32
-        )).collect();
-
-        let iso = Instance { items, ..*self };
-        let sln = iso.dynamic_programming_c();
-        let cost = (0usize..).zip(self.items.iter()).fold(0, |acc, (i, (_w, c))|
-            acc + sln.cfg[i] as u32 * c
-        );
-        Solution { inst: self, cost, ..sln }
-    }
     // ~\~ end
 
     // ~\~ begin <<lit/main.md|solver-greedy>>[0]
-    fn greedy(&self) -> Solution {
-        use ::permutation::*;
-        let Instance {m, items, ..} = self;
-        fn ratio((w, c): (u32, u32)) -> f64 {
-            let r = c as f64 / w as f64;
-            if r.is_nan() { f64::NEG_INFINITY } else { r }
-        }
-        let permutation = sort_by(
-            &(items)[..],
-            |a, b|
-                ratio(*a)
-                .partial_cmp(&ratio(*b))
-                .unwrap()
-                .reverse() // max item first
-        );
-        let ord = { #[inline] |i| permutation.apply_idx(i) };
-
-        let mut sol = Solution::default(self);
-        for i in (0..items.len()).map(ord) {
-            let (w, _c) = items[i];
-            if sol.weight + w <= *m {
-                sol = sol.with(i);
-            } else { break }
-        }
-
-        sol
-    }
     // ~\~ end
 
     // ~\~ begin <<lit/main.md|solver-greedy-redux>>[0]
-    fn greedy_redux(&self) -> Solution {
-        let greedy = self.greedy();
-        (0_usize..)
-            .zip(self.items.iter())
-            .filter(|(_, (w, _))| *w <= self.m)
-            .max_by_key(|(_, (_, c))| c)
-            .map(|(highest_price_index, _)|
-                max(greedy, Solution::default(self).with(highest_price_index))
-            ).unwrap_or(greedy)
-    }
     // ~\~ end
 
     // ~\~ begin <<lit/main.md|solver-bb>>[0]
-    fn branch_and_bound(&self) -> Solution {
-        struct State<'a>(&'a Vec<(u32, u32)>, Vec<u32>);
-        let prices: Vec<u32> = {
-            self.items.iter().rev()
-            .scan(0, |sum, (_w, c)| {
-                *sum += c;
-                Some(*sum)
-            })
-            .collect::<Vec<_>>().into_iter().rev().collect()
-        };
-
-        fn go<'a>(state: &'a State, current: Solution<'a>, best: Solution<'a>, i: usize, m: u32) -> Solution<'a> {
-            let State(items, prices) = state;
-            if i >= items.len() || current.cost + prices[i] <= best.cost {
-                return current
-            }
-
-            let (w, _c) = items[i];
-            let next = |current, best, m| go(state, current, best, i + 1, m);
-            let include = || {
-                let current = current.with(i);
-                next(current, max(current, best), m - w)
-            };
-            let exclude = |best: Solution<'a>| next(current, best, m);
-
-            if w <= m {
-                let x = include();
-                max(x, exclude(x))
-            }
-            else { exclude(best) }
-        }
-
-        // FIXME borrowck issues
-        let state = State(&self.items, prices);
-        let empty = Solution::default(self);
-        Solution { inst: self, ..go(&state, empty, empty, 0, self.m) }
-    }
     // ~\~ end
 
     // ~\~ begin <<lit/main.md|solver-bf>>[0]
-    fn brute_force(&self) -> Solution {
-        fn go<'a>(items: &'a [(u32, u32)], current: Solution<'a>, i: usize, m: u32) -> Solution<'a> {
-            if i >= items.len() { return current }
-
-            let (w, _c) = items[i];
-            let next = |current, m| go(items, current, i + 1, m);
-            let include = || {
-                let current = current.with(i);
-                next(current, m - w)
-            };
-            let exclude = || next(current, m);
-
-            if w <= m {
-                max(include(), exclude())
-            }
-            else { exclude() }
-        }
-
-        go(&self.items, Solution::default(self), 0, self.m)
-    }
     // ~\~ end
 
     // ~\~ begin <<lit/main.md|solver-sa>>[0]
-    pub fn simulated_annealing<Rng>(
-        &self,
-        rng: &mut Rng,
-        (max_iterations, scaling_factor, temp_modifier, equilibrium_width): (u32, f64, f64, u8)
-    ) -> Solution
-    where Rng: rand::Rng + ?Sized {
-        let total_cost = self.items.iter().map(|(_, c)| c).sum::<u32>() as f64;
-        let mut current = self.greedy_redux();
-        let mut best = current;
-        let mut temperature = temp_modifier * self.greedy_redux().cost as f64;
-
-        let mut iteration = 0;
-        let frozen = |t| t < 0.00001;
-        let equilibrium = |i| i % equilibrium_width as u32 == 0;
-
-        while !frozen(temperature) {
-            let temp = temperature;
-            loop {
-                use rand::prelude::IteratorRandom;
-                println!("    {} {} {}", current.cost, best.cost, temp);
-
-                let next_sln = (0..self.items.len())
-                    // construct the set of neighbouring solutions: generate n
-                    // solutions, each with one item different to the current
-                    // solution (included or excluded)
-                    .map(|i| current.clone().set(i, !current.cfg[i]))
-                    // also add a complete flip as an option
-                    .chain(std::iter::once(current.invert()))
-                    // select a neighbour at random
-                    .choose(rng);
-                match next_sln {
-                    Some(mut new) => {
-                        new.trim(rng);
-                        let delta = (new.cost as f64 - current.cost as f64) / total_cost;
-                        let rnd = rng.gen_range(0.0 .. 1.0);
-                        let threshold = (delta / temp).exp();
-                        if delta <= 0.0 {
-                            // eprintln!(
-                            //     "considering {} (current {}),\tdelta {}, rnd {}, temp {},\t(will {} against {})",
-                            //     new.cost,
-                            //     current.cost,
-                            //     delta,
-                            //     rnd,
-                            //     temp,
-                            //     if rnd < threshold { "succeed" } else { "fail" },
-                            //     threshold,
-                            // );
-                        }
-
-                        if  delta > 0.0 // the new state is better, accept it right away
-                        || // otherwise accept with probability proportional to the cost delta and the temp
-                            rnd < threshold {
-                            current = new;
-                            if current.cost > best.cost {
-                                best = current;
-                            }
-                        }
-                    },
-                    None => {
-                        println!("  early return @ {}, temp {}", iteration, temp);
-                        return best
-                    },
-                };
-                iteration += 1;
-                temperature *= scaling_factor;
-                if iteration >= max_iterations {
-                    println!("  iteration limit exhausted");
-                    return best
-                } else if equilibrium(iteration) { break }
-            }
-        }
-
-        println!("  frozen @ {}, temp {}", iteration, temperature / scaling_factor);
-        best
-    }
     // ~\~ end
 }
 
@@ -525,17 +275,63 @@ mod tests {
     use quickcheck::{Arbitrary, Gen};
     use std::{fs::File, io::BufReader};
 
+    #[derive(Clone, Debug)]
+    #[repr(transparent)]
+    struct ArrayVecProxy<T, const CAP: usize>(ArrayVec<T, CAP>);
+
+    type LiteralProxy = ArrayVecProxy<Literal, 3>;
+    type ClauseProxy = ArrayVecProxy<LiteralProxy, MAX_CLAUSES>;
+
+    impl<T, const CAP: usize> From<ArrayVec<T, CAP>> for ArrayVecProxy<T, CAP> {
+        fn from(av: ArrayVec<T, CAP>) -> Self {
+            ArrayVecProxy(av)
+        }
+    }
+
+    impl<T, const CAP: usize> From<ArrayVecProxy<T, CAP>> for ArrayVec<T, CAP> {
+        fn from(ArrayVecProxy(av): ArrayVecProxy<T, CAP>) -> Self {
+            av
+        }
+    }
+
+    impl<T: Arbitrary + core::fmt::Debug, const CAP: usize> Arbitrary for ArrayVecProxy<T, CAP> {
+        fn arbitrary(g: &mut Gen) -> Self {
+            let arr: [T; CAP] = Vec::arbitrary(g)
+                .into_iter()
+                .take(CAP)
+                .collect::<Vec<_>>()
+                .try_into()
+                .unwrap();
+            ArrayVecProxy(arr.into())
+        }
+
+        fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+            Box::new(self.0.clone()
+                .into_iter()
+                .collect::<Vec<T>>()
+                .shrink()
+                .map(|vec| {
+                    let arr: [T; CAP] = vec.try_into().unwrap();
+                    ArrayVecProxy(arr.into())
+                })
+                .into_iter()
+            )
+        }
+    }
+
+    impl Arbitrary for Literal {
+        fn arbitrary(g: &mut Gen) -> Self {
+            Literal(bool::arbitrary(g), Id::arbitrary(g))
+        }
+    }
+
     impl Arbitrary for Instance {
         fn arbitrary(g: &mut Gen) -> Instance {
+            let proxy: ArrayVec<LiteralProxy, MAX_CLAUSES> = (ArrayVecProxy::arbitrary(g) as ClauseProxy).into();
             Instance {
-                id:    i32::arbitrary(g),
-                m:     u32::arbitrary(g).min(10_000),
-                items: vec![<(u32, u32)>::arbitrary(g)]
-                           .into_iter()
-                           .chain(Vec::arbitrary(g).into_iter())
-                           .take(10)
-                           .map(|(w, c): (u32, u32)| (w.min(10_000), c % 10_000))
-                           .collect(),
+                id:      i32::arbitrary(g),
+                weights: ArrayVecProxy::arbitrary(g).into(),
+                clauses: proxy.into_iter().map(Into::into).collect(),
             }
         }
 
@@ -543,10 +339,30 @@ mod tests {
             let data = self.clone();
             #[allow(clippy::needless_collect)]
             let chain: Vec<Instance> = quickcheck::empty_shrinker()
-                .chain(self.id   .shrink().map(|id   | Instance {id,    ..(&data).clone()}))
-                .chain(self.m    .shrink().map(|m    | Instance {m,     ..(&data).clone()}))
-                .chain(self.items.shrink().map(|items| Instance { items, ..(&data).clone() })
-                        .filter(|i| !i.items.is_empty()))
+                .chain(self.id.shrink().map(|id| Instance {id, ..(&data).clone()}))
+                .chain(ArrayVecProxy(self.weights.clone())
+                    .shrink()
+                    .map(|weights| Instance {
+                        weights: weights.into(),
+                        ..(&data).clone()
+                    })
+                )
+                .chain(ArrayVecProxy(
+                        self.clauses.clone()
+                            .into_iter()
+                            .map(|c| ArrayVecProxy(c))
+                            .collect()
+                    )
+                    .shrink()
+                    .map(|clauses| {
+                        let av: ArrayVec<LiteralProxy, MAX_CLAUSES> = clauses.into();
+                        Instance {
+                            clauses: av.into_iter().map(Into::into).collect(),
+                            ..(&data).clone()
+                        }
+                    })
+                    .filter(|i| !i.clauses.is_empty())
+                )
                 .collect();
             Box::new(chain.into_iter())
         }
@@ -554,145 +370,26 @@ mod tests {
 
     impl <'a> Solution<'a> {
         fn assert_valid(&self) {
-            let Solution { weight, cost, cfg, inst } = self;
-            let Instance { m, items, .. } = inst;
+            let Solution { weight, cfg, inst } = self;
+            let Instance { weights, clauses, .. } = inst;
 
-            let (computed_weight, computed_cost) = items
+            let computed_weight = weights
                 .iter()
                 .zip(cfg)
-                .map(|((w, c), b)| {
-                    if *b { (*w, *c) } else { (0, 0) }
+                .map(|(w, b)| {
+                    if *b { w.get() as u32 } else { 0 }
                 })
-                .reduce(|(a0, b0), (a1, b1)| (a0 + a1, b0 + b1))
-                .unwrap_or_default();
+                .sum::<u32>();
 
-            assert!(computed_weight <= *m);
-            assert_eq!(computed_cost, *cost);
+            let satisfied = clauses.into_iter()
+                .all(|clause| clause
+                    .into_iter()
+                    .any(|&Literal(pos, id)| pos == cfg[id.get() as usize])
+                );
+
             assert_eq!(computed_weight, *weight);
+            assert!(satisfied);
         }
-    }
-
-    #[test]
-    fn stupid() {
-        // let i = Instance { id: 0, m: 1, b: 0, items: vec![(1, 0), (1, 0)] };
-        // i.branch_and_bound2().assert_valid(&i);
-        let i = Instance { id: 0, m: 1, items: vec![(1, 1), (1, 2), (0, 1)] };
-        let bb = i.branch_and_bound();
-        assert_eq!(bb.cost, i.dynamic_programming_w().cost);
-        assert_eq!(bb.cost, i.dynamic_programming_c().cost);
-        assert_eq!(bb.cost, i.greedy_redux().cost);
-        assert_eq!(bb.cost, i.brute_force().cost);
-        assert_eq!(bb.cost, i.greedy().cost);
-    }
-
-    #[ignore]
-    #[test]
-    fn proper() -> Result<()> {
-        type Solver = (&'static str, for<'a> fn(&'a Instance) -> Solution<'a>);
-        let algs = get_algorithms();
-        let algs: Vec<Solver> = algs.iter().map(|(s, f)| (*s, *f)).collect();
-        let opts = load_solutions("NK")?;
-        println!("loaded {} optimal solutions", opts.len());
-
-        let solve: for<'a> fn(&Vec<_>, &'a _) -> Vec<(&'static str, Solution<'a>)> =
-            |algs, inst|
-            algs.iter().map(|(name, alg): &Solver| (*name, alg(inst))).collect();
-
-        let mut files = list_input_files("NK", 0..5)?.into_iter();
-        // make sure `files` is not empty
-        let first = files.next().ok_or_else(|| anyhow!("no instance files loaded"))?;
-        for file in vec![first].into_iter().chain(files) {
-            let file = file?;
-            println!("Testing {}", file.file_name().to_str().unwrap());
-            // open the file
-            let mut r = BufReader::new(File::open(file.path())?);
-            // solve each instance with all algorithms
-            while let Some(slns) = parse_line(&mut r)?.as_ref().map(|x| solve(&algs, x)) {
-                // verify correctness
-                slns.iter().for_each(|(alg, s)| {
-                    eprint!("\rid: {} alg: {}\t", s.inst.id, alg);
-                    s.assert_valid();
-                    let key = (s.inst.items.len() as u32, s.inst.id);
-                    assert!(s.cost <= opts[&key].cost);
-                });
-            }
-        }
-        Ok(())
-    }
-
-    #[test]
-    fn dpc_simple() {
-        let i = Instance { id: 0, m: 0, items: vec![(0, 1), (0, 1)] };
-        let s = i.dynamic_programming_c();
-        assert_eq!(s.cost, 2);
-        assert_eq!(s.weight, 0);
-        s.assert_valid();
-    }
-
-    #[test]
-    fn fptas_is_within_bounds() -> Result<()> {
-        let opts = load_solutions("NK")?;
-        for eps in [0.1, 0.01] {
-            for file in list_input_files("NK", 0..5)? {
-                let file = file?;
-                let mut r = BufReader::new(File::open(file.path())?);
-                while let Some(sln) = parse_line(&mut r)?.as_ref().map(|x| x.fptas(eps)) {
-                    // make sure the solution from fptas is at least (1 - eps) * optimal cost
-                    let key = (sln.inst.items.len() as u32, sln.inst.id);
-                    println!("{} {} {}", sln.cost, opts[&key].cost, (1.0 - eps) * opts[&key].cost as f64);
-                    assert!(sln.cost as f64 >= opts[&key].cost as f64 * (1.0 - eps));
-                }
-            }
-        }
-        Ok(())
-    }
-
-    #[test]
-    fn small_bb_is_correct() {
-        let a = Instance {
-            id: -10,
-            m: 165,
-            items: vec![ (86,  744)
-                       , (214, 1373)
-                       , (236, 1571)
-                       , (239, 2388)
-                       ],
-        };
-        a.branch_and_bound().assert_valid();
-    }
-
-    #[ignore]
-    #[test]
-    fn bb_is_correct() -> Result<()> {
-        use std::fs::File;
-        use std::io::BufReader;
-        let inst = parse_line(
-            &mut BufReader::new(File::open("ds/NK15_inst.dat")?)
-        )?.unwrap();
-        println!("testing {:?}", inst);
-        inst.branch_and_bound().assert_valid();
-        Ok(())
-    }
-
-    #[quickcheck]
-    fn qc_bb_is_really_correct(inst: Instance) {
-        assert_eq!(inst.branch_and_bound().cost, inst.brute_force().cost);
-    }
-
-    #[quickcheck]
-    fn qc_dp_matches_bb(inst: Instance) {
-        assert!(inst.branch_and_bound().cost <= inst.dynamic_programming_w().cost);
-    }
-
-    #[quickcheck]
-    fn qc_dps_match(inst: Instance) {
-        assert_eq!(inst.dynamic_programming_w().cost, inst.dynamic_programming_c().cost);
-    }
-
-    #[quickcheck]
-    fn qc_greedy_is_valid(inst: Instance) {
-        inst.greedy().assert_valid();
-        inst.greedy_redux().assert_valid();
     }
 }
 
