@@ -4,13 +4,13 @@
 use std::{cmp, cmp::max,
     ops::Range,
     str::FromStr,
-    io::{BufRead, BufReader},
+    io::{BufRead, BufReader, self},
     collections::{BTreeMap, HashMap},
     fs::{read_dir, File, DirEntry},
     num::NonZeroU16,
 };
 use anyhow::{Context, Result, anyhow};
-use bitvec::prelude::BitArr;
+use bitvec::prelude::{BitArr, BitVec};
 use arrayvec::ArrayVec;
 
 #[cfg(test)]
@@ -41,7 +41,7 @@ pub fn list_input_files(set: &str, r: Range<u32>) -> Result<Vec<IOResult<DirEntr
 }
 
 // ~\~ begin <<lit/main.md|problem-instance-definition>>[0]
-type Id = NonZeroU16;
+pub type Id = NonZeroU16;
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Literal(bool, Id);
 pub type Clause = ArrayVec<Literal, 3>;
@@ -61,7 +61,12 @@ pub struct Instance {
 pub type Config = BitArr!(for MAX_VARIABLES);
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
-pub struct Solution<'a> { weight: u32, cfg: Config, pub inst: &'a Instance }
+pub struct Solution<'a> {
+    pub weight: u32,
+    cfg: Config,
+    pub inst: &'a Instance,
+    pub satisfied: bool,
+}
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct OptimalSolution {
@@ -132,9 +137,23 @@ impl <'a> Solution<'a> {
     }
 
     fn default(inst: &'a Instance) -> Solution<'a> {
-        Solution { weight: 0, cfg: Config::default(), inst }
+        Solution::new(0, Config::default(), inst)
+    }
+
+    pub fn new(weight: u32, cfg: Config, inst: &'a Instance) -> Solution<'a> {
+        Solution {
+            weight, cfg, inst, satisfied: satisfied(&inst.clauses, &cfg)
+        }
     }
 }
+
+pub fn satisfied(clauses: &ArrayVec<Clause, MAX_CLAUSES>, cfg: &Config) -> bool {
+    clauses.iter().all(|clause| clause
+        .iter()
+        .any(|&Literal(pos, id)| pos == cfg[id.get() as usize])
+    )
+}
+
 // ~\~ end
 // ~\~ end
 
@@ -150,20 +169,19 @@ impl Boilerplate for std::str::SplitWhitespace<'_> {
       where <T as FromStr>::Err: std::error::Error + Send + Sync + 'static {
         let str = self.next().ok_or_else(|| anyhow!("unexpected end of input"))?;
         str.parse::<T>()
-           .with_context(|| format!("cannot parse {}", str))
+           .with_context(|| anyhow!("cannot parse {}", str))
     }
 }
 // ~\~ end
 
-pub fn parse_clauses<T: BufRead>(stream: &mut T) -> Result<ArrayVec<Clause, MAX_CLAUSES>> {
+pub fn parse_clauses<T: Iterator<Item = String>>(lines: &mut T) -> Result<ArrayVec<Clause, MAX_CLAUSES>> {
     let to_literal: fn(i16) -> Result<Literal> = |n| Ok(Literal(
         n.is_positive(), NonZeroU16::new(n.abs() as u16).ok_or_else(|| anyhow!("variables start from 1"))?
     ));
     let mut clauses = ArrayVec::new();
-    let mut input = String::new();
 
-    while stream.read_line(&mut input)? != 0 {
-        let mut numbers = input.split_whitespace();
+    for line in lines {
+        let mut numbers = line.split_whitespace();
         clauses.push(ArrayVec::from([
             to_literal(numbers.parse_next()?)?,
             to_literal(numbers.parse_next()?)?,
@@ -196,6 +214,49 @@ fn parse_solution_line<T: BufRead>(mut stream: T, params: InstanceParams) -> Res
     Ok(Some(OptimalSolution {id, weight, cfg, params}))
 }
 
+pub fn load_instances(set: char) -> Result<Vec<Instance>> {
+    read_dir("../data/")?.filter_map(|entry| entry.ok()
+        .filter(|entry|
+            entry.file_name().into_string().unwrap().ends_with(&[set, '1'][..])
+        )
+        .and_then(|entry|
+            entry.file_type().ok().filter(|&typ| typ.is_dir()).and(Some(entry))
+        )
+    )
+    .flat_map(|dir| {
+        let params = params_from_filename(&dir.file_name().into_string().unwrap()).unwrap();
+        read_dir(dir.path()).into_iter()
+            .flatten().flatten()
+            .map(move |file| (params, file))
+    })
+    .map(|(_params, file)| {
+        let id = file.file_name().into_string().unwrap().split('-')
+            .nth(1).unwrap().split('.').next().unwrap().parse().unwrap();
+
+        let mut lines = BufReader::new(File::open(file.path()).unwrap())
+            .lines()
+            .map(|l| l.unwrap());
+
+        let weights_row = lines.find(|s| s.starts_with('w'))
+            .ok_or_else(|| anyhow!("could not find the weights row"))?;
+        let mut weights_row = weights_row.split_whitespace();
+        weights_row.next();
+        let weights =
+            weights_row.flat_map(|w| w /* will fail for w == 0 */.parse().into_iter()).collect();
+
+        let mut lines = lines.filter(|l| !l.starts_with('c'));
+        let clauses = parse_clauses(&mut lines)?;
+        Ok(Instance { id, weights, clauses })
+    }).collect()
+}
+
+fn params_from_filename(filename: &str) -> Result<InstanceParams> {
+    let mut params = filename[3..].split('-').take(2).map(|n| n.parse::<u16>());
+    let variables = params.next().unwrap()? as u8;
+    let clauses = params.next().unwrap()?;
+    Ok(InstanceParams { variables, clauses })
+}
+
 pub fn load_solutions(set: char) -> Result<HashMap<InstanceParams, OptimalSolution>> {
     let mut solutions = HashMap::new();
 
@@ -209,11 +270,7 @@ pub fn load_solutions(set: char) -> Result<HashMap<InstanceParams, OptimalSoluti
     for file in files {
         let file = file?;
         let filename = file.file_name().into_string().expect("FS error");
-
-        let mut params = filename[3..].split('-').take(2).map(|n| n.parse::<u16>());
-        let variables = params.next().unwrap()? as u8;
-        let clauses = params.next().unwrap()?;
-        let params = InstanceParams { variables, clauses };
+        let params = params_from_filename(&filename)?;
 
         let mut stream = BufReader::new(File::open(file.path())?);
         while let Some(opt) = parse_solution_line(&mut stream, params)? {
@@ -266,6 +323,73 @@ impl Instance {
 
     // ~\~ begin <<lit/main.md|solver-sa>>[0]
     // ~\~ end
+
+    pub fn evolutionary<Rng: rand::Rng>(&self, rng: &mut Rng) -> Solution {
+        impl<'a> Solution<'a> {
+            fn fitness(&self) -> u64 {
+                if !self.satisfied { 0 }
+                else { self.weight as u64 }
+            }
+
+            fn breed<Rng: rand::Rng>(&self, other: &Self, rng: &mut Rng) -> Solution<'a> {
+                let mut cfg = Config::zeroed();
+                let mut weight = 0;
+                for (i, (l, r)) in self
+                    .cfg.iter()
+                    .zip(other.cfg.iter())
+                    .take(self.inst.weights.len())
+                    .enumerate() {
+                    let b = *(if rng.gen_bool(0.5 ) {  l } else { r });
+                    let b =   if rng.gen_bool(0.01) { !b } else { b };
+                    cfg.set(i, b);
+                    weight += self.inst.weights[i].get() as u32 * b as u32;
+                }
+
+                Solution::new(weight, cfg, self.inst)
+            }
+        }
+
+        let mut random = || {
+            let mut cfg = Config::zeroed();
+            let mut weight = 0;
+            for i in 0..self.weights.len() {
+                let b = rng.gen_bool(0.5);
+                cfg.set(i, b);
+                weight += self.weights[i].get() as u32 * b as u32;
+            }
+
+            Solution::new(weight, cfg, self)
+        };
+
+        const POP_SIZE: usize = 1_000;
+        const ITER_LIMIT: usize = 10_000;
+        let mut population = vec![random(); POP_SIZE];
+        let mut buffer = Vec::with_capacity(population.len());
+        for iteration in 0..ITER_LIMIT {
+            population.sort_by_key(Solution::fitness);
+            population.reverse();
+            population.drain(POP_SIZE / 2 ..);
+
+            let mut offspring = population.iter().chain(population.iter());
+            offspring.next();
+            buffer.extend(population.iter()
+                .zip(offspring)
+                .map(|(a, b)| a.breed(b, rng)));
+
+            assert_eq!(buffer.len(), POP_SIZE / 2);
+            assert_eq!(population.len(), POP_SIZE / 2);
+
+            population.append(&mut buffer);
+            assert!(buffer.is_empty());
+
+            assert_eq!(population.len(), POP_SIZE);
+            if iteration % 100 == 0 {
+                // println!("  iteration {}", iteration);
+            }
+        }
+
+        population.into_iter().max_by_key(Solution::fitness).unwrap()
+    }
 }
 
 // ~\~ begin <<lit/main.md|tests>>[0]
@@ -273,7 +397,6 @@ impl Instance {
 mod tests {
     use super::*;
     use quickcheck::{Arbitrary, Gen};
-    use std::{fs::File, io::BufReader};
 
     #[derive(Clone, Debug)]
     #[repr(transparent)]
@@ -314,7 +437,6 @@ mod tests {
                     let arr: [T; CAP] = vec.try_into().unwrap();
                     ArrayVecProxy(arr.into())
                 })
-                .into_iter()
             )
         }
     }
@@ -370,7 +492,7 @@ mod tests {
 
     impl <'a> Solution<'a> {
         fn assert_valid(&self) {
-            let Solution { weight, cfg, inst } = self;
+            let Solution { weight, cfg, inst, satisfied } = self;
             let Instance { weights, clauses, .. } = inst;
 
             let computed_weight = weights
@@ -380,12 +502,6 @@ mod tests {
                     if *b { w.get() as u32 } else { 0 }
                 })
                 .sum::<u32>();
-
-            let satisfied = clauses.into_iter()
-                .all(|clause| clause
-                    .into_iter()
-                    .any(|&Literal(pos, id)| pos == cfg[id.get() as usize])
-                );
 
             assert_eq!(computed_weight, *weight);
             assert!(satisfied);
