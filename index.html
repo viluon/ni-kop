@@ -5,7 +5,7 @@
   <meta name="generator" content="pandoc" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes" />
   <meta name="author" content="Ondřej Kvapil" />
-  <title>NI-KOP – úkol 4</title>
+  <title>NI-KOP – úkol 5</title>
   <style type="text/css">
       code{white-space: pre-wrap;}
       span.smallcaps{font-variant: small-caps;}
@@ -97,19 +97,17 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
   </button>
-  <a href="#" class="ml-5 mr-auto navbar-brand">NI-KOP – úkol 4<br><span style="font-size: smaller">
+  <a href="#" class="ml-5 mr-auto navbar-brand">NI-KOP – úkol 5<br><span style="font-size: smaller">
         by <i>Ondřej Kvapil</i></span></a>
 <div class="collapse navbar-collapse" id="navbarSupportedContent">
 <ul>
-<li><a href="#kombinatorická-optimalizace-problém-batohu">Kombinatorická optimalizace: problém batohu</a>
+<li><a href="#kombinatorická-optimalizace-problém-vážené-splnitelnosti-booleovské-formule">Kombinatorická optimalizace: problém vážené splnitelnosti booleovské formule</a>
 <ul>
 <li><a href="#zadání">Zadání</a>
 <ul>
-<li><a href="#účel">Účel</a></li>
-<li><a href="#algoritmy-k-výběru">Algoritmy k výběru</a></li>
-<li><a href="#úkol">Úkol</a></li>
 <li><a href="#pokyny">Pokyny</a></li>
-<li><a href="#poznámka">Poznámka</a></li>
+<li><a href="#hodnocení">Hodnocení</a></li>
+<li><a href="#instance">Instance</a></li>
 </ul></li>
 <li><a href="#řešení">Řešení</a></li>
 <li><a href="#instrukce-k-sestavení-programu">Instrukce k sestavení programu</a></li>
@@ -140,40 +138,60 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
  -->
 
 <main role="main" class="flex-fill"><div class="container my-5">
-<h1 id="kombinatorická-optimalizace-problém-batohu">Kombinatorická optimalizace: problém batohu</h1>
+<h1 id="kombinatorická-optimalizace-problém-vážené-splnitelnosti-booleovské-formule">Kombinatorická optimalizace: problém vážené splnitelnosti booleovské formule</h1>
 <h2 id="zadání">Zadání</h2>
-<h3 id="účel">Účel</h3>
-<p>V této úloze si budete moci vyzkoušet nasazení pokročilé iterativní techniky “v malém”, na řešení jednoduchého problému (problém batohu). Proto by jak seznámení se s heuristikou samotnou, tak white box a black box fáze měly být snadné. Techniky experimentálního vyhodnocení, které jste si osvojili v předchozích úlohách, zde použijete k ověření, zda Vaše nasazení heuristiky je dostatečně kvalitní. V poslední úloze (jejíž hodnocení bude součástí hodnocení zkoušky) budete řešit složitější problém touto pokročilou technikou, tudíž “osahání si” těchto algoritmů a jejich nasazení na jednodušší úloze bude pro Vás přínosem. Krok od 4. úlohy k 5. bude pak malý: pouze upravíte konfiguraci a optimalizační kritérium pro jiný typ problému. Seznámíte se s reakcí algoritmu na manipulaci s parametry.</p>
-<p>Problém 5. úlohy má ovšem podstatně jiné vlastnosti, než problém batohu. Nepočítejte s tím, že kromě kódu přeberete i konkrétní hodnoty parametrů.</p>
-<h3 id="algoritmy-k-výběru">Algoritmy k výběru</h3>
-<ul>
-<li><strong>Simulované ochlazování</strong></li>
-<li>Genetické algoritmy</li>
-<li>Tabu search</li>
-</ul>
-<h3 id="úkol">Úkol</h3>
-<ul>
-<li>Zvolte si heuristiku, kterou budete řešit problém vážené splnitelnosti booleovské formule (simulované ochlazování, simulovaná evoluce, tabu prohledávání)</li>
-<li>Tuto heuristiku použijte pro řešení problému batohu. Můžete použít dostupné instance problému (instance zde, popis zde), anebo si vygenerujte své instance pomocí generátoru. Používejte instance s větším počtem věcí (&gt;30).</li>
-<li>Hlavním cílem domácí práce je seznámit se s danou heuristikou, zejména se způsobem, jakým se nastavují její parametry (rozvrh ochlazování, selekční tlak, tabu lhůta…) a modifikace (zjištění počáteční teploty, mechanismus selekce, tabu atributy…). Není-li Vám cokoli jasné, prosíme, ptejte se na cvičeních.</li>
-<li>Proveďte obě fáze nasazení (white box, black box) a podejte o nich zprávu.</li>
-</ul>
 <h3 id="pokyny">Pokyny</h3>
-<p>Problém batohu není příliš obtížný, většinou budete mít k dispozici globální maxima (exaktní řešení) z předchozích prací, například z dynamického programování. Při správném nastavení parametrů byste měli vždy dosáhnout těchto optim, případně pouze velice malých chyb. Doba výpočtu může ovšem být relativně větší. Závěrečná úloha je co do nastavení a požadovaného výkonu heuristiky podstatně náročnější a může vyžadovat zcela jiné nastavení parametrů.</p>
-<p>Zpráva by měla dokumentovat, že jste si při nasazení počínali racionálně. Obsahovat by měla:</p>
+<p>Problém řešte některou z pokročilých heuristik:</p>
 <ul>
-<li>Stručný popis zvoleného algoritmu.</li>
-<li>Popis white box fáze. Postup nastavení parametrů, výsledky experimentů s různými nastaveními parametrů, které vedly k určitému rozhodnutí, typicky vývoj řešení (populace u GA) v průběhu běhu algoritmu. Graf může dobře ilustrovat závěr, který z dat děláte.</li>
-<li>Popis black box fáze. Výsledek měření = čas výpočtu a rel. chyba. Pokud nejste schopni vypočítat rel. chybu, stačí uvést vývoj výsledné ceny (počáteční → koncová)</li>
-<li>Pokuste se vyvodit nějaké závěry</li>
+<li>simulované ochlazování</li>
+<li>genetický algoritmus</li>
+<li>tabu prohledávání</li>
 </ul>
-<h3 id="poznámka">Poznámka</h3>
+<p>Po nasazení heuristiky ověřte její vlastnosti experimentálním vyhodnocením, které přesvědčivě doloží, jakou třídu (rozsah, velikosti…) instancí heuristika zpracovává. Zejména v případě použití nestandardních, např. originálních technik doložte jejich účinnost experimentálně (což vyloučí případné diskuse o jejich vhodnosti).</p>
+<p>Zpráva by měla dokládat Váš racionální přístup k řešení problému, tedy celý pracovní postup. Ve zprávě prosím také popište obě fáze nasazení heuristiky, jak nastavení, (white box fáze), tak závěrečné vyhodnocení heuristiky (black box fáze). Prosím používejte definované formáty pro instance a řešení, usnadníte tak lepší přizpůsobení zkušebních instancí.</p>
+<h3 id="hodnocení">Hodnocení</h3>
+<p>Tato úloha je součástí hodnocení zkoušky - až 30 bodů ze 100 za předmět celkem. Práce by měla doložit Vaši schopnost nasadit pokročilé heuristiky na netriviální optimalizační problém. Nasazená heuristika by měla zpracovávat rozumně široké spektrum instancí s rozumnou chybou. Co je “rozumně”, bychom se měli dočíst v závěru Vaší práce.</p>
+<p>V hodnocení je kladen důraz na racionální postup celé práce. Pokud postup vyhovuje, méně uspokojivé výsledky heuristiky příliš nevadí, vzhledem k tomu, že řešený problém (jak jistě víte) patří k nejtěžším ve třídě NPO. Proto potřebujeme znát jak pracovní postup ve white box fázi, tak výsledky a závěr black box fáze.</p>
+<p>Hodnocení je rozděleno do tří kategorií:</p>
 <ul>
-<li>Hodnocení této úlohy bude odpovídat účelu úlohy - tj. prozkoumat chování příslušné pokročilé heuristiky. Hodnocení tedy bude velice benevolentní co se dosažených výsledků týče, méně už v případě postupu nasazení.</li>
+<li>Algoritmus a implementace (5 pt.)
+<ul>
+<li>Byly použity techniky (algoritmy, datové struktury) adekvátní problému?</li>
+<li>Byly použity pokročilé techniky? (např. adaptační mechanismy)</li>
+<li>Jsou některé postupy originálním přínosem autora?</li>
+</ul></li>
+<li>Nastavení heuristiky (13 pt.)
+<ul>
+<li>Jakou metodou autor hledal nastavení parametrů?</li>
+<li>Jak byly plánovány experimenty a jaké byly jejich otázky?</li>
+<li>Jestliže byl proveden faktorový návrh (což příliš nedoporučujeme), jak kompletní byl (změna vždy jen jednoho parametru nestačí)?</li>
+<li>Na jak velkých instancích je heuristika schopna pracovat?</li>
+<li>Jestliže práce heuristiky není uspokojivá, jak systematické byly snahy autora zjednat nápravu?</li>
+</ul></li>
+<li>Experimentální vyhodnocení heuristiky (12 pt.)
+<ul>
+<li>Jak dalece jsou závěry vyhodnocení doloženy experimentálně?</li>
+<li>Je interpretace experimentů přesvědčivá?</li>
+<li>Pokud je algoritmus randomizovaný, byla tato skutečnost vzata v úvahu při plánování experimentů?</li>
+<li>Je možno z experimentů usoudit na iterativní sílu heuristiky?</li>
+<li>Byly nestandardní postupy experimentálně porovnány se standardními?</li>
+<li>Jsou výsledky experimentů srozumitelně prezentovány (grafy, tabulky, statistické metody)?</li>
+</ul></li>
+</ul>
+<p>Práce bez experimentální části nemůže být přijata k hodnocení.</p>
+<h3 id="instance">Instance</h3>
+<ul>
+<li>SAT instance lze generovat náhodně. Klíčovým parametrem je poměr počtu klauzulí k počtu proměnných pro 3-SAT (viz ai-phys1.pdf - doporučujeme). Váhy lze generovat náhodně. V takovém případě je vhodné prokázat, že instance, kde všechny váhy byly vynásobeny velkým číslem, jsou zpracovávány stejně úspěšně.</li>
+<li>Lze vyjít z <a href="http://www.cs.ubc.ca/~hoos/SATLIB/benchm.html">DIMACS</a> SAT instancí. Nemají váhy, jejich generování viz výše.Tyto instance jsou na hraně fázového přechodu, jsou tedy značně obtížné. Obtížnost můžete snížit zkrácením (vynechání klauzulí).</li>
+<li>Připravili jsme sady zkušebních instancí. Vycházejí z instancí SATLIB, jsou ale zkráceny tak, aby měly co nejvíce řešení (počty řešení přikládáme). Váhy nejsou náhodné, mají ale náhodnou složku. Za upozornění na chyby, nekonzistence atd. budeme vděčni.
+<ul>
+<li><code>wuf-M</code> a <code>wuf-N</code>: Váhy by měly podporovat nalezení řešení. Heuristika, která řeší určitou instanci v sadě <code>wuf-M</code>, by měla řešit odpovídající instanci v sadě <code>wuf-N</code> stejně snadno. Vzhledem k počtu řešení jednotlivých instací (až 108), není možné efektivně najít optimální řešení</li>
+<li><code>wuf-Q</code> a <code>wuf-R</code>: Jako výše, váhy ale vytvářejí (mírně) zavádějící úlohu.</li>
+<li><code>wuf-A</code>: z dílny prof. Zlomyslného. Instance vycházejí z nezkrácených (nebo jen mírně zkrácených) instancí, takže jsou obtížné. Váhy vytvářejí zavádějící úlohu. Nicméně, malý počet řešení dovoluje ve většině případů uvést optimální řešení.</li>
+</ul></li>
 </ul>
 <h2 id="řešení">Řešení</h2>
 <p>Úkoly předmětu NI-KOP jsem se rozhodl implementovat v jazyce Rust za pomoci nástrojů na <em>literate programming</em> – přístup k psaní zdrojového kódu, který upřednostňuje lidsky čitelný popis před seznamem příkazů pro počítač. Tento dokument obsahuje veškerý zdrojový kód nutný k reprodukci mojí práce. Výsledek je dostupný online jako statická <a href="http://viluon.me/ni-kop/">webová stránka</a> a <a href="http://viluon.me/ni-kop/report.pdf">ke stažení v PDF</a>.</p>
-<p>Pro tento úkol jsem zvolil algoritmus simulovaného žíhání (taktéž ochlazování).</p>
 <h2 id="instrukce-k-sestavení-programu">Instrukce k sestavení programu</h2>
 <p>Program využívá standardních nástrojů jazyka Rust. O sestavení stačí požádat <code>cargo</code>.</p>
 <div class="doctest" data-status="SUCCESS">
@@ -191,34 +209,36 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <pre class="ansi2html-content"><span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">    Updating</span> crates.io index
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00"> Downloading</span> crates ...
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> aho-corasick v0.7.18
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> permutation v0.2.5
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> log v0.4.14
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> syn v1.0.80
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> funty v1.2.0
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> permutation v0.2.5
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> env_logger v0.8.4
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> tap v1.0.1
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> quickcheck v1.0.3
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> radium v0.6.2
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> quickcheck_macros v1.0.0
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> env_logger v0.8.4
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> libc v0.2.103
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> bitvec v0.22.3
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> wyz v0.4.0
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> proc-macro2 v1.0.29
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> radium v0.6.2
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> wyz v0.4.0
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> syn v1.0.80
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> libc v0.2.103
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> arrayvec v0.7.2
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> anyhow v1.0.44
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> quickcheck_macros v1.0.0
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> funty v1.2.0
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> bitvec v0.22.3
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> libc v0.2.103
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> cfg-if v1.0.0
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> memchr v2.4.1
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> proc-macro2 v1.0.29
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> unicode-xid v0.2.2
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> log v0.4.14
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> radium v0.6.2
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> ppv-lite86 v0.2.15
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> syn v1.0.80
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> regex-syntax v0.6.25
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> ppv-lite86 v0.2.15
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> radium v0.6.2
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> tap v1.0.1
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> anyhow v1.0.44
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> tap v1.0.1
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> funty v1.2.0
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> permutation v0.2.5
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> arrayvec v0.7.2
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> wyz v0.4.0
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> aho-corasick v0.7.18
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> getrandom v0.2.3
@@ -231,45 +251,69 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> quickcheck_macros v1.0.0
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> rand v0.8.4
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> quickcheck v1.0.3
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> solver v0.1.0 (/__w/ni-kop/ni-kop/4-iterative-knapsack/solver)
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #aa5500">warning</span><span style="font-weight: bold">: associated function is never used: `without`</span>
-   <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">--&gt; </span>src/lib.rs:123:8
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> solver v0.1.0 (/__w/ni-kop/ni-kop/5-weighted-sat/solver)
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #aa5500">warning</span><span style="font-weight: bold">: unused imports: `BTreeMap`, `cmp::max`, `self`</span>
+ <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">--&gt; </span>src/lib.rs:4:16
+  <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">|</span>
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">4</span> <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">| </span>use std::{cmp, cmp::max,
+  <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">| </span>               <span style="font-weight: bold"></span><span style="font-weight: bold; color: #aa5500">^^^^^^^^</span>
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">...</span>
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">7</span> <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">| </span>    io::{BufRead, BufReader, self},
+  <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">| </span>                             <span style="font-weight: bold"></span><span style="font-weight: bold; color: #aa5500">^^^^</span>
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">8</span> <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">| </span>    collections::{BTreeMap, HashMap},
+  <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">| </span>                  <span style="font-weight: bold"></span><span style="font-weight: bold; color: #aa5500">^^^^^^^^</span>
+  <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">|</span>
+  <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">= </span><span style="font-weight: bold">note</span>: `#[warn(unused_imports)]` on by default
+
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #aa5500">warning</span><span style="font-weight: bold">: unused import: `BitVec`</span>
+  <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">--&gt; </span>src/lib.rs:13:31
+   <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">|</span>
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">13</span> <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">| </span>use bitvec::prelude::{BitArr, BitVec};
+   <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">| </span>                              <span style="font-weight: bold"></span><span style="font-weight: bold; color: #aa5500">^^^^^^</span>
+
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #aa5500">warning</span><span style="font-weight: bold">: associated function is never used: `with`</span>
+   <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">--&gt; </span>src/lib.rs:114:8
     <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">|</span>
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">123</span> <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">| </span>    fn without(mut self, i: usize) -&gt; Solution&lt;'a&gt; {
-    <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">| </span>       <span style="font-weight: bold"></span><span style="font-weight: bold; color: #aa5500">^^^^^^^</span>
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">114</span> <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">| </span>    fn with(mut self, i: usize) -&gt; Solution&lt;'a&gt; {
+    <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">| </span>       <span style="font-weight: bold"></span><span style="font-weight: bold; color: #aa5500">^^^^</span>
     <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">|</span>
     <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">= </span><span style="font-weight: bold">note</span>: `#[warn(dead_code)]` on by default
 
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #aa5500">warning</span><span style="font-weight: bold">:</span> `solver` (lib) generated 1 warning
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">    Finished</span> release [optimized + debuginfo] target(s) in 1m 07s
-</pre>
-</div>
-</div>
-</div>
-<p>Následně připravíme ještě generátor instancí.</p>
-<div class="doctest" data-status="SUCCESS">
-<div class="doctestInput">
-<div class="fold-block">
-<button class="btn btn-outline-primary btn-sm fold-toggle" type="button" data-toggle="collapse" data-target="#build-generator-container" aria-controls="build-generator-container">&lt;&lt;build-generator&gt;&gt;=</button>
-<div id="build-generator-container" class="collapse">
-<div class="sourceCode" id="build-generator" style="max-height: 50vh"><pre class="sourceCode zsh eval bootstrap-fold overflow-auto"><code class="sourceCode zsh"><span id="build-generator-1"><a href="#build-generator-1" aria-hidden="true" tabindex="-1"></a><span class="kw">cd</span> gen</span>
-<span id="build-generator-2"><a href="#build-generator-2" aria-hidden="true" tabindex="-1"></a>make all</span></code></pre></div>
-</div>
-</div>
-</div>
-<div class="doctestResult">
-<div class="programOutput">
-<pre class="ansi2html-content">cd: no such file or directory: gen
-make[1]: Entering directory '/__w/ni-kop/ni-kop/4-iterative-knapsack'
-JUPYTER=1 pandoc --from markdown+multiline_tables+simple_tables --standalone --filter pandoc-doctest --filter pandoc-csv2table --highlight-style tango lit/*.md -o docs/pandoc.json
-Kernel `zsh` running ...
-Kernel `zsh` running ...
-Kernel `zsh` running ...
-Kernel `python3` running ...
-pandoc --to html5 --mathjax --toc --toc-depth 3 --template bootstrap/template.html --css css/mods.css --filter pandoc-bootstrap docs/pandoc.json -o docs/index.html
-cp bootstrap/mods.css docs/css/mods.css
-pandoc --to pdf --template templates/template.tex --variable documentclass=article --variable geometry="margin=3cm" docs/pandoc.json -o docs/report.pdf
-make[1]: Leaving directory '/__w/ni-kop/ni-kop/4-iterative-knapsack'
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #aa5500">warning</span><span style="font-weight: bold">: associated function is never used: `without`</span>
+   <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">--&gt; </span>src/lib.rs:118:8
+    <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">|</span>
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">118</span> <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">| </span>    fn without(mut self, i: usize) -&gt; Solution&lt;'a&gt; {
+    <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">| </span>       <span style="font-weight: bold"></span><span style="font-weight: bold; color: #aa5500">^^^^^^^</span>
+
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #aa5500">warning</span><span style="font-weight: bold">: associated function is never used: `invert`</span>
+   <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">--&gt; </span>src/lib.rs:122:8
+    <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">|</span>
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">122</span> <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">| </span>    fn invert(mut self) -&gt; Solution&lt;'a&gt; {
+    <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">| </span>       <span style="font-weight: bold"></span><span style="font-weight: bold; color: #aa5500">^^^^^^</span>
+
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #aa5500">warning</span><span style="font-weight: bold">: associated function is never used: `set`</span>
+   <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">--&gt; </span>src/lib.rs:129:8
+    <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">|</span>
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">129</span> <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">| </span>    fn set(&amp;mut self, i: usize, set: bool) -&gt; Solution&lt;'a&gt; {
+    <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">| </span>       <span style="font-weight: bold"></span><span style="font-weight: bold; color: #aa5500">^^^</span>
+
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #aa5500">warning</span><span style="font-weight: bold">: associated function is never used: `default`</span>
+   <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">--&gt; </span>src/lib.rs:139:8
+    <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">|</span>
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">139</span> <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">| </span>    fn default(inst: &amp;'a Instance) -&gt; Solution&lt;'a&gt; {
+    <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">| </span>       <span style="font-weight: bold"></span><span style="font-weight: bold; color: #aa5500">^^^^^^^</span>
+
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #aa5500">warning</span><span style="font-weight: bold">:</span> `solver` (lib) generated 7 warnings
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #aa5500">warning</span><span style="font-weight: bold">: unused import: `anyhow`</span>
+ <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">--&gt; </span>src/bin/main.rs:8:22
+  <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">|</span>
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">8</span> <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">| </span>use anyhow::{Result, anyhow};
+  <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">| </span>                     <span style="font-weight: bold"></span><span style="font-weight: bold; color: #aa5500">^^^^^^</span>
+  <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">|</span>
+  <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">= </span><span style="font-weight: bold">note</span>: `#[warn(unused_imports)]` on by default
+
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #aa5500">warning</span><span style="font-weight: bold">:</span> `solver` (bin "main") generated 1 warning
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">    Finished</span> release [optimized + debuginfo] target(s) in 1m 38s
 </pre>
 </div>
 </div>
@@ -288,20 +332,20 @@ make[1]: Leaving directory '/__w/ni-kop/ni-kop/4-iterative-knapsack'
 </div>
 <div class="doctestResult">
 <div class="programOutput">
-<pre class="ansi2html-content">Linux c51a1f2a3190 5.11.0-1025-azure #27~20.04.1-Ubuntu SMP Fri Jan 7 15:02:06 UTC 2022 x86_64 GNU/Linux
+<pre class="ansi2html-content">Linux e852750c2f5b 5.11.0-1025-azure #27~20.04.1-Ubuntu SMP Fri Jan 7 15:02:06 UTC 2022 x86_64 GNU/Linux
 
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">                   .#################.          </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">Name:</span>       <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">Intel Xeon Platinum </span>
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">                   .#################.          </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">Name:</span>       <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">Intel Xeon E5-2673 v</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">              .####                   ####.     </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">Hypervisor:</span> <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">Microsoft Hyper-V</span>
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">          .##                             ###   </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">uArch:</span>      <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">Cascade Lake</span>
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">          .##                             ###   </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">uArch:</span>      <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">Broadwell</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">       ##                          :##     ###  </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">Technology:</span> <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">14nm</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">    #                ##            :##      ##  </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">Max Freq:</span>   <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">Unknown</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">  ##   ##  ######.   ####  ######  :##      ##  </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">Cores:</span>      <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">2 cores</span>
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7"> ##    ##  ##:  ##:  ##   ##   ### :##     ###  </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">AVX:</span>        <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">AVX,AVX2,AVX512</span>
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7"> ##    ##  ##:  ##:  ##   ##   ### :##     ###  </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">AVX:</span>        <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">AVX,AVX2</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">##     ##  ##:  ##:  ##  :######## :##    ##    </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">FMA:</span>        <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">FMA3</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">##     ##  ##:  ##:  ##   ##.   .  :## ####     </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">L1i Size:</span>   <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">32KB (64KB Total)</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">##      #  ##:  ##:  ####  #####:   ##          </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">L1d Size:</span>   <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">32KB (64KB Total)</span>
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7"> ##                                             </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">L2 Size:</span>    <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">1MB (2MB Total)</span>
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">  ###.                         ..o####.         </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">L3 Size:</span>    <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">35.75MB</span>
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7"> ##                                             </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">L2 Size:</span>    <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">256KB (512KB Total)</span>
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">  ###.                         ..o####.         </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">L3 Size:</span>    <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">50MB</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">   ######oo...         ..oo#######              </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">Peak Perf.:</span> <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">Unknown</span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">          o###############o                     </span>
 
@@ -330,68 +374,24 @@ make[1]: Leaving directory '/__w/ni-kop/ni-kop/4-iterative-knapsack'
 </div>
 </div>
 <p>Skript <code>charts.py</code> je zodpovědný nejen za vykreslování grafů, ale také za načítání vstupních instancí, spouštění řešiče a měření času, který problém řešiči zabere.</p>
-<div class="doctest" data-status="SUCCESS">
+<div class="doctest" data-status="ERROR">
 <div class="doctestInput">
 <div class="sourceCode" id="cb1"><pre class="sourceCode python eval"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>python<span class="op">-</span>imports<span class="op">&gt;&gt;</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>performance<span class="op">-</span>chart<span class="op">&gt;&gt;</span></span></code></pre></div>
 </div>
-<div class="doctestResult">
+<div class="doctestError">
 <div class="programOutput">
-<pre class="ansi2html-content">{'id': 'scaling_factor_exploration', 'precise_plot': True, 'n_instances': 15, 'max_iterations': 8000, 'scaling_factor': 0.85, 'temperature_modifier': 0.7, 'equilibrium_width': 10}
-{'id': 'scaling_factor_exploration', 'precise_plot': True, 'n_instances': 15, 'max_iterations': 8000, 'scaling_factor': 0.9, 'temperature_modifier': 0.7, 'equilibrium_width': 10}
-{'id': 'scaling_factor_exploration', 'precise_plot': True, 'n_instances': 15, 'max_iterations': 8000, 'scaling_factor': 0.95, 'temperature_modifier': 0.7, 'equilibrium_width': 10}
-{'id': 'scaling_factor_exploration', 'precise_plot': True, 'n_instances': 15, 'max_iterations': 8000, 'scaling_factor': 0.99, 'temperature_modifier': 0.7, 'equilibrium_width': 10}
-{'id': 'scaling_factor_exploration', 'precise_plot': True, 'n_instances': 15, 'max_iterations': 8000, 'scaling_factor': 0.992, 'temperature_modifier': 0.7, 'equilibrium_width': 10}
-{'id': 'scaling_factor_exploration', 'precise_plot': True, 'n_instances': 15, 'max_iterations': 8000, 'scaling_factor': 0.994, 'temperature_modifier': 0.7, 'equilibrium_width': 10}
-{'id': 'scaling_factor_exploration', 'precise_plot': True, 'n_instances': 15, 'max_iterations': 8000, 'scaling_factor': 0.996, 'temperature_modifier': 0.7, 'equilibrium_width': 10}
-{'id': 'scaling_factor_exploration', 'precise_plot': True, 'n_instances': 15, 'max_iterations': 8000, 'scaling_factor': 0.997, 'temperature_modifier': 0.7, 'equilibrium_width': 10}
-{'id': 'scaling_factor_exploration', 'precise_plot': True, 'n_instances': 15, 'max_iterations': 8000, 'scaling_factor': 0.998, 'temperature_modifier': 0.7, 'equilibrium_width': 10}
-{'id': 'scaling_factor_exploration', 'precise_plot': True, 'n_instances': 15, 'max_iterations': 8000, 'scaling_factor': 0.999, 'temperature_modifier': 0.7, 'equilibrium_width': 10}
-{'id': 'temperature modifier exploration', 'precise_plot': True, 'n_instances': 30, 'max_iterations': 8000, 'scaling_factor': 0.996, 'temperature_modifier': 0.0001, 'equilibrium_width': 10}
-{'id': 'temperature modifier exploration', 'precise_plot': True, 'n_instances': 30, 'max_iterations': 8000, 'scaling_factor': 0.996, 'temperature_modifier': 0.01, 'equilibrium_width': 10}
-{'id': 'temperature modifier exploration', 'precise_plot': True, 'n_instances': 30, 'max_iterations': 8000, 'scaling_factor': 0.996, 'temperature_modifier': 1, 'equilibrium_width': 10}
-{'id': 'temperature modifier exploration', 'precise_plot': True, 'n_instances': 30, 'max_iterations': 8000, 'scaling_factor': 0.996, 'temperature_modifier': 100, 'equilibrium_width': 10}
-{'id': 'temperature modifier exploration', 'precise_plot': True, 'n_instances': 30, 'max_iterations': 8000, 'scaling_factor': 0.996, 'temperature_modifier': 10000, 'equilibrium_width': 10}
-{'id': 'equilibrium width exploration', 'precise_plot': False, 'n_instances': 40, 'max_iterations': 8000, 'scaling_factor': 0.996, 'temperature_modifier': 0.7, 'equilibrium_width': 1}
-{'id': 'equilibrium width exploration', 'precise_plot': False, 'n_instances': 40, 'max_iterations': 8000, 'scaling_factor': 0.996, 'temperature_modifier': 0.7, 'equilibrium_width': 2}
-{'id': 'equilibrium width exploration', 'precise_plot': False, 'n_instances': 40, 'max_iterations': 8000, 'scaling_factor': 0.996, 'temperature_modifier': 0.7, 'equilibrium_width': 3}
-{'id': 'equilibrium width exploration', 'precise_plot': False, 'n_instances': 40, 'max_iterations': 8000, 'scaling_factor': 0.996, 'temperature_modifier': 0.7, 'equilibrium_width': 4}
-{'id': 'equilibrium width exploration', 'precise_plot': False, 'n_instances': 40, 'max_iterations': 8000, 'scaling_factor': 0.996, 'temperature_modifier': 0.7, 'equilibrium_width': 5}
-{'id': 'equilibrium width exploration', 'precise_plot': False, 'n_instances': 40, 'max_iterations': 8000, 'scaling_factor': 0.996, 'temperature_modifier': 0.7, 'equilibrium_width': 6}
-{'id': 'equilibrium width exploration', 'precise_plot': False, 'n_instances': 40, 'max_iterations': 8000, 'scaling_factor': 0.996, 'temperature_modifier': 0.7, 'equilibrium_width': 7}
-{'id': 'equilibrium width exploration', 'precise_plot': False, 'n_instances': 40, 'max_iterations': 8000, 'scaling_factor': 0.996, 'temperature_modifier': 0.7, 'equilibrium_width': 8}
-{'id': 'equilibrium width exploration', 'precise_plot': False, 'n_instances': 40, 'max_iterations': 8000, 'scaling_factor': 0.996, 'temperature_modifier': 0.7, 'equilibrium_width': 9}
-{'id': 'equilibrium width exploration', 'precise_plot': False, 'n_instances': 40, 'max_iterations': 8000, 'scaling_factor': 0.996, 'temperature_modifier': 0.7, 'equilibrium_width': 10}
-{'id': 'equilibrium width exploration', 'precise_plot': False, 'n_instances': 40, 'max_iterations': 8000, 'scaling_factor': 0.996, 'temperature_modifier': 0.7, 'equilibrium_width': 20}
-{'id': 'equilibrium width exploration', 'precise_plot': False, 'n_instances': 40, 'max_iterations': 8000, 'scaling_factor': 0.996, 'temperature_modifier': 0.7, 'equilibrium_width': 30}
-{'id': 'equilibrium width exploration', 'precise_plot': False, 'n_instances': 40, 'max_iterations': 8000, 'scaling_factor': 0.996, 'temperature_modifier': 0.7, 'equilibrium_width': 40}
-{'id': 'equilibrium width exploration', 'precise_plot': False, 'n_instances': 40, 'max_iterations': 8000, 'scaling_factor': 0.996, 'temperature_modifier': 0.7, 'equilibrium_width': 50}
-{'id': 'equilibrium width exploration', 'precise_plot': False, 'n_instances': 40, 'max_iterations': 8000, 'scaling_factor': 0.996, 'temperature_modifier': 0.7, 'equilibrium_width': 60}
-{'id': 'equilibrium width exploration', 'precise_plot': False, 'n_instances': 40, 'max_iterations': 8000, 'scaling_factor': 0.996, 'temperature_modifier': 0.7, 'equilibrium_width': 70}
-{'id': 'equilibrium width exploration', 'precise_plot': False, 'n_instances': 40, 'max_iterations': 8000, 'scaling_factor': 0.996, 'temperature_modifier': 0.7, 'equilibrium_width': 80}
-{'id': 'equilibrium width exploration', 'precise_plot': False, 'n_instances': 40, 'max_iterations': 8000, 'scaling_factor': 0.996, 'temperature_modifier': 0.7, 'equilibrium_width': 90}
-{'id': 'equilibrium width exploration', 'precise_plot': False, 'n_instances': 40, 'max_iterations': 8000, 'scaling_factor': 0.996, 'temperature_modifier': 0.7, 'equilibrium_width': 100}
-{'id': 'black box', 'precise_plot': False, 'n_instances': 500, 'max_iterations': 8000, 'scaling_factor': 0.996, 'temperature_modifier': 0.7, 'equilibrium_width': 10}
-/tmp/ipykernel_3659/1103332206.py:150: SettingWithCopyWarning: 
-A value is trying to be set on a copy of a slice from a DataFrame.
-Try using .loc[row_indexer,col_indexer] = value instead
+<pre class="ansi2html-content"><span style="color: #aa0000">---------------------------------------------------------------------------</span>
+<span style="color: #aa0000">FileNotFoundError</span>                         Traceback (most recent call last)
+<span style="color: #00aa00">/tmp/ipykernel_1641/1103332206.py</span> in <span style="color: #00aaaa">&lt;module&gt;</span><span style="color: #0000aa"></span>
+<span style="font-weight: bold; color: #00aa00">    101</span> <span style="color: #aa0000"># load the input</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+<span style="font-weight: bold; color: #00aa00">    102</span> input <span style="color: #0000aa">=</span> <span style="color: #00aa00">None</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+<span style="color: #00aa00">--&gt; 103</span><span style="color: #aa0000"> </span><span style="color: #00aa00">with</span> open<span style="color: #0000aa">(</span><span style="color: #0000aa">"solver/ds/NK35_inst.dat"</span><span style="color: #0000aa">,</span> <span style="color: #0000aa">"r"</span><span style="color: #0000aa">)</span> <span style="color: #00aa00">as</span> f<span style="color: #0000aa">:</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+<span style="font-weight: bold; color: #00aa00">    104</span>     input <span style="color: #0000aa">=</span> f<span style="color: #0000aa">.</span>read<span style="color: #0000aa">(</span><span style="color: #0000aa">)</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
+<span style="font-weight: bold; color: #00aa00">    105</span> <span style="color: #0000aa"></span>
 
-See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
-  df["mean error"] = df[col].map(series)
-/tmp/ipykernel_3659/1103332206.py:150: SettingWithCopyWarning: 
-A value is trying to be set on a copy of a slice from a DataFrame.
-Try using .loc[row_indexer,col_indexer] = value instead
-
-See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
-  df["mean error"] = df[col].map(series)
-/tmp/ipykernel_3659/1103332206.py:150: SettingWithCopyWarning: 
-A value is trying to be set on a copy of a slice from a DataFrame.
-Try using .loc[row_indexer,col_indexer] = value instead
-
-See the caveats in the documentation: https://pandas.pydata.org/pandas-docs/stable/user_guide/indexing.html#returning-a-view-versus-a-copy
-  df["mean error"] = df[col].map(series)
-&lt;Figure size 640x480 with 1 Axes&gt;</pre>
+<span style="color: #aa0000">FileNotFoundError</span>: [Errno 2] No such file or directory: 'solver/ds/NK35_inst.dat'</pre>
 </div>
 </div>
 </div>
