@@ -29,18 +29,32 @@ fn main() -> Result<()> {
         size_of::<Instance>(),
     );
 
-    for inst in load_instances(set)? {
+    let mut instances = load_instances(set)?
+        .into_iter()
+        .map(|inst| (inst.clone().into(), inst))
+        .collect::<Vec<(InstanceParams, _)>>();
+    instances.sort_by(|(p1, i1), (p2, i2)|
+        p1.cmp(p2).then(i1.id.cmp(&i2.id))
+    );
+
+    instances.into_iter().take(3).for_each(|(params, inst)| {
         use std::time::Instant;
+
+        println!("solving {} ({:?} from set {})", inst.id, params, set);
 
         let mut rng = rng.clone();
         let now = Instant::now();
         let sln = inst.evolutionary(&mut rng);
         println!("took {} ms", now.elapsed().as_millis());
 
-        let optimal = &solutions.get(&inst.clone().into());
+        let optimal = solutions.get(&(inst.clone().into(), inst.id));
         let error = optimal.map(|opt| 1.0 - sln.weight as f64 / opt.weight as f64);
         println!("{} {} {}", sln.satisfied, sln.weight, error.map(|e| e.to_string()).unwrap_or_default());
-    }
+        println!("valid? {}", sln.valid());
+
+        println!("ours:    {}", sln.dump());
+        println!("optimal: {}\n", optimal.unwrap().dump());
+    });
     Ok(())
 }
 // ~\~ end

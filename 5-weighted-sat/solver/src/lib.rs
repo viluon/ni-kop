@@ -1,13 +1,15 @@
 // ~\~ language=Rust filename=solver/src/lib.rs
 // ~\~ begin <<lit/main.md|solver/src/lib.rs>>[0]
 // ~\~ begin <<lit/main.md|imports>>[0]
+#![feature(iter_intersperse)]
+
 use std::{cmp, cmp::max,
     ops::Range,
     str::FromStr,
     io::{BufRead, BufReader, self},
     collections::{BTreeMap, HashMap},
     fs::{read_dir, File, DirEntry},
-    num::NonZeroU16,
+    num::NonZeroU16, sync::Mutex,
 };
 use anyhow::{Context, Result, anyhow};
 use bitvec::prelude::{BitArr, BitVec};
@@ -44,14 +46,14 @@ pub fn list_input_files(set: &str, r: Range<u32>) -> Result<Vec<IOResult<DirEntr
 pub type Id = NonZeroU16;
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Literal(bool, Id);
-pub type Clause = ArrayVec<Literal, 3>;
+pub type Clause = [Literal; 3];
 
 const MAX_CLAUSES: usize = 512;
 const MAX_VARIABLES: usize = 256;
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Instance {
     pub id: i32,
-    pub weights: ArrayVec<Id, MAX_VARIABLES>,
+    pub weights: ArrayVec<NonZeroU16, MAX_VARIABLES>,
     pub clauses: ArrayVec<Clause, MAX_CLAUSES>,
 }
 
@@ -70,13 +72,14 @@ pub struct Solution<'a> {
 
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct OptimalSolution {
-    pub id: String,
+    pub full_id: String,
+    pub id: i32,
     pub weight: u32,
     pub cfg: Config,
     pub params: InstanceParams,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct InstanceParams {
     variables: u8,
     clauses: u16,
@@ -145,6 +148,44 @@ impl <'a> Solution<'a> {
             weight, cfg, inst, satisfied: satisfied(&inst.clauses, &cfg)
         }
     }
+
+    pub fn valid(&self) -> bool {
+        let Solution { weight, cfg, inst, satisfied } = *self;
+        let Instance { weights, clauses, .. } = inst;
+
+        let computed_weight = weights
+            .iter()
+            .zip(cfg)
+            .map(|(w, b)| {
+                if b { w.get() as u32 } else { 0 }
+            })
+            .sum::<u32>();
+
+        computed_weight == weight && satisfied
+    }
+
+    pub fn dump(&self) -> String {
+        dump_solution(self.inst.id, self.weight, &self.cfg, &self.inst.clone().into())
+    }
+}
+
+impl OptimalSolution {
+    pub fn dump(&self) -> String {
+        dump_solution(self.id, self.weight, &self.cfg, &self.clone().into())
+    }
+}
+
+fn dump_solution(id: i32, weight: u32, cfg: &Config, params: &InstanceParams) -> String {
+    use core::iter::once;
+    once(format!("uf{}-0{}", params.variables, id))
+    .chain(once(weight.to_string()))
+    .chain((0..params.variables as usize)
+        .map(|i| if cfg[i] { 1 } else { -1 } * i as i16)
+        .chain(once(0))
+        .map(|id| id.to_string())
+    )
+    .intersperse(" ".into())
+    .collect()
 }
 
 pub fn satisfied(clauses: &ArrayVec<Clause, MAX_CLAUSES>, cfg: &Config) -> bool {
@@ -164,7 +205,7 @@ trait Boilerplate {
       where <T as FromStr>::Err: std::error::Error + Send + Sync + 'static;
 }
 
-impl Boilerplate for std::str::SplitWhitespace<'_> {
+impl<'a, Iter> Boilerplate for Iter where Iter: Iterator<Item = &'a str> {
     fn parse_next<T: FromStr>(&mut self) -> Result<T>
       where <T as FromStr>::Err: std::error::Error + Send + Sync + 'static {
         let str = self.next().ok_or_else(|| anyhow!("unexpected end of input"))?;
@@ -182,11 +223,11 @@ pub fn parse_clauses<T: Iterator<Item = String>>(lines: &mut T) -> Result<ArrayV
 
     for line in lines {
         let mut numbers = line.split_whitespace();
-        clauses.push(ArrayVec::from([
+        clauses.push([
             to_literal(numbers.parse_next()?)?,
             to_literal(numbers.parse_next()?)?,
             to_literal(numbers.parse_next()?)?,
-        ]));
+        ]);
     }
 
     Ok(clauses)
@@ -198,26 +239,27 @@ fn parse_solution_line<T: BufRead>(mut stream: T, params: InstanceParams) -> Res
         return Ok(None)
     }
 
-    let mut numbers = input.split_whitespace();
-    let id = numbers.parse_next()?;
-    let weight = numbers.parse_next()?;
+    let mut line = input.split_whitespace();
+    let full_id: String = line.parse_next()?;
+    let id = full_id.split('-').skip(1).parse_next()?;
+    let weight = line.parse_next()?;
 
     let mut cfg = Config::default();
     let mut i = 0;
     loop {
-        let a: i16 = numbers.parse_next()?;
+        let a: i16 = line.parse_next()?;
         if a == 0 { break }
         cfg.set(i, a.is_positive());
         i += 1;
     }
 
-    Ok(Some(OptimalSolution {id, weight, cfg, params}))
+    Ok(Some(OptimalSolution {full_id, id, weight, cfg, params}))
 }
 
 pub fn load_instances(set: char) -> Result<Vec<Instance>> {
     read_dir("../data/")?.filter_map(|entry| entry.ok()
         .filter(|entry|
-            entry.file_name().into_string().unwrap().ends_with(&[set, '1'][..])
+            entry.file_name().into_string().unwrap().ends_with(&(set.to_string() + "1"))
         )
         .and_then(|entry|
             entry.file_type().ok().filter(|&typ| typ.is_dir()).and(Some(entry))
@@ -239,10 +281,11 @@ pub fn load_instances(set: char) -> Result<Vec<Instance>> {
 
         let weights_row = lines.find(|s| s.starts_with('w'))
             .ok_or_else(|| anyhow!("could not find the weights row"))?;
-        let mut weights_row = weights_row.split_whitespace();
-        weights_row.next();
-        let weights =
-            weights_row.flat_map(|w| w /* will fail for w == 0 */.parse().into_iter()).collect();
+
+        let weights = weights_row
+            .split_whitespace()
+            .skip(1)
+            .flat_map(|w| w /* will fail for w == 0 */.parse().into_iter()).collect();
 
         let mut lines = lines.filter(|l| !l.starts_with('c'));
         let clauses = parse_clauses(&mut lines)?;
@@ -257,7 +300,7 @@ fn params_from_filename(filename: &str) -> Result<InstanceParams> {
     Ok(InstanceParams { variables, clauses })
 }
 
-pub fn load_solutions(set: char) -> Result<HashMap<InstanceParams, OptimalSolution>> {
+pub fn load_solutions(set: char) -> Result<HashMap<(InstanceParams, i32), OptimalSolution>> {
     let mut solutions = HashMap::new();
 
     let files = read_dir("../data/")?
@@ -274,7 +317,7 @@ pub fn load_solutions(set: char) -> Result<HashMap<InstanceParams, OptimalSoluti
 
         let mut stream = BufReader::new(File::open(file.path())?);
         while let Some(opt) = parse_solution_line(&mut stream, params)? {
-            solutions.insert(params, opt);
+            assert!(solutions.insert((params, opt.id), opt).is_none());
         }
     }
 
@@ -324,7 +367,9 @@ impl Instance {
     // ~\~ begin <<lit/main.md|solver-sa>>[0]
     // ~\~ end
 
-    pub fn evolutionary<Rng: rand::Rng>(&self, rng: &mut Rng) -> Solution {
+    pub fn evolutionary<Rng: rand::Rng + Send + Sync + Clone>(&self, rng: &mut Rng) -> Solution {
+        use rayon::prelude::*;
+
         impl<'a> Solution<'a> {
             fn fitness(&self) -> u64 {
                 if !self.satisfied { 0 }
@@ -340,7 +385,7 @@ impl Instance {
                     .take(self.inst.weights.len())
                     .enumerate() {
                     let b = *(if rng.gen_bool(0.5 ) {  l } else { r });
-                    let b =   if rng.gen_bool(0.01) { !b } else { b };
+                    let b =   if rng.gen_bool(0.02) { !b } else { b };
                     cfg.set(i, b);
                     weight += self.inst.weights[i].get() as u32 * b as u32;
                 }
@@ -362,33 +407,83 @@ impl Instance {
         };
 
         const POP_SIZE: usize = 1_000;
-        const ITER_LIMIT: usize = 10_000;
-        let mut population = vec![random(); POP_SIZE];
-        let mut buffer = Vec::with_capacity(population.len());
-        for iteration in 0..ITER_LIMIT {
+        const ITER_LIMIT: usize = 1_000;
+
+        fn print_stats(pop: &[Solution]) {
+            let identity = core::iter::repeat(0u16).take(MAX_VARIABLES)
+                .collect::<ArrayVec<_, MAX_VARIABLES>>().into_inner().unwrap();
+            let counts = pop.par_iter()
+                .map(|sln| sln.cfg.iter()
+                    .map(|b| *b as u16)
+                    .collect::<ArrayVec<_, MAX_VARIABLES>>().into_inner().unwrap()
+                )
+                .reduce(|| identity, |l, r|
+                    l.iter().zip(r.iter())
+                    .map(|(x, y)| x + y)
+                    .collect::<ArrayVec<_, MAX_VARIABLES>>().into_inner().unwrap()
+                );
+
+            let vars = pop[0].inst.weights.len();
+            println!("stats: {}", counts.into_iter()
+                .map(|x| x as f64 / pop.len() as f64)
+                .map(|x| x.to_string())
+                .intersperse(" ".into())
+                .take(vars)
+                .collect::<String>()
+            );
+        }
+
+        let mut population = (0..POP_SIZE).map(|_| random()).collect::<Vec<_>>();
+        let mut buffer = Vec::with_capacity(population.len() / 2);
+        print_stats(&population[..]);
+        let ex_rng = Mutex::new(rng.clone());
+
+        (0..ITER_LIMIT).for_each(|i| {
             population.sort_by_key(Solution::fitness);
             population.reverse();
             population.drain(POP_SIZE / 2 ..);
 
-            let mut offspring = population.iter().chain(population.iter());
-            offspring.next();
-            buffer.extend(population.iter()
-                .zip(offspring)
-                .map(|(a, b)| a.breed(b, rng)));
-
-            assert_eq!(buffer.len(), POP_SIZE / 2);
-            assert_eq!(population.len(), POP_SIZE / 2);
+            buffer.par_extend(population.par_iter()
+                .zip(population.par_iter().chain(population.par_iter()).skip(1))
+                .map_init(|| {
+                    use rand::SeedableRng;
+                    let mut lock = ex_rng.lock().unwrap();
+                    rand_xoshiro::Xoshiro256PlusPlus::from_rng(&mut *lock).unwrap()
+                }, |prng, (a, b)| {
+                    a.breed(b, prng)
+                })
+            );
 
             population.append(&mut buffer);
-            assert!(buffer.is_empty());
-
+            if (i + 1) % (ITER_LIMIT / 100) == 0 { print_stats(&population[..]) }
             assert_eq!(population.len(), POP_SIZE);
-            if iteration % 100 == 0 {
-                // println!("  iteration {}", iteration);
-            }
-        }
+        });
 
+        *rng = ex_rng.into_inner().unwrap();
         population.into_iter().max_by_key(Solution::fitness).unwrap()
+    }
+
+    pub fn dump(&self) -> String {
+        use core::iter::once;
+
+        once("w".into())
+        .chain(self.weights.iter()
+            .map(|id| id.get())
+            .chain(once(0))
+            .map(|w| w.to_string())
+        )
+        .intersperse(" ".into())
+        .chain(once("\n".into()))
+        .chain(self.clauses.iter().flat_map(|clause|
+            clause.iter().map(|&Literal(pos, id)|
+                    id.get() as i16 * if pos { 1 } else { -1 }
+                )
+                .chain(once(0))
+                .map(|l| l.to_string())
+                .intersperse(" ".into())
+                .chain(once("\n".into()))
+        ))
+        .collect()
     }
 }
 
@@ -453,7 +548,7 @@ mod tests {
             Instance {
                 id:      i32::arbitrary(g),
                 weights: ArrayVecProxy::arbitrary(g).into(),
-                clauses: proxy.into_iter().map(Into::into).collect(),
+                clauses: proxy.into_iter().map(|clause| clause.0.into_inner().unwrap()).collect(),
             }
         }
 
@@ -472,14 +567,14 @@ mod tests {
                 .chain(ArrayVecProxy(
                         self.clauses.clone()
                             .into_iter()
-                            .map(|c| ArrayVecProxy(c))
+                            .map(|c| ArrayVecProxy(c.into()))
                             .collect()
                     )
                     .shrink()
                     .map(|clauses| {
                         let av: ArrayVec<LiteralProxy, MAX_CLAUSES> = clauses.into();
                         Instance {
-                            clauses: av.into_iter().map(Into::into).collect(),
+                            clauses: av.into_iter().map(|clause| clause.0.into_inner().unwrap()).collect(),
                             ..(&data).clone()
                         }
                     })
@@ -487,24 +582,6 @@ mod tests {
                 )
                 .collect();
             Box::new(chain.into_iter())
-        }
-    }
-
-    impl <'a> Solution<'a> {
-        fn assert_valid(&self) {
-            let Solution { weight, cfg, inst, satisfied } = self;
-            let Instance { weights, clauses, .. } = inst;
-
-            let computed_weight = weights
-                .iter()
-                .zip(cfg)
-                .map(|(w, b)| {
-                    if *b { w.get() as u32 } else { 0 }
-                })
-                .sum::<u32>();
-
-            assert_eq!(computed_weight, *weight);
-            assert!(satisfied);
         }
     }
 }
