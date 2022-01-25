@@ -4,6 +4,7 @@ extern crate solver;
 
 use std::mem::size_of;
 
+use rayon::prelude::*;
 use solver::*;
 use anyhow::{Result, anyhow};
 
@@ -30,10 +31,10 @@ fn main() -> Result<()> {
     );
 
     let mut instances = load_instances(set)?
-        .into_iter()
+        .into_par_iter()
         .map(|inst| (inst.clone().into(), inst))
         .collect::<Vec<(InstanceParams, _)>>();
-    instances.sort_by(|(p1, i1), (p2, i2)|
+    instances.par_sort_unstable_by(|(p1, i1), (p2, i2)|
         p1.cmp(p2).then(i1.id.cmp(&i2.id))
     );
 
@@ -44,7 +45,9 @@ fn main() -> Result<()> {
 
         let mut rng = rng.clone();
         let now = Instant::now();
-        let sln = inst.evolutionary(&mut rng);
+        let sln = inst.evolutionary(&mut rng, EvolutionaryConfig {
+            mutation_chance: 0.02,
+        });
         println!("took {} ms", now.elapsed().as_millis());
 
         let optimal = solutions.get(&(inst.clone().into(), inst.id));
@@ -53,7 +56,7 @@ fn main() -> Result<()> {
         println!("valid? {}", sln.valid());
 
         println!("ours:    {}", sln.dump());
-        println!("optimal: {}\n", optimal.unwrap().dump());
+        optimal.into_iter().for_each(|opt| println!("optimal: {}\n", opt.dump()));
     });
     Ok(())
 }
