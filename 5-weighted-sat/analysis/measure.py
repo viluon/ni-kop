@@ -71,6 +71,7 @@ def merge_datasets(*dss):
         for k in dss[0]
     }
 
+# ~\~ begin <<lit/main.md|datasets>>[0]
 configs = merge_datasets(dataset(
     "default",
 ), dataset(
@@ -78,6 +79,7 @@ configs = merge_datasets(dataset(
     n_instances = [6],
     mutation_chance = [0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5],
 ))
+# ~\~ end
 
 data = pd.DataFrame()
 cfgs = [dict(zip(configs, v)) for v in zip(*configs.values())]

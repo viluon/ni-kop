@@ -5,14 +5,6 @@ author: 'Ondřej Kvapil'
 
 # Kombinatorická optimalizace: problém vážené splnitelnosti booleovské formule
 
-**TODO**: heatmap vývoje přiřazení proměnných, osa y je čas, osa x jsou
-proměnné, barva buňky znázorňuje průměr přiřazení přes všechny jedince
-
-**TODO**: zdroje nedeterminismu:
-  - `map_init()` používá RNG n-krát, neznáme n (závisí na počtu jader, odhadu
-    práce, etc)
-  - `par_sort_unstable_by_key()` nepředvídatelně přehazuje řešení stejné fitness
-
 ## Zadání
 
 ### Pokyny
@@ -129,7 +121,11 @@ uname -a
 
 ### White box: průzkum chování algoritmu
 
-``` {.python .eval .bootstrap-fold file=analysis/measure.py}
+Následující soubor slouží k vyhodnocení algoritmu na různých datových sadách s
+různými parametry. Spouští implementaci v jazyce Rust a výsledky měření ukládá
+do binárního souboru pro následnou analýzu.
+
+``` {.python file=analysis/measure.py .eval .bootstrap-fold}
 
 import os
 from itertools import product, chain
@@ -201,13 +197,7 @@ def merge_datasets(*dss):
         for k in dss[0]
     }
 
-configs = merge_datasets(dataset(
-    "default",
-), dataset(
-    "mutation_exploration",
-    n_instances = [6],
-    mutation_chance = [0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5],
-))
+<<datasets>>
 
 data = pd.DataFrame()
 cfgs = [dict(zip(configs, v)) for v in zip(*configs.values())]
@@ -238,7 +228,32 @@ data.to_pickle("docs/assets/measurements.pkl")
 
 ```
 
-``` {.python .eval .bootstrap-fold file=analysis/plot.py}
+V tuto chvíli ještě nevíme, ve kterých oblastech prostoru všech konfigurací
+parametrů evolučního algoritmu se skrývají efektivní řešiče problému. Protože
+vyhodnocení kartézského součinu všech množin parametrů by zabralo moc dlouho,
+zaměříme se pouze na zajímavé podprostory. Ty jsou generovány funkcí `dataset`,
+která vytvoří pojmenovaný podprostor konfigurací kartézského součinu zadaných
+hodnot všech parametrů. Sjednocením těchto podprostorů dostaneme podprostor
+všech konfigurací, pro které je třeba algoritmus vyhodnotit.
+
+``` {.python #datasets}
+configs = merge_datasets(dataset(
+    "default",
+), dataset(
+    "mutation_exploration",
+    n_instances = [6],
+    mutation_chance = [0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5],
+))
+```
+
+Po vyhodnocení algoritmu pro různé parametry je čas na vizualizaci a analýzu
+výsledků. O tu se stará další program, který využívá vizualizací vyvinutých v
+předchozích úkolech, a přidává vlastní. Rozdělení na dvě fáze (měření a
+vizualizace zvlášť) se serializací do binárního souboru uprostřed vede ke
+zkrácení iteračního cyklu během whitebox fáze vývoje algoritmu. Je-li třeba
+poupravit detaily grafu, měření se nemusí provádět znovu, a naopak.
+
+``` {.python file=analysis/plot.py .eval .bootstrap-fold}
 
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -523,7 +538,13 @@ plottery()
 
 ```
 
-![Vývoj populace po 200 generací](assets/whitebox-heatmap-default.svg)
+Vůbec první varianta algoritmu nevyužívá žádných metod nichingu, v každé ze dvou
+set generací z populace tisíce jedinců nekompromisně vyřadí slabší půlku a
+rodiče kombinuje do nových potomků uniformním křížením.
+
+![První nástřel evolučního algoritmu](whitebox-default-0.svg)
+
+![Vývoj populace po 200 generací](assets/whitebox-heatmap-default-mix.svg)
 
 ![Šance mutace vs. hustota chyb](assets/whitebox-mutation-chance-error.svg)
 
