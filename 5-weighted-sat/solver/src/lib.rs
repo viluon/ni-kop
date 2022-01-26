@@ -89,7 +89,11 @@ pub struct InstanceParams {
 
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
 pub struct EvolutionaryConfig {
+    pub set: char,
     pub mutation_chance: f64,
+    pub n_instances: u16,
+    pub generations: u32,
+    pub population_size: usize,
 }
 
 impl From<Instance> for InstanceParams {
@@ -374,7 +378,12 @@ impl Instance {
     // ~\~ begin <<lit/main.md|solver-sa>>[0]
     // ~\~ end
 
-    pub fn evolutionary<Rng: rand::Rng + Send + Sync + Clone>(&self, rng: &mut Rng, evo_config: EvolutionaryConfig) -> Solution {
+    pub fn evolutionary<Rng: rand::Rng + Send + Sync + Clone>(
+        &self,
+        rng: &mut Rng,
+        evo_config: EvolutionaryConfig,
+        opt: Option<&OptimalSolution>
+    ) -> Solution {
         use rayon::prelude::*;
 
         impl<'a> Solution<'a> {
@@ -413,10 +422,7 @@ impl Instance {
             Solution::new(weight, cfg, self)
         };
 
-        const POP_SIZE: usize = 1_000;
-        const ITER_LIMIT: usize = 100;
-
-        fn stats(pop: &[Solution]) -> String {
+        fn stats(pop: &[Solution], evo_config: EvolutionaryConfig, opt: Option<&OptimalSolution>) -> String {
             let identity = core::iter::repeat(0u16).take(MAX_VARIABLES)
                 .collect::<ArrayVec<_, MAX_VARIABLES>>().into_inner().unwrap();
             let counts = pop.par_iter()
@@ -431,42 +437,55 @@ impl Instance {
                 );
 
             let vars = pop[0].inst.weights.len();
-            counts.into_iter()
-                .map(|x| x as f64 / pop.len() as f64)
+            opt.and_then(|opt| {
+                    pop.iter()
+                        .filter(|sln| sln.satisfied)
+                        .map(|sln| (1, sln.weight as f64 / opt.weight as f64))
+                        .reduce(|acc, (n, w)| (acc.0 + n, acc.1 + w))
+                        .map(|(count, sum)| 1.0 - sum / count as f64)
+                }).or(Some(2.0)) // fill in the error if there's no known optimum
+                .into_iter()
+                .chain(counts.into_iter().take(vars).map(|x| x as f64 / pop.len() as f64))
                 .map(|x| x.to_string())
                 .intersperse(" ".into())
-                .take(vars)
                 .collect::<String>()
         }
 
-        let mut population = (0..POP_SIZE).map(|_| random()).collect::<Vec<_>>();
+        let mut population = (0..evo_config.population_size).map(|_| random()).collect::<Vec<_>>();
         let mut buffer = Vec::with_capacity(population.len() / 2);
         let mut shuffler: Vec<Solution> = buffer.clone();
-        println!("init {}", stats(&population[..]));
+        println!("0 {}", stats(&population[..], evo_config, opt));
         let ex_rng = Mutex::new(rng.clone());
 
-        (0..ITER_LIMIT).for_each(|i| {
-            population.par_sort_unstable_by_key(|sln| -(sln.fitness(&evo_config) as i64));
-            population.drain(POP_SIZE / 2 ..);
+        (0..evo_config.generations).for_each(|i| {
+            population.par_sort_by_key(|sln| -(sln.fitness(&evo_config) as i64));
+            population.drain(evo_config.population_size / 2 ..);
 
             shuffler.par_extend(population.par_iter());
             shuffler.shuffle(&mut *ex_rng.lock().unwrap());
 
-            buffer.par_extend(shuffler.par_drain(..)
-                .zip(population.par_iter())
-                .map_init(|| {
-                    use rand::SeedableRng;
-                    let mut lock = ex_rng.lock().unwrap();
-                    rand_xoshiro::Xoshiro256PlusPlus::from_rng(&mut *lock).unwrap()
-                }, |prng, (a, b)| {
-                    a.breed(b, &evo_config, prng)
+            buffer.extend(shuffler.drain(..)
+                .zip(population.iter())
+                // // for the parallel (nondet!) version, just take par_extend,
+                // // par_drain, par_iter, and this:
+                // .map_init(|| {
+                //     use rand::SeedableRng;
+                //     let mut lock = ex_rng.lock().unwrap();
+                //     rand_xoshiro::Xoshiro256PlusPlus::from_rng(&mut *lock).unwrap()
+                // }, |prng, (a, b)| {
+                //     a.breed(b, &evo_config, prng)
+                // })
+                .map(|(a, b)| {
+                    a.breed(b, &evo_config, &mut *ex_rng.lock().unwrap())
                 })
             );
 
             population.append(&mut buffer);
             #[allow(clippy::modulo_one)]
-            if (i + 1) % (ITER_LIMIT / 100) == 0 { println!("{} {}", i, stats(&population[..])) }
-            assert_eq!(population.len(), POP_SIZE);
+            if (i + 1) % (evo_config.generations / 100) == 0 {
+                println!("{} {}", i + 1, stats(&population[..], evo_config, opt))
+            }
+            assert_eq!(population.len(), evo_config.population_size);
         });
 
         *rng = ex_rng.into_inner().unwrap();

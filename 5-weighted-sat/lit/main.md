@@ -5,6 +5,14 @@ author: 'Ondřej Kvapil'
 
 # Kombinatorická optimalizace: problém vážené splnitelnosti booleovské formule
 
+**TODO**: heatmap vývoje přiřazení proměnných, osa y je čas, osa x jsou
+proměnné, barva buňky znázorňuje průměr přiřazení přes všechny jedince
+
+**TODO**: zdroje nedeterminismu:
+  - `map_init()` používá RNG n-krát, neznáme n (závisí na počtu jader, odhadu
+    práce, etc)
+  - `par_sort_unstable_by_key()` nepředvídatelně přehazuje řešení stejné fitness
+
 ## Zadání
 
 ### Pokyny

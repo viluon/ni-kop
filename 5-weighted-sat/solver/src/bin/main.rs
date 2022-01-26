@@ -9,8 +9,12 @@ use solver::*;
 use anyhow::{Result, anyhow};
 
 fn main() -> Result<()> {
-    let set = 'M';
-    let solutions = load_solutions(set)?;
+    let evo_config: EvolutionaryConfig = serde_json::from_str(std::env::args()
+        .collect::<Vec<_>>()
+        .get(1)
+        .ok_or_else(|| anyhow!("Expected the evolutionary configuration in JSON format as the first argument"))?)?;
+
+    let solutions = load_solutions(evo_config.set)?;
     let rng: rand_chacha::ChaCha8Rng = rand::SeedableRng::seed_from_u64(42);
 
     println!(
@@ -30,7 +34,7 @@ fn main() -> Result<()> {
         size_of::<Instance>(),
     );
 
-    let mut instances = load_instances(set)?
+    let mut instances = load_instances(evo_config.set)?
         .into_par_iter()
         .map(|inst| (inst.clone().into(), inst))
         .collect::<Vec<(InstanceParams, _)>>();
@@ -38,25 +42,35 @@ fn main() -> Result<()> {
         p1.cmp(p2).then(i1.id.cmp(&i2.id))
     );
 
-    instances.into_iter().take(3).for_each(|(params, inst)| {
+    instances.into_iter().take(evo_config.n_instances as usize).for_each(|(params, inst)| {
         use std::time::Instant;
 
-        println!("solving {} ({:?} from set {})", inst.id, params, set);
+        // println!("solving {} ({:?} from set {})", inst.id, params, evo_config.set);
 
         let mut rng = rng.clone();
-        let now = Instant::now();
-        let sln = inst.evolutionary(&mut rng, EvolutionaryConfig {
-            mutation_chance: 0.02,
-        });
-        println!("took {} ms", now.elapsed().as_millis());
-
         let optimal = solutions.get(&(inst.clone().into(), inst.id));
-        let error = optimal.map(|opt| 1.0 - sln.weight as f64 / opt.weight as f64);
-        println!("{} {} {}", sln.satisfied, sln.weight, error.map(|e| e.to_string()).unwrap_or_default());
-        println!("valid? {}", sln.valid());
+        let now = Instant::now();
+        let sln = inst.evolutionary(&mut rng, evo_config, optimal);
+        let time = now.elapsed().as_millis();
 
-        println!("ours:    {}", sln.dump());
-        optimal.into_iter().for_each(|opt| println!("optimal: {}\n", opt.dump()));
+        let error = optimal.map(|opt| 1.0 - sln.weight as f64 / opt.weight as f64);
+        println!("done: {time} {id} {satisfied} {valid} {weight} {err}",
+            time = time,
+            id = inst.id,
+            satisfied = sln.satisfied,
+            valid = sln.valid(),
+            weight = sln.weight,
+            err = error.map(|e| e.to_string()).unwrap_or_default()
+        );
+        // assert!(sln.valid(),
+        //     "the following (satisfied = {}) isn't a valid solution to instance {}:\n{}",
+        //     sln.satisfied,
+        //     inst.id,
+        //     sln.dump()
+        // );
+
+        // println!("ours:    {}", sln.dump());
+        // println!("optimal: {}\n", optimal.map(|opt| opt.dump()).unwrap_or_else(|| "None".into()));
     });
     Ok(())
 }
