@@ -1,3 +1,6 @@
+# ~\~ language=Python filename=analysis/measure.py
+# ~\~ begin <<lit/main.md|analysis/measure.py>>[0]
+
 import os
 from itertools import product, chain
 from subprocess import run, PIPE
@@ -102,3 +105,5 @@ for config in cfgs:
         progress_bar(iteration, total)
 
 data.to_pickle("docs/assets/measurements.pkl")
+
+# ~\~ end

@@ -23,6 +23,7 @@ extern crate quickcheck_macros;
 // ~\~ end
 
 // ~\~ begin <<lit/main.md|algorithm-map>>[0]
+
 // ~\~ end
 
 use std::result::Result as IOResult;
@@ -355,27 +356,35 @@ impl<I> IteratorRandomWeighted for I where I: Iterator + Sized + Clone {}
 
 impl Instance {
     // ~\~ begin <<lit/main.md|solver-dpw>>[0]
+
     // ~\~ end
 
     // ~\~ begin <<lit/main.md|solver-dpc>>[0]
+
     // ~\~ end
 
     // ~\~ begin <<lit/main.md|solver-fptas>>[0]
+
     // ~\~ end
 
     // ~\~ begin <<lit/main.md|solver-greedy>>[0]
+
     // ~\~ end
 
     // ~\~ begin <<lit/main.md|solver-greedy-redux>>[0]
+
     // ~\~ end
 
     // ~\~ begin <<lit/main.md|solver-bb>>[0]
+
     // ~\~ end
 
     // ~\~ begin <<lit/main.md|solver-bf>>[0]
+
     // ~\~ end
 
     // ~\~ begin <<lit/main.md|solver-sa>>[0]
+
     // ~\~ end
 
     pub fn evolutionary<Rng: rand::Rng + Send + Sync + Clone>(

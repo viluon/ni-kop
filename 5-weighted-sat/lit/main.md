@@ -129,46 +129,13 @@ uname -a
 
 ### White box: průzkum chování algoritmu
 
-Průzkumná fáze práce má za cíl odhalit vztahy mezi jednotlivými parametry
-algoritmu a najít pro ně vhodné hodnoty. Výchozí parametry jsou vidět v kódu
-níže, modifikátor teploty je $0.7$ a maximální počet iterací je $8 000$.
-Modifikátor teploty je koeficient, kterým se násobí cena řešení heuristické
-metody greedy redux. Toto číslo určuje počáteční teplotu.
+``` {.python .eval .bootstrap-fold file=analysis/measure.py}
 
-Průzkum jsem provedl na prvních dvaceti instancích sady `NK35`.
-
-```{.python #python-imports .bootstrap-fold}
-import matplotlib.pyplot as plt
-import pandas as pd
-import seaborn as sns
-import numpy as np
-import scipy.stats as st
-import json
 import os
-import time
-from pandas.core.tools.numeric import to_numeric
-from subprocess import run, PIPE
 from itertools import product, chain
-import textwrap as tr
-```
-
-Skript `charts.py` je zodpovědný nejen za vykreslování grafů, ale také za
-načítání vstupních instancí, spouštění řešiče a měření času, který problém
-řešiči zabere.
-
-```{.python .eval file=analysis/charts.py}
-<<python-imports>>
-
-<<performance-chart>>
-```
-
-Výkon každého algoritmu je na instancích měřen jednotlivě, tj. vstupní soubor
-rozdělíme na řádky a řešiči předáme jedinou instanci.
-
-```{.python #performance-chart .bootstrap-fold}
-# plot the measurements
-
-figsize = (14, 8)
+from subprocess import run, PIPE
+import json
+import pandas as pd
 
 show_progress = os.environ.get("JUPYTER") == None
 
@@ -183,18 +150,13 @@ def progress_bar(iteration, total, length = 60):
     if iteration == total:
         print()
 
-def invoke_solver(input, cfg):
+def invoke_solver(cfg):
     solver = run(
         [
             "target/release/main",
-            "sa",
-            str(cfg["max_iterations"]),
-            str(cfg["scaling_factor"]),
-            str(cfg["temperature_modifier"]),
-            str(cfg["equilibrium_width"]),
+            json.dumps(cfg),
         ],
         stdout = PIPE,
-        input = input,
         encoding = "ascii",
         cwd = "solver/"
     )
@@ -202,22 +164,26 @@ def invoke_solver(input, cfg):
         print(solver)
         raise Exception("solver failed")
 
-    lines = solver.stdout.split("\n")
-    [_, time, _] = lines[-3].split()
-    [cost, err]  = lines[-2].split()
-    cost_temperature_progression = [list(map(float, entry.split())) for entry in lines[:-4]]
-    return (float(time), float(cost), float(err), cost_temperature_progression)
+    results = []
+    stats = []
+    for line in solver.stdout.split("\n")[8:]:
+        if line.startswith("done: "):
+            [_, time, inst_id, satisfied, valid, weight, err] = line.split()
+            results.append((float(time), int(inst_id), satisfied == "true", valid == "true", float(weight), float(err), stats))
+            stats = []
+        else:
+            stats.append(list(map(float, line.split())))
+    return results
 
 def dataset(id, **kwargs):
     params = dict({
         # defaults
         "id": [id],
-        "precise_plot": [True],
+        "set": ["M"],
         "n_instances": [15],
-        "max_iterations": [8000],
-        "scaling_factor": [0.996],
-        "temperature_modifier": [0.7],
-        "equilibrium_width": [10],
+        "generations": [200],
+        "mutation_chance": [0.02],
+        "population_size": [1000],
     }, **kwargs)
 
     key_order = [k for k in params]
@@ -236,29 +202,14 @@ def merge_datasets(*dss):
     }
 
 configs = merge_datasets(dataset(
-    "scaling_factor_exploration",
-    scaling_factor = [0.85, 0.9, 0.95, 0.99, 0.992, 0.994, 0.996, 0.997, 0.998, 0.999],
+    "default",
 ), dataset(
-    "temperature modifier exploration",
-    n_instances = [30],
-    temperature_modifier = [0.0001, 0.01, 1, 100, 10000],
-), dataset(
-    "equilibrium width exploration",
-    n_instances = [40],
-    precise_plot = [False],
-    equilibrium_width = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
-), dataset(
-    "black box",
-    precise_plot = [False],
-    n_instances = [500],
+    "mutation_exploration",
+    n_instances = [6],
+    mutation_chance = [0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5],
 ))
 
-# load the input
-input = None
-with open("solver/ds/NK35_inst.dat", "r") as f:
-    input = f.read()
-
-errors = []
+data = pd.DataFrame()
 cfgs = [dict(zip(configs, v)) for v in zip(*configs.values())]
 iteration = 0
 total = sum([cfg["n_instances"] for cfg in cfgs])
@@ -270,36 +221,58 @@ for config in cfgs:
     progress_bar(iteration, total)
 
     params = "-".join([str(v) for _, v in config.items()])
-    for instance in input.split("\n")[:config["n_instances"]]:
-        id = instance.split()[0]
-        (t, cost, err, cost_temperature_progression) = invoke_solver(instance, config)
-        errors.append(dict(config, error = err))
-
-        if config["precise_plot"]:
-            # plot the cost / temperature progression:
-            # we have two line graphs in a single plot
-            # the x axis is just the index in the list
-
-            plt.style.use("dark_background")
-            fig, ax = plt.subplots(figsize = figsize)
-            for (i, label) in zip(range(42), ["cost", "best cost", "temperature"]):
-                ax.plot(
-                    range(len(cost_temperature_progression)),
-                    [entry[i] for entry in cost_temperature_progression],
-                    label = label,
-                )
-            ax.set_xlabel("iteration")
-            ax.set_title(f"instance {id} with error {err}")
-            ax.legend(loc = "lower right")
-
-            plt.savefig(f"docs/assets/whitebox-{params}-{id}.svg")
-            plt.close()
+    for (t, inst_id, satisfied, valid, weight, err, stats) in invoke_solver(config):
+        data = data.append(dict(config,
+            error   = err,
+            inst_id = inst_id,
+            stats   = stats,
+            time    = t,
+            valid   = valid,
+            weight  = weight,
+        ), ignore_index = True)
 
         iteration = iteration + 1
         progress_bar(iteration, total)
 
-data = pd.DataFrame(errors)
-def ridgeline(id, title, col, filename, x_label = "Chyba oproti optimálnímu řešení [%]"):
+data.to_pickle("docs/assets/measurements.pkl")
+
+```
+
+``` {.python .eval .bootstrap-fold file=analysis/plot.py}
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import textwrap as tr
+import os
+
+data = pd.read_pickle("docs/assets/measurements.pkl")
+
+show_progress = os.environ.get("JUPYTER") == None
+
+plot_labels = dict(
+    error           = "Chyba oproti optimálnímu řešení [%]",
+    generations     = "Počet generací",
+    mutation_chance = "Pravděpodobnost mutace",
+    n_instances     = "Počet instancí",
+    set             = "Datová sada",
+    time            = "Doba běhu [s]",
+    weight          = "Váha řešení",
+)
+
+scheduled_plots = []
+
+def progress_bar(iteration, total, length = 60):
+    if not show_progress:
+        return
+    percent = ("{0:.1f}").format(100 * (iteration / float(total)))
+    filledLength = int(length * iteration // total)
+    bar = '=' * filledLength + ' ' * (length - filledLength)
+    print(f'\r[{bar}] {percent}%', end = "\r")
+    if iteration == total:
+        print()
+
+def ridgeline(id, title, col, filename, x_label = "Chyba oproti optimálnímu řešení [%]", progress = lambda _: None):
     df = data[data["id"] == id]
     series = df.groupby(col)["error"].mean()
     df["mean error"] = df[col].map(series)
@@ -329,8 +302,16 @@ def ridgeline(id, title, col, filename, x_label = "Chyba oproti optimálnímu ř
     g.fig.subplots_adjust(hspace = -0.3)
 
     for i, ax in enumerate(g.axes.flat):
-        ax.text(-0.125, 5, df[col].unique()[i],
-                fontsize = 15, color = ax.lines[-1].get_color(), va = "baseline")
+        ax.annotate(
+            df[col].unique()[i],
+            (0, 0),
+            (-16.5, 3),
+            xycoords = "axes fraction",
+            textcoords = "offset points",
+            va = "baseline",
+            fontsize = 15,
+            color = ax.lines[-1].get_color(),
+        )
 
     # remove titles, y ticks, spines
     g.set_titles("")
@@ -344,85 +325,211 @@ def ridgeline(id, title, col, filename, x_label = "Chyba oproti optimálnímu ř
 
     g.savefig(f"docs/assets/{filename}")
     plt.close()
+    progress(1)
 
-ridgeline(
-    "scaling_factor_exploration",
-    "Vliv koeficientu chlazení na hustotu chyb",
-    "scaling_factor",
-    "whitebox-error-distributions.svg",
+def boxplot(x_axis, y_axis, id, title, grouping_column, data = data, filename = None, progress = lambda _: None):
+    if filename is None:
+        filename = id.replace(" ", "_") + ".svg"
+    print(f"\t{title}")
+    fig, ax = plt.subplots(figsize = (14, 8))
+    ds = [d for d in data if d["id"] == id]
+    # create a frame from the list
+    df = pd.DataFrame(ds)
+
+    # do a grouped boxplot
+    sns.boxplot(
+        x = x_axis,
+        y = y_axis,
+        data = df,
+        hue = grouping_column,
+        ax = ax,
+        linewidth = 0.8,
+    )
+
+    # render the datapoints as dots with horizontal jitter
+    sns.stripplot(
+        x = x_axis,
+        y = y_axis,
+        data = df,
+        hue = grouping_column,
+        ax = ax,
+        jitter = True,
+        size = 4,
+        dodge = True,
+        linewidth = 0.2,
+        alpha = 0.4,
+        edgecolor = "white",
+    )
+
+    plt.title(title)
+    plt.xlabel(plot_labels[x_axis])
+    plt.ylabel(plot_labels[y_axis])
+
+    constant_columns = [
+        col for col in df.columns[df.nunique() <= 1]
+            if (col not in ["id", "n_instances", "contents"])
+    ]
+
+    caption = "\n".join(tr.wrap("Konfigurace: {}".format({
+        k: df[k][0] for k in constant_columns
+    }), width = 170))
+
+    fig.text(
+        0.09,
+        0.05,
+        caption,
+        fontsize = "small",
+        fontfamily = "monospace",
+        verticalalignment = "top",
+    )
+
+    handles, labels = ax.get_legend_handles_labels()
+    # labels = [alg_labels[l] for l in labels]
+
+    plt.legend(handles[0 : int(len(handles) / 2)], labels[0 : int(len(labels) / 2)])
+    plt.savefig(f"docs/assets/{filename}.svg")
+    progress(1)
+
+def heatmap(id, title, filename, data = data, progress = lambda _: None):
+    dataset = data[data["id"] == id]
+    stats = dataset["stats"]
+    n_instances = int(dataset["inst_id"].count())
+    n_generations = int(dataset["generations"].max())
+    n_variables = len(stats[0][0]) - 2
+
+    fig, axs = plt.subplots(1, 2 * n_instances,
+        figsize = (1 + n_instances * n_variables * 0.12, n_generations / 25),
+        gridspec_kw = {"left": 0.015, "right": 0.975, "width_ratios": [n_variables, 1] * n_instances},
+    )
+    fig.suptitle(title)
+
+    for i, (_, inst_id), (_, df), (_, err) in zip(
+        range(1, 100),
+        dataset["inst_id"].iteritems(),
+        stats.iteritems(),
+        dataset["error"].iteritems()
+    ):
+        inst_id = int(inst_id)
+        df = pd.DataFrame(df)
+        ax = axs[2 * (i - 1)]
+        err_ax = axs[2 * i - 1]
+        ax.set_title(f"inst. {inst_id}")
+
+        sns.heatmap(
+            df.iloc[:, 2:], # drop first column (with generation numbers) and second (with errors)
+            ax = ax,
+            vmin = 0,
+            vmax = 1,
+            square = True,
+            cmap = "magma",
+            xticklabels = False,
+            yticklabels = df.iloc[:, 0].map(int) if i == 1 else False,
+            cbar_kws = {"shrink": 0.5, "pad": 0.2},
+            cbar = i == n_instances,
+        )
+
+        ax_pos = ax.get_position()
+        err_pos = err_ax.get_position()
+        err_ax.set_position([ax_pos.x0 + ax_pos.width * 1.08, err_pos.y0, err_pos.width, err_pos.height])
+        mask = df.iloc[:, 1:2]
+        # disable false-positive warning
+        pd.options.mode.chained_assignment = None
+        mask[1] = mask[1].map(lambda x: x > 1)
+        sns.heatmap(
+            df.iloc[:, 1:2], # second column (error)
+            ax = err_ax,
+            vmin = 0,
+            vmax = 1,
+            square = True,
+            mask = mask,
+            cmap = "viridis_r",
+            xticklabels = False,
+            yticklabels = False,
+            cbar = False,
+        )
+
+        new_ticks = [i.get_text() for i in ax.get_yticklabels()]
+        ax.set_yticks(range(0, len(new_ticks), 10), new_ticks[::10])
+        ax.annotate(
+            f"{100 * err:.2f}%",
+            (0, 0),
+            (4, -10),
+            xycoords = "axes fraction",
+            textcoords = "offset points",
+            va = "top",
+        )
+        progress(1)
+
+    plt.savefig(f"docs/assets/{filename}.svg")
+    plt.close()
+    progress(1)
+
+def schedule_ridgeline(*args, **kwargs):
+    scheduled_plots.append({"type": "ridgeline", "total": 1, "args": args, "kwargs": kwargs})
+
+def schedule_boxplot(*args, **kwargs):
+    scheduled_plots.append({"type": "boxplot",   "total": 1, "args": args, "kwargs": kwargs})
+
+def schedule_heatmap(id, *args, data = data, **kwargs):
+    dataset = data[data["id"] == id]
+    n_instances = int(dataset["inst_id"].count())
+    scheduled_plots.append({
+        "type": "heatmap",
+        "total": n_instances + 1,
+        "args": [id] + list(args),
+        "kwargs": dict(kwargs, data = data)
+    })
+
+def plottery():
+    iteration = 0
+    total = sum(p["total"] for p in scheduled_plots)
+    progress_bar(iteration, total)
+    for plot in scheduled_plots:
+        def progress(i):
+            nonlocal iteration
+            iteration += i
+            progress_bar(iteration, total)
+        if plot["type"] == "ridgeline":
+            ridgeline(*plot["args"], progress = progress, **plot["kwargs"])
+        elif plot["type"] == "boxplot":
+            boxplot(*plot["args"], progress = progress, **plot["kwargs"])
+        elif plot["type"] == "heatmap":
+            heatmap(*plot["args"], progress = progress, **plot["kwargs"])
+
+schedule_ridgeline(
+    "mutation_exploration",
+    "Vliv šance mutace na hustotu chyb",
+    "mutation_chance",
+    "whitebox-mutation-chance-error.svg",
 )
 
-ridgeline(
-    "temperature modifier exploration",
-    "Vliv koeficientu počáteční teploty na hustotu chyb",
-    "temperature_modifier",
-    "whitebox-error-distributions-temperature.svg",
+schedule_heatmap(
+    "default",
+    "Vývoj populace ve výchozím nastavení",
+    "whitebox-heatmap-default-mix",
+    data = data[data["inst_id"] <= 8]
 )
 
-ridgeline(
-    "equilibrium width exploration",
-    "Vliv šířky ekvilibria na hustotu chyb",
-    "equilibrium_width",
-    "whitebox-error-distributions-equilibrium-width.svg",
-)
+# for _, mutation_chance in data[data["id"] == "mutation_exploration"]["mutation_chance"].iteritems():
+#     schedule_heatmap(
+#         "mutation_exploration",
+#         f"Vývoj populace s šancí mutace {mutation_chance * 100}%",
+#         f"whitebox-heatmap-mut-explr-{mutation_chance}",
+#         data = data[data["mutation_chance"] == mutation_chance]
+#     )
 
-# plot the error distribution
-sns.kdeplot(
-    data = data[data["id"] == "black box"],
-    x = "error",
-)
-plt.savefig("docs/assets/blackbox-error-distribution.svg")
+# do the plottery
+plottery()
 
 ```
 
-Koeficient chlazení má na průběh hledání zásadní vliv. Přehled různých nastavení
-tohoto parametru je vidět v grafu níže.
+![Vývoj populace po 200 generací](assets/whitebox-heatmap-default.svg)
 
-![Vliv koeficientu chlazení na hustotu
-chyb](assets/whitebox-error-distributions.svg)
-
-Rychlé chlazení vede k nedostatečné diversifikaci řešení. Algoritmus nemá
-možnost projít skrz řešení nízké ceny aby se dostal z oblasti lokálního minima.
-Protože ukončovací podmínka závisí na teplotě, tento postup nevyzkouší mnoho
-možností a už po pár desítkách iterací skončí -- s vysokou chybou.
-
-![Nedostatečná diversifikace rychlého
-chlazení](assets/whitebox-scaling_factor_exploration-True-15-8000-0.85-0.7-10-9.svg)
-
-U velmi pomalého chlazení dochází k předčasnému vyčerpání limitu iterací.
-Algoritmus skončí dříve, než teplota klesne natolik, aby začala intensifikace.
-
-![Nedostatečná intensifikace pomalého
-chlazení](assets/whitebox-scaling_factor_exploration-True-15-8000-0.999-0.7-10-9.svg)
-
-Koeficient $0.996$ je ideální volbou pro toto konkrétní nastavení ostatních
-parametrů. Řešení se blíží optimu s maximální chybou $\approx 2.43\%$ a průměrnou
-$\approx 0.36\%$.
-
-![Fáze diversifikace i intensifikace ve vhodném
-poměru](assets/whitebox-scaling_factor_exploration-True-15-8000-0.996-0.7-10-9.svg)
-
-Vliv parametrů počáteční teploty a šířky ekvilibria na hustotu chyb jsem změřil
-podobným způsobem, tyto parametry zřejmě kvalitu řešení zdaleka neovlivňují
-tolik.
-
-Pro připomenutí, koeficient počáteční teploty násobí cenu řešení greedy redux,
-toto číslo udává počáteční teplotu.
-
-![Vliv koeficientu počáteční teploty na hustotu
-chyb](assets/whitebox-error-distributions-temperature.svg)
-
-Šířka ekvilibria určuje počet iterací při kterých algoritmus setrvá v jedné
-teplotě, nikoliv však jak rychle se teplota mění.
-
-![Vliv šířky ekvilibria na hustotu
-chyb](assets/whitebox-error-distributions-equilibrium-width.svg)
+![Šance mutace vs. hustota chyb](assets/whitebox-mutation-chance-error.svg)
 
 ### Black box: vyhodnocení hustoty chyb
 
-Pro black box vyhodnocení jsem použil celou sadu NK35 a změřil hustotu chyb.
-
-![Hustota chyb přes 500 instancí](assets/blackbox-error-distribution.svg)
+**TODO**
 
 ## Implementace
 
@@ -430,10 +537,20 @@ Program začíná definicí datové struktury reprezentující instanci problém
 batohu.
 
 ``` {.rust #problem-instance-definition .bootstrap-fold}
+pub type Id = NonZeroU16;
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub struct Literal(bool, Id);
+pub type Clause = [Literal; 3];
+
+const MAX_CLAUSES: usize = 512;
+const MAX_VARIABLES: usize = 256;
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Instance {
-    pub id: i32, m: u32, pub items: Vec<(u32, u32)>
+    pub id: i32,
+    pub weights: ArrayVec<NonZeroU16, MAX_VARIABLES>,
+    pub clauses: ArrayVec<Clause, MAX_CLAUSES>,
 }
+
 ```
 
 Následující úryvek poskytuje ptačí pohled na strukturu souboru. Použité knihovny
@@ -445,35 +562,6 @@ samotné algoritmy řešiče a v neposlední řadě sada automatických testů.
 <<imports>>
 
 <<algorithm-map>>
-
-pub fn solve_stream<T>(
-    alg: for <'b> fn(&'b Instance) -> Solution<'b>,
-    solutions: HashMap<(u32, i32), OptimalSolution>,
-    stream: &mut T
-) -> Result<Vec<(u32, Option<f64>)>> where T: BufRead {
-    let mut results = vec![];
-    loop {
-        match parse_line(stream)?.as_ref().map(|inst| (inst, alg(inst))) {
-            Some((inst, sln)) => {
-                let optimal = &solutions.get(&(inst.items.len() as u32, inst.id));
-                let error = optimal.map(|opt| 1.0 - sln.cost as f64 / opt.cost as f64);
-                results.push((sln.cost, error))
-            },
-            None => return Ok(results)
-        }
-    }
-}
-
-pub fn load_instances<T>(stream: &mut T) -> Result<Vec<Instance>>
-where T: BufRead {
-    let mut instances = vec![];
-    loop {
-        match parse_line(stream)? {
-            Some(inst) => instances.push(inst),
-            None => return Ok(instances)
-        }
-    }
-}
 
 use std::result::Result as IOResult;
 pub fn list_input_files(set: &str, r: Range<u32>) -> Result<Vec<IOResult<DirEntry, std::io::Error>>> {
@@ -533,6 +621,143 @@ impl Instance {
     <<solver-bf>>
 
     <<solver-sa>>
+
+    pub fn evolutionary<Rng: rand::Rng + Send + Sync + Clone>(
+        &self,
+        rng: &mut Rng,
+        evo_config: EvolutionaryConfig,
+        opt: Option<&OptimalSolution>
+    ) -> Solution {
+        use rayon::prelude::*;
+
+        impl<'a> Solution<'a> {
+            fn fitness(&self, evo_config: &EvolutionaryConfig) -> u64 {
+                if !self.satisfied { 0 }
+                else { self.weight as u64 }
+            }
+
+            fn breed<Rng: rand::Rng>(&self, other: &Self, evo_config: &EvolutionaryConfig, rng: &mut Rng) -> Solution<'a> {
+                let mut cfg = Config::zeroed();
+                let mut weight = 0;
+                for (i, (l, r)) in self
+                    .cfg.iter()
+                    .zip(other.cfg.iter())
+                    .take(self.inst.weights.len())
+                    .enumerate() {
+                    let b = *(if rng.gen_bool(0.5 ) {  l } else { r });
+                    let b = if rng.gen_bool(evo_config.mutation_chance) { !b } else { b };
+                    cfg.set(i, b);
+                    weight += self.inst.weights[i].get() as u32 * b as u32;
+                }
+
+                Solution::new(weight, cfg, self.inst)
+            }
+        }
+
+        let mut random = || {
+            let mut cfg = Config::zeroed();
+            let mut weight = 0;
+            for i in 0..self.weights.len() {
+                let b = rng.gen_bool(0.5);
+                cfg.set(i, b);
+                weight += self.weights[i].get() as u32 * b as u32;
+            }
+
+            Solution::new(weight, cfg, self)
+        };
+
+        fn stats(pop: &[Solution], evo_config: EvolutionaryConfig, opt: Option<&OptimalSolution>) -> String {
+            let identity = core::iter::repeat(0u16).take(MAX_VARIABLES)
+                .collect::<ArrayVec<_, MAX_VARIABLES>>().into_inner().unwrap();
+            let counts = pop.par_iter()
+                .map(|sln| sln.cfg.iter()
+                    .map(|b| *b as u16)
+                    .collect::<ArrayVec<_, MAX_VARIABLES>>().into_inner().unwrap()
+                )
+                .reduce(|| identity, |l, r|
+                    l.iter().zip(r.iter())
+                    .map(|(x, y)| x + y)
+                    .collect::<ArrayVec<_, MAX_VARIABLES>>().into_inner().unwrap()
+                );
+
+            let vars = pop[0].inst.weights.len();
+            opt.and_then(|opt| {
+                    pop.iter()
+                        .filter(|sln| sln.satisfied)
+                        .map(|sln| (1, sln.weight as f64 / opt.weight as f64))
+                        .reduce(|acc, (n, w)| (acc.0 + n, acc.1 + w))
+                        .map(|(count, sum)| 1.0 - sum / count as f64)
+                }).or(Some(2.0)) // fill in the error if there's no known optimum
+                .into_iter()
+                .chain(counts.into_iter().take(vars).map(|x| x as f64 / pop.len() as f64))
+                .map(|x| x.to_string())
+                .intersperse(" ".into())
+                .collect::<String>()
+        }
+
+        let mut population = (0..evo_config.population_size).map(|_| random()).collect::<Vec<_>>();
+        let mut buffer = Vec::with_capacity(population.len() / 2);
+        let mut shuffler: Vec<Solution> = buffer.clone();
+        println!("0 {}", stats(&population[..], evo_config, opt));
+        let ex_rng = Mutex::new(rng.clone());
+
+        (0..evo_config.generations).for_each(|i| {
+            population.par_sort_by_key(|sln| -(sln.fitness(&evo_config) as i64));
+            population.drain(evo_config.population_size / 2 ..);
+
+            shuffler.par_extend(population.par_iter());
+            shuffler.shuffle(&mut *ex_rng.lock().unwrap());
+
+            buffer.extend(shuffler.drain(..)
+                .zip(population.iter())
+                // // for the parallel (nondet!) version, just take par_extend,
+                // // par_drain, par_iter, and this:
+                // .map_init(|| {
+                //     use rand::SeedableRng;
+                //     let mut lock = ex_rng.lock().unwrap();
+                //     rand_xoshiro::Xoshiro256PlusPlus::from_rng(&mut *lock).unwrap()
+                // }, |prng, (a, b)| {
+                //     a.breed(b, &evo_config, prng)
+                // })
+                .map(|(a, b)| {
+                    a.breed(b, &evo_config, &mut *ex_rng.lock().unwrap())
+                })
+            );
+
+            population.append(&mut buffer);
+            #[allow(clippy::modulo_one)]
+            if (i + 1) % (evo_config.generations / 100) == 0 {
+                println!("{} {}", i + 1, stats(&population[..], evo_config, opt))
+            }
+            assert_eq!(population.len(), evo_config.population_size);
+        });
+
+        *rng = ex_rng.into_inner().unwrap();
+        population.into_iter().max_by_key(|sln| sln.fitness(&evo_config)).unwrap()
+    }
+
+    pub fn dump(&self) -> String {
+        use core::iter::once;
+
+        once("w".into())
+        .chain(self.weights.iter()
+            .map(|id| id.get())
+            .chain(once(0))
+            .map(|w| w.to_string())
+        )
+        .intersperse(" ".into())
+        .chain(once("\n".into()))
+        .chain(self.clauses.iter().flat_map(|clause|
+            clause.iter().map(|&Literal(pos, id)|
+                    id.get() as i16 * if pos { 1 } else { -1 }
+                )
+                .chain(once(0))
+                .map(|l| l.to_string())
+                .intersperse(" ".into())
+                .chain(once("\n".into()))
+        ))
+        .collect()
+    }
 }
 
 <<tests>>
@@ -543,13 +768,54 @@ problému především bit array udávající množinu předmětů v pomyslném 
 Zároveň nese informaci o počtu navštívených konfigurací při jeho výpočtu.
 
 ```{.rust #solution-definition .bootstrap-fold}
-pub type Config = BitArr!(for 64);
+pub type Config = BitArr!(for MAX_VARIABLES);
 
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
-pub struct Solution<'a> { weight: u32, pub cost: u32, cfg: Config, pub inst: &'a Instance }
+pub struct Solution<'a> {
+    pub weight: u32,
+    cfg: Config,
+    pub inst: &'a Instance,
+    pub satisfied: bool,
+}
 
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct OptimalSolution { id: i32, pub cost: u32, cfg: Config }
+pub struct OptimalSolution {
+    pub full_id: String,
+    pub id: i32,
+    pub weight: u32,
+    pub cfg: Config,
+    pub params: InstanceParams,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct InstanceParams {
+    variables: u8,
+    clauses: u16,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+pub struct EvolutionaryConfig {
+    pub set: char,
+    pub mutation_chance: f64,
+    pub n_instances: u16,
+    pub generations: u32,
+    pub population_size: usize,
+}
+
+impl From<Instance> for InstanceParams {
+    fn from(inst: Instance) -> Self {
+        InstanceParams {
+            variables: inst.weights.len() as u8,
+            clauses:   inst.clauses.len() as u16,
+        }
+    }
+}
+
+impl From<OptimalSolution> for InstanceParams {
+    fn from(opt: OptimalSolution) -> Self {
+        opt.params
+    }
+}
 
 <<solution-helpers>>
 ```
@@ -561,12 +827,7 @@ navštívených konfigurací a přidávání předmětů do batohu.
 ```{.rust #solution-helpers .bootstrap-fold}
 impl <'a> PartialOrd for Solution<'a> {
     fn partial_cmp(&self, other: &Self) -> Option<cmp::Ordering> {
-        use cmp::Ordering;
-        let Solution {weight, cost, ..} = self;
-        Some(match cost.cmp(&other.cost) {
-            Ordering::Equal => weight.cmp(&other.weight).reverse(),
-            other => other,
-        })
+        Some(self.weight.cmp(&other.weight))
     }
 }
 
@@ -586,37 +847,78 @@ impl <'a> Solution<'a> {
     }
 
     fn invert(mut self) -> Solution<'a> {
-        for i in 0..self.inst.items.len() {
+        for i in 0..self.inst.weights.len() {
             self.set(i, !self.cfg[i]);
         }
         self
     }
 
     fn set(&mut self, i: usize, set: bool) -> Solution<'a> {
-        let (w, c) = self.inst.items[i];
+        let w = self.inst.weights[i];
         let k = if set { 1 } else { -1 };
         if self.cfg[i] != set {
             self.cfg.set(i, set);
-            self.weight = (self.weight as i32 + k * w as i32) as u32;
-            self.cost   = (self.cost   as i32 + k * c as i32) as u32;
+            self.weight = (self.weight as i32 + k * w.get() as i32) as u32;
         }
         *self
     }
 
     fn default(inst: &'a Instance) -> Solution<'a> {
-        Solution { weight: 0, cost: 0, cfg: Config::default(), inst }
+        Solution::new(0, Config::default(), inst)
     }
 
-    fn overweight(inst: &'a Instance) -> Solution<'a> {
-        Solution { weight: u32::MAX, cost: 0, cfg: Config::default(), inst }
-    }
-
-    fn trim<Rng: ?Sized>(&mut self, rng: &mut Rng) where Rng: rand::Rng {
-        while self.weight > self.inst.m {
-            self.set(rng.gen_range(0..self.inst.items.len()), false);
+    pub fn new(weight: u32, cfg: Config, inst: &'a Instance) -> Solution<'a> {
+        Solution {
+            weight, cfg, inst, satisfied: satisfied(&inst.clauses, &cfg)
         }
     }
+
+    pub fn valid(&self) -> bool {
+        let Solution { weight, cfg, inst, satisfied } = *self;
+        let Instance { weights, clauses, .. } = inst;
+
+        let computed_weight = weights
+            .iter()
+            .zip(cfg)
+            .map(|(w, b)| {
+                if b { w.get() as u32 } else { 0 }
+            })
+            .sum::<u32>();
+
+        computed_weight == weight && satisfied
+    }
+
+    pub fn dump(&self) -> String {
+        dump_solution(self.inst.id, self.weight, &self.cfg, &self.inst.clone().into())
+    }
 }
+
+impl OptimalSolution {
+    pub fn dump(&self) -> String {
+        dump_solution(self.id, self.weight, &self.cfg, &self.clone().into())
+    }
+}
+
+fn dump_solution(id: i32, weight: u32, cfg: &Config, params: &InstanceParams) -> String {
+    use core::iter::once;
+    once(format!("uf{}-0{}", params.variables, id))
+    .chain(once(weight.to_string()))
+    .chain((0..params.variables as usize)
+        .map(|i| if cfg[i] { 1 } else { -1 } * i as i16)
+        .chain(once(0))
+        .map(|id| id.to_string())
+    )
+    .intersperse(" ".into())
+    .collect()
+}
+
+pub fn satisfied(clauses: &ArrayVec<Clause, MAX_CLAUSES>, cfg: &Config) -> bool {
+    clauses.iter().all(|clause| clause
+        .iter()
+        .any(|&Literal(pos, id)| pos == cfg[id.get() as usize])
+    )
+}
+
 ```
 
 ### Algoritmy
@@ -627,20 +929,7 @@ používáme při vybírání algoritmu pomocí argumentu předaného na příka
 v testovacím kódu na testy všech implementací atp.
 
 ``` {.rust #algorithm-map .bootstrap-fold}
-pub fn get_algorithms() -> BTreeMap<&'static str, fn(&Instance) -> Solution> {
-    let cast = |x: fn(&Instance) -> Solution| x;
-    // the BTreeMap works as a trie, maintaining alphabetic order
-    BTreeMap::from([
-        ("bf",     cast(Instance::brute_force)),
-        ("bb",     cast(Instance::branch_and_bound)),
-        ("dpc",    cast(Instance::dynamic_programming_c)),
-        ("dpw",    cast(Instance::dynamic_programming_w)),
-        ("fptas1", cast(|inst| inst.fptas(10f64.powi(-1)))),
-        ("fptas2", cast(|inst| inst.fptas(10f64.powi(-2)))),
-        ("greedy", cast(Instance::greedy)),
-        ("redux",  cast(Instance::greedy_redux)),
-    ])
-}
+
 ```
 
 #### Hladový přístup
@@ -653,33 +942,7 @@ permutaci předmětů na posloupnost indexů, které procházíme. Přesně to d
 `(0..items.len()).map(ord)`.
 
 ``` {.rust #solver-greedy .bootstrap-fold}
-fn greedy(&self) -> Solution {
-    use ::permutation::*;
-    let Instance {m, items, ..} = self;
-    fn ratio((w, c): (u32, u32)) -> f64 {
-        let r = c as f64 / w as f64;
-        if r.is_nan() { f64::NEG_INFINITY } else { r }
-    }
-    let permutation = sort_by(
-        &(items)[..],
-        |a, b|
-            ratio(*a)
-            .partial_cmp(&ratio(*b))
-            .unwrap()
-            .reverse() // max item first
-    );
-    let ord = { #[inline] |i| permutation.apply_idx(i) };
 
-    let mut sol = Solution::default(self);
-    for i in (0..items.len()).map(ord) {
-        let (w, _c) = items[i];
-        if sol.weight + w <= *m {
-            sol = sol.with(i);
-        } else { break }
-    }
-
-    sol
-}
 ```
 
 #### Hladový přístup -- redux
@@ -691,83 +954,19 @@ posloupnosti indexů a předmětů, vyřadíme prvky, jejichž váha přesahuje 
 batohu a vybereme maximální prvek podle ceny.
 
 ``` {.rust #solver-greedy-redux .bootstrap-fold}
-fn greedy_redux(&self) -> Solution {
-    let greedy = self.greedy();
-    (0_usize..)
-        .zip(self.items.iter())
-        .filter(|(_, (w, _))| *w <= self.m)
-        .max_by_key(|(_, (_, c))| c)
-        .map(|(highest_price_index, _)|
-            max(greedy, Solution::default(self).with(highest_price_index))
-        ).unwrap_or(greedy)
-}
+
 ```
 
 #### Hrubá síla
 
 ``` {.rust .bootstrap-fold #solver-bf}
-fn brute_force(&self) -> Solution {
-    fn go<'a>(items: &'a [(u32, u32)], current: Solution<'a>, i: usize, m: u32) -> Solution<'a> {
-        if i >= items.len() { return current }
 
-        let (w, _c) = items[i];
-        let next = |current, m| go(items, current, i + 1, m);
-        let include = || {
-            let current = current.with(i);
-            next(current, m - w)
-        };
-        let exclude = || next(current, m);
-
-        if w <= m {
-            max(include(), exclude())
-        }
-        else { exclude() }
-    }
-
-    go(&self.items, Solution::default(self), 0, self.m)
-}
 ```
 
 #### Branch & bound
 
 ``` {.rust #solver-bb .bootstrap-fold}
-fn branch_and_bound(&self) -> Solution {
-    struct State<'a>(&'a Vec<(u32, u32)>, Vec<u32>);
-    let prices: Vec<u32> = {
-        self.items.iter().rev()
-        .scan(0, |sum, (_w, c)| {
-            *sum += c;
-            Some(*sum)
-        })
-        .collect::<Vec<_>>().into_iter().rev().collect()
-    };
 
-    fn go<'a>(state: &'a State, current: Solution<'a>, best: Solution<'a>, i: usize, m: u32) -> Solution<'a> {
-        let State(items, prices) = state;
-        if i >= items.len() || current.cost + prices[i] <= best.cost {
-            return current
-        }
-
-        let (w, _c) = items[i];
-        let next = |current, best, m| go(state, current, best, i + 1, m);
-        let include = || {
-            let current = current.with(i);
-            next(current, max(current, best), m - w)
-        };
-        let exclude = |best: Solution<'a>| next(current, best, m);
-
-        if w <= m {
-            let x = include();
-            max(x, exclude(x))
-        }
-        else { exclude(best) }
-    }
-
-    // FIXME borrowck issues
-    let state = State(&self.items, prices);
-    let empty = Solution::default(self);
-    Solution { inst: self, ..go(&state, empty, empty, 0, self.m) }
-}
 ```
 
 #### Dynamické programování
@@ -776,27 +975,7 @@ Dynamické programování s rozkladem podle váhy jsem implementoval už v prvn�
 úkolu.
 
 ``` {.rust #solver-dpw .bootstrap-fold}
-fn dynamic_programming_w(&self) -> Solution {
-    let Instance {m, items, ..} = self;
-    let mut next = vec![Solution::default(self); *m as usize + 1];
-    let mut last = vec![];
 
-    for (i, &(weight, _cost)) in items.iter().enumerate() {
-        last.clone_from(&next);
-
-        for cap in 0 ..= *m as usize {
-            let s = if (cap as u32) < weight {
-                    last[cap]
-                } else {
-                    let rem_weight = max(0, cap as isize - weight as isize) as usize;
-                    max(last[cap], last[rem_weight].with(i))
-                };
-            next[cap] = s;
-        }
-    }
-
-    *next.last().unwrap()
-}
 ```
 
 V úkolu 2 přibyla implementace dynamického programování s rozkladem podle ceny,
@@ -814,33 +993,7 @@ sestupně podle váhy. V tomto případě porovnáváme vždy dvě řešení ste
 (a nebo je `last[cap]` neplatné řešení s nadváhou, které má cenu $0$).
 
 ``` {.rust #solver-dpc .bootstrap-fold}
-fn dynamic_programming_c(&self) -> Solution {
-    let Instance {items, ..} = self;
-    let max_profit = items.iter().map(|(_, c)| *c).max().unwrap() as usize;
-    let mut next = vec![Solution::overweight(self); max_profit * items.len() + 1];
-    let mut last = vec![];
-    next[0] = Solution::default(self);
 
-    for (i, &(_weight, cost)) in items.iter().enumerate() {
-        last.clone_from(&next);
-
-        for cap in 1 ..= max_profit * items.len() {
-            let s = if (cap as u32) < cost {
-                    last[cap]
-                } else {
-                    let rem_cost = (cap as isize - cost as isize) as usize;
-                    let lightest_for_cost = if last[rem_cost].weight == u32::MAX {
-                        last[0] // replace the overweight solution with the empty one
-                    } else { last[rem_cost] };
-
-                    max(last[cap], lightest_for_cost.with(i))
-                };
-            next[cap] = s;
-        }
-    }
-
-    *next.iter().filter(|sln| sln.weight <= self.m).last().unwrap()
-}
 ```
 
 #### FPTAS
@@ -851,23 +1004,7 @@ stačí opravit referenci výchozí instance (`inst: self`) a přepočíst cenu 
 vypočítané konfigurace, samotné indexy předmětů se škálováním nemění.
 
 ``` {.rust #solver-fptas .bootstrap-fold}
-// TODO: are items heavier than the knapsack capacity a problem? if so, we
-// can just zero them out
-fn fptas(&self, eps: f64) -> Solution {
-    let Instance {m: _, items, ..} = self;
-    let max_profit = items.iter().map(|(_, c)| *c).max().unwrap();
-    let scaling_factor = eps * max_profit as f64 / items.len() as f64;
-    let items: Vec<(u32, u32)> = items.iter().map(|(w, c)|
-        (*w, (*c as f64 / scaling_factor).floor() as u32
-    )).collect();
 
-    let iso = Instance { items, ..*self };
-    let sln = iso.dynamic_programming_c();
-    let cost = (0usize..).zip(self.items.iter()).fold(0, |acc, (i, (_w, c))|
-        acc + sln.cfg[i] as u32 * c
-    );
-    Solution { inst: self, cost, ..sln }
-}
 ```
 
 #### Simulované žíhání
@@ -890,93 +1027,12 @@ přijetím je ovšem kandidát opraven pomocí metody `Solution::trim`, která o
 náhodné předměty dokud váha řešení neklesne pod danou mez.
 
 ``` {.rust #solver-sa .bootstrap-fold}
-pub fn simulated_annealing<Rng>(
-    &self,
-    rng: &mut Rng,
-    (max_iterations, scaling_factor, temp_modifier, equilibrium_width): (u32, f64, f64, u8)
-) -> Solution
-where Rng: rand::Rng + ?Sized {
-    let total_cost = self.items.iter().map(|(_, c)| c).sum::<u32>() as f64;
-    let mut current = self.greedy_redux();
-    let mut best = current;
-    let mut temperature = temp_modifier * self.greedy_redux().cost as f64;
 
-    let mut iteration = 0;
-    let frozen = |t| t < 0.00001;
-    let equilibrium = |i| i % equilibrium_width as u32 == 0;
-
-    while !frozen(temperature) {
-        let temp = temperature;
-        loop {
-            use rand::prelude::IteratorRandom;
-            println!("    {} {} {}", current.cost, best.cost, temp);
-
-            let next_sln = (0..self.items.len())
-                // construct the set of neighbouring solutions: generate n
-                // solutions, each with one item different to the current
-                // solution (included or excluded)
-                .map(|i| current.clone().set(i, !current.cfg[i]))
-                // also add a complete flip as an option
-                .chain(std::iter::once(current.invert()))
-                // select a neighbour at random
-                .choose(rng);
-            match next_sln {
-                Some(mut new) => {
-                    new.trim(rng);
-                    let delta = (new.cost as f64 - current.cost as f64) / total_cost;
-                    let rnd = rng.gen_range(0.0 .. 1.0);
-                    let threshold = (delta / temp).exp();
-                    if delta <= 0.0 {
-                        // eprintln!(
-                        //     "considering {} (current {}),\tdelta {}, rnd {}, temp {},\t(will {} against {})",
-                        //     new.cost,
-                        //     current.cost,
-                        //     delta,
-                        //     rnd,
-                        //     temp,
-                        //     if rnd < threshold { "succeed" } else { "fail" },
-                        //     threshold,
-                        // );
-                    }
-
-                    if  delta > 0.0 // the new state is better, accept it right away
-                    || // otherwise accept with probability proportional to the cost delta and the temp
-                        rnd < threshold {
-                        current = new;
-                        if current.cost > best.cost {
-                            best = current;
-                        }
-                    }
-                },
-                None => {
-                    println!("  early return @ {}, temp {}", iteration, temp);
-                    return best
-                },
-            };
-            iteration += 1;
-            temperature *= scaling_factor;
-            if iteration >= max_iterations {
-                println!("  iteration limit exhausted");
-                return best
-            } else if equilibrium(iteration) { break }
-        }
-    }
-
-    println!("  frozen @ {}, temp {}", iteration, temperature / scaling_factor);
-    best
-}
 ```
 
 ## Závěr
 
-Implementoval jsem metodu simulovaného žíhání (alias ochlazování) a prozkoumal
-jsem její pro a proti. S vhodným nastavením parametrů nachází výrazně lepší
-řešení než hladové heuristiky a lze využít pro iterativní zlepšování
-existujících řešení (např. z greedy redux). Počáteční teplota a hranice
-maximálního počtu iterací navíc dovolují vhodně omezit výpočetní náročnost na
-úkor kvality nalezených řešení. Je ovšem třeba dát si pozor na interakci
-jednotlivých parametrů, např. aby nízký koeficient chlazení nevedl k předčasnému
-ukončení algoritmu.
+**TODO**
 
 ## Appendix
 
@@ -984,15 +1040,21 @@ Dodatek obsahuje nezajímavé části implementace, jako je import symbolů z
 knihoven.
 
 ``` {.rust #imports .bootstrap-fold}
+#![feature(iter_intersperse)]
+
+use serde::{Deserialize, Serialize};
 use std::{cmp, cmp::max,
     ops::Range,
     str::FromStr,
-    io::{BufRead, BufReader},
+    io::{BufRead, BufReader, self},
     collections::{BTreeMap, HashMap},
     fs::{read_dir, File, DirEntry},
+    num::NonZeroU16, sync::Mutex,
 };
 use anyhow::{Context, Result, anyhow};
-use bitvec::prelude::BitArr;
+use bitvec::prelude::{BitArr, BitVec};
+use arrayvec::ArrayVec;
+use rand::prelude::SliceRandom;
 
 #[cfg(test)]
 #[macro_use(quickcheck)]
@@ -1005,64 +1067,109 @@ testy je tu parser formátu souborů s optimálními řešeními.
 ``` {.rust #parser .bootstrap-fold}
 <<boilerplate>>
 
-pub fn parse_line<T>(stream: &mut T) -> Result<Option<Instance>> where T: BufRead {
+pub fn parse_clauses<T: Iterator<Item = String>>(lines: &mut T) -> Result<ArrayVec<Clause, MAX_CLAUSES>> {
+    let to_literal: fn(i16) -> Result<Literal> = |n| Ok(Literal(
+        n.is_positive(), NonZeroU16::new(n.abs() as u16).ok_or_else(|| anyhow!("variables start from 1"))?
+    ));
+    let mut clauses = ArrayVec::new();
+
+    for line in lines {
+        let mut numbers = line.split_whitespace();
+        clauses.push([
+            to_literal(numbers.parse_next()?)?,
+            to_literal(numbers.parse_next()?)?,
+            to_literal(numbers.parse_next()?)?,
+        ]);
+    }
+
+    Ok(clauses)
+}
+
+fn parse_solution_line<T: BufRead>(mut stream: T, params: InstanceParams) -> Result<Option<OptimalSolution>> {
     let mut input = String::new();
     if stream.read_line(&mut input)? == 0 {
         return Ok(None)
     }
 
-    let mut  numbers = input.split_whitespace();
-    let id = numbers.parse_next()?;
-    let  n = numbers.parse_next()?;
-    let  m = numbers.parse_next()?;
+    let mut line = input.split_whitespace();
+    let full_id: String = line.parse_next()?;
+    let id = full_id.split('-').skip(1).parse_next()?;
+    let weight = line.parse_next()?;
 
-    let mut items: Vec<(u32, u32)> = Vec::with_capacity(n);
-    for _ in 0..n {
-        let w = numbers.parse_next()?;
-        let c = numbers.parse_next()?;
-        items.push((w, c));
+    let mut cfg = Config::default();
+    let mut i = 0;
+    loop {
+        let a: i16 = line.parse_next()?;
+        if a == 0 { break }
+        cfg.set(i, a.is_positive());
+        i += 1;
     }
 
-    Ok(Some(Instance {id, m, items}))
+    Ok(Some(OptimalSolution {full_id, id, weight, cfg, params}))
 }
 
-fn parse_solution_line<T>(mut stream: T) -> Result<Option<OptimalSolution>> where T: BufRead {
-    let mut input = String::new();
-    if stream.read_line(&mut input)? == 0 {
-        return Ok(None)
-    }
+pub fn load_instances(set: char) -> Result<Vec<Instance>> {
+    read_dir("../data/")?.filter_map(|entry| entry.ok()
+        .filter(|entry|
+            entry.file_name().into_string().unwrap().ends_with(&(set.to_string() + "1"))
+        )
+        .and_then(|entry|
+            entry.file_type().ok().filter(|&typ| typ.is_dir()).and(Some(entry))
+        )
+    )
+    .flat_map(|dir| {
+        let params = params_from_filename(&dir.file_name().into_string().unwrap()).unwrap();
+        read_dir(dir.path()).into_iter()
+            .flatten().flatten()
+            .map(move |file| (params, file))
+    })
+    .map(|(_params, file)| {
+        let id = file.file_name().into_string().unwrap().split('-')
+            .nth(1).unwrap().split('.').next().unwrap().parse().unwrap();
 
-    let mut    numbers = input.split_whitespace();
-    let   id = numbers.parse_next()?;
-    let    n = numbers.parse_next()?;
-    let cost = numbers.parse_next()?;
+        let mut lines = BufReader::new(File::open(file.path()).unwrap())
+            .lines()
+            .map(|l| l.unwrap());
 
-    let mut items = Config::default();
-    for i in 0..n {
-        let a: u8 = numbers.parse_next()?;
-        items.set(i, a == 1);
-    }
+        let weights_row = lines.find(|s| s.starts_with('w'))
+            .ok_or_else(|| anyhow!("could not find the weights row"))?;
 
-    Ok(Some(OptimalSolution {id, cost, cfg: items}))
+        let weights = weights_row
+            .split_whitespace()
+            .skip(1)
+            .flat_map(|w| w /* will fail for w == 0 */.parse().into_iter()).collect();
+
+        let mut lines = lines.filter(|l| !l.starts_with('c'));
+        let clauses = parse_clauses(&mut lines)?;
+        Ok(Instance { id, weights, clauses })
+    }).collect()
 }
 
-pub fn load_solutions(set: &str) -> Result<HashMap<(u32, i32), OptimalSolution>> {
+fn params_from_filename(filename: &str) -> Result<InstanceParams> {
+    let mut params = filename[3..].split('-').take(2).map(|n| n.parse::<u16>());
+    let variables = params.next().unwrap()? as u8;
+    let clauses = params.next().unwrap()?;
+    Ok(InstanceParams { variables, clauses })
+}
+
+pub fn load_solutions(set: char) -> Result<HashMap<(InstanceParams, i32), OptimalSolution>> {
     let mut solutions = HashMap::new();
 
-    let files = read_dir("../data/constructive/")?
+    let files = read_dir("../data/")?
         .filter(|res| res.as_ref().ok().filter(|f| {
             let name = f.file_name().into_string().unwrap();
             f.file_type().unwrap().is_file() &&
-            name.starts_with(set) &&
-            name.ends_with("_sol.dat")
+            name.ends_with(&(set.to_string() + "-opt.dat"))
         }).is_some());
 
     for file in files {
         let file = file?;
-        let n = file.file_name().into_string().unwrap()[set.len()..].split('_').next().unwrap().parse()?;
+        let filename = file.file_name().into_string().expect("FS error");
+        let params = params_from_filename(&filename)?;
+
         let mut stream = BufReader::new(File::open(file.path())?);
-        while let Some(opt) = parse_solution_line(&mut stream)? {
-            solutions.insert((n, opt.id), opt);
+        while let Some(opt) = parse_solution_line(&mut stream, params)? {
+            assert!(solutions.insert((params, opt.id), opt).is_none());
         }
     }
 
@@ -1079,12 +1186,12 @@ trait Boilerplate {
       where <T as FromStr>::Err: std::error::Error + Send + Sync + 'static;
 }
 
-impl Boilerplate for std::str::SplitWhitespace<'_> {
+impl<'a, Iter> Boilerplate for Iter where Iter: Iterator<Item = &'a str> {
     fn parse_next<T: FromStr>(&mut self) -> Result<T>
       where <T as FromStr>::Err: std::error::Error + Send + Sync + 'static {
         let str = self.next().ok_or_else(|| anyhow!("unexpected end of input"))?;
         str.parse::<T>()
-           .with_context(|| format!("cannot parse {}", str))
+           .with_context(|| anyhow!("cannot parse {}", str))
     }
 }
 ```
@@ -1228,35 +1335,76 @@ výstup vypisuje cenu a chybu řešení, spoléhá ovšem na to, že mezi optim�
 ``` {.rust file=solver/src/bin/main.rs}
 extern crate solver;
 
-use std::io::stdin;
+use std::mem::size_of;
+
+use rayon::prelude::*;
 use solver::*;
 use anyhow::{Result, anyhow};
 
 fn main() -> Result<()> {
-    let algorithms = get_algorithms();
-    let solutions = load_solutions("NK")?;
+    let evo_config: EvolutionaryConfig = serde_json::from_str(std::env::args()
+        .collect::<Vec<_>>()
+        .get(1)
+        .ok_or_else(|| anyhow!("Expected the evolutionary configuration in JSON format as the first argument"))?)?;
 
-    enum Either<A, B> { Left(A), Right(B) }
-    use  Either::*;
+    let solutions = load_solutions(evo_config.set)?;
+    let rng: rand_chacha::ChaCha8Rng = rand::SeedableRng::seed_from_u64(42);
 
-    let alg = {
-        <<select-algorithm>>
-    }?;
+    println!(
+        "info:\n\
+        |   Id size: {}\n\
+        |   Literal size: {}\n\
+        |   Clause size: {}\n\
+        |   Config size: {}\n\
+        |   Solution size: {}\n\
+        |   Instance size: {}\n\
+        ",
+        size_of::<Id>(),
+        size_of::<Literal>(),
+        size_of::<Clause>(),
+        size_of::<Config>(),
+        size_of::<Solution>(),
+        size_of::<Instance>(),
+    );
 
-    for inst in load_instances(&mut stdin().lock())? {
+    let mut instances = load_instances(evo_config.set)?
+        .into_par_iter()
+        .map(|inst| (inst.clone().into(), inst))
+        .collect::<Vec<(InstanceParams, _)>>();
+    instances.par_sort_unstable_by(|(p1, i1), (p2, i2)|
+        p1.cmp(p2).then(i1.id.cmp(&i2.id))
+    );
+
+    instances.into_iter().take(evo_config.n_instances as usize).for_each(|(params, inst)| {
         use std::time::Instant;
-        let (now, sln) = match alg {
-            Right(f) => (Instant::now(), f(&inst)),
-            Left(cfg) => {
-                let mut rng: rand_chacha::ChaCha8Rng = rand::SeedableRng::seed_from_u64(42);
-                (Instant::now(), inst.simulated_annealing(&mut rng, cfg))
-            },
-        };
-        println!("took {} ms", now.elapsed().as_millis());
-        let optimal = &solutions.get(&(inst.items.len() as u32, inst.id));
-        let error = optimal.map(|opt| 1.0 - sln.cost as f64 / opt.cost as f64);
-        println!("{} {}", sln.cost, error.map(|e| e.to_string()).unwrap_or_default());
-    }
+
+        // println!("solving {} ({:?} from set {})", inst.id, params, evo_config.set);
+
+        let mut rng = rng.clone();
+        let optimal = solutions.get(&(inst.clone().into(), inst.id));
+        let now = Instant::now();
+        let sln = inst.evolutionary(&mut rng, evo_config, optimal);
+        let time = now.elapsed().as_millis();
+
+        let error = optimal.map(|opt| 1.0 - sln.weight as f64 / opt.weight as f64);
+        println!("done: {time} {id} {satisfied} {valid} {weight} {err}",
+            time = time,
+            id = inst.id,
+            satisfied = sln.satisfied,
+            valid = sln.valid(),
+            weight = sln.weight,
+            err = error.map(|e| e.to_string()).unwrap_or_default()
+        );
+        // assert!(sln.valid(),
+        //     "the following (satisfied = {}) isn't a valid solution to instance {}:\n{}",
+        //     sln.satisfied,
+        //     inst.id,
+        //     sln.dump()
+        // );
+
+        // println!("ours:    {}", sln.dump());
+        // println!("optimal: {}\n", optimal.map(|opt| opt.dump()).unwrap_or_else(|| "None".into()));
+    });
     Ok(())
 }
 ```
@@ -1300,19 +1448,63 @@ property-based testu s knihovnou
 mod tests {
     use super::*;
     use quickcheck::{Arbitrary, Gen};
-    use std::{fs::File, io::BufReader};
+
+    #[derive(Clone, Debug)]
+    #[repr(transparent)]
+    struct ArrayVecProxy<T, const CAP: usize>(ArrayVec<T, CAP>);
+
+    type LiteralProxy = ArrayVecProxy<Literal, 3>;
+    type ClauseProxy = ArrayVecProxy<LiteralProxy, MAX_CLAUSES>;
+
+    impl<T, const CAP: usize> From<ArrayVec<T, CAP>> for ArrayVecProxy<T, CAP> {
+        fn from(av: ArrayVec<T, CAP>) -> Self {
+            ArrayVecProxy(av)
+        }
+    }
+
+    impl<T, const CAP: usize> From<ArrayVecProxy<T, CAP>> for ArrayVec<T, CAP> {
+        fn from(ArrayVecProxy(av): ArrayVecProxy<T, CAP>) -> Self {
+            av
+        }
+    }
+
+    impl<T: Arbitrary + core::fmt::Debug, const CAP: usize> Arbitrary for ArrayVecProxy<T, CAP> {
+        fn arbitrary(g: &mut Gen) -> Self {
+            let arr: [T; CAP] = Vec::arbitrary(g)
+                .into_iter()
+                .take(CAP)
+                .collect::<Vec<_>>()
+                .try_into()
+                .unwrap();
+            ArrayVecProxy(arr.into())
+        }
+
+        fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+            Box::new(self.0.clone()
+                .into_iter()
+                .collect::<Vec<T>>()
+                .shrink()
+                .map(|vec| {
+                    let arr: [T; CAP] = vec.try_into().unwrap();
+                    ArrayVecProxy(arr.into())
+                })
+            )
+        }
+    }
+
+    impl Arbitrary for Literal {
+        fn arbitrary(g: &mut Gen) -> Self {
+            Literal(bool::arbitrary(g), Id::arbitrary(g))
+        }
+    }
 
     impl Arbitrary for Instance {
         fn arbitrary(g: &mut Gen) -> Instance {
+            let proxy: ArrayVec<LiteralProxy, MAX_CLAUSES> = (ArrayVecProxy::arbitrary(g) as ClauseProxy).into();
             Instance {
-                id:    i32::arbitrary(g),
-                m:     u32::arbitrary(g).min(10_000),
-                items: vec![<(u32, u32)>::arbitrary(g)]
-                           .into_iter()
-                           .chain(Vec::arbitrary(g).into_iter())
-                           .take(10)
-                           .map(|(w, c): (u32, u32)| (w.min(10_000), c % 10_000))
-                           .collect(),
+                id:      i32::arbitrary(g),
+                weights: ArrayVecProxy::arbitrary(g).into(),
+                clauses: proxy.into_iter().map(|clause| clause.0.into_inner().unwrap()).collect(),
             }
         }
 
@@ -1320,156 +1512,33 @@ mod tests {
             let data = self.clone();
             #[allow(clippy::needless_collect)]
             let chain: Vec<Instance> = quickcheck::empty_shrinker()
-                .chain(self.id   .shrink().map(|id   | Instance {id,    ..(&data).clone()}))
-                .chain(self.m    .shrink().map(|m    | Instance {m,     ..(&data).clone()}))
-                .chain(self.items.shrink().map(|items| Instance { items, ..(&data).clone() })
-                        .filter(|i| !i.items.is_empty()))
+                .chain(self.id.shrink().map(|id| Instance {id, ..(&data).clone()}))
+                .chain(ArrayVecProxy(self.weights.clone())
+                    .shrink()
+                    .map(|weights| Instance {
+                        weights: weights.into(),
+                        ..(&data).clone()
+                    })
+                )
+                .chain(ArrayVecProxy(
+                        self.clauses.clone()
+                            .into_iter()
+                            .map(|c| ArrayVecProxy(c.into()))
+                            .collect()
+                    )
+                    .shrink()
+                    .map(|clauses| {
+                        let av: ArrayVec<LiteralProxy, MAX_CLAUSES> = clauses.into();
+                        Instance {
+                            clauses: av.into_iter().map(|clause| clause.0.into_inner().unwrap()).collect(),
+                            ..(&data).clone()
+                        }
+                    })
+                    .filter(|i| !i.clauses.is_empty())
+                )
                 .collect();
             Box::new(chain.into_iter())
         }
-    }
-
-    impl <'a> Solution<'a> {
-        fn assert_valid(&self) {
-            let Solution { weight, cost, cfg, inst } = self;
-            let Instance { m, items, .. } = inst;
-
-            let (computed_weight, computed_cost) = items
-                .iter()
-                .zip(cfg)
-                .map(|((w, c), b)| {
-                    if *b { (*w, *c) } else { (0, 0) }
-                })
-                .reduce(|(a0, b0), (a1, b1)| (a0 + a1, b0 + b1))
-                .unwrap_or_default();
-
-            assert!(computed_weight <= *m);
-            assert_eq!(computed_cost, *cost);
-            assert_eq!(computed_weight, *weight);
-        }
-    }
-
-    #[test]
-    fn stupid() {
-        // let i = Instance { id: 0, m: 1, b: 0, items: vec![(1, 0), (1, 0)] };
-        // i.branch_and_bound2().assert_valid(&i);
-        let i = Instance { id: 0, m: 1, items: vec![(1, 1), (1, 2), (0, 1)] };
-        let bb = i.branch_and_bound();
-        assert_eq!(bb.cost, i.dynamic_programming_w().cost);
-        assert_eq!(bb.cost, i.dynamic_programming_c().cost);
-        assert_eq!(bb.cost, i.greedy_redux().cost);
-        assert_eq!(bb.cost, i.brute_force().cost);
-        assert_eq!(bb.cost, i.greedy().cost);
-    }
-
-    #[ignore]
-    #[test]
-    fn proper() -> Result<()> {
-        type Solver = (&'static str, for<'a> fn(&'a Instance) -> Solution<'a>);
-        let algs = get_algorithms();
-        let algs: Vec<Solver> = algs.iter().map(|(s, f)| (*s, *f)).collect();
-        let opts = load_solutions("NK")?;
-        println!("loaded {} optimal solutions", opts.len());
-
-        let solve: for<'a> fn(&Vec<_>, &'a _) -> Vec<(&'static str, Solution<'a>)> =
-            |algs, inst|
-            algs.iter().map(|(name, alg): &Solver| (*name, alg(inst))).collect();
-
-        let mut files = list_input_files("NK", 0..5)?.into_iter();
-        // make sure `files` is not empty
-        let first = files.next().ok_or_else(|| anyhow!("no instance files loaded"))?;
-        for file in vec![first].into_iter().chain(files) {
-            let file = file?;
-            println!("Testing {}", file.file_name().to_str().unwrap());
-            // open the file
-            let mut r = BufReader::new(File::open(file.path())?);
-            // solve each instance with all algorithms
-            while let Some(slns) = parse_line(&mut r)?.as_ref().map(|x| solve(&algs, x)) {
-                // verify correctness
-                slns.iter().for_each(|(alg, s)| {
-                    eprint!("\rid: {} alg: {}\t", s.inst.id, alg);
-                    s.assert_valid();
-                    let key = (s.inst.items.len() as u32, s.inst.id);
-                    assert!(s.cost <= opts[&key].cost);
-                });
-            }
-        }
-        Ok(())
-    }
-
-    #[test]
-    fn dpc_simple() {
-        let i = Instance { id: 0, m: 0, items: vec![(0, 1), (0, 1)] };
-        let s = i.dynamic_programming_c();
-        assert_eq!(s.cost, 2);
-        assert_eq!(s.weight, 0);
-        s.assert_valid();
-    }
-
-    #[test]
-    fn fptas_is_within_bounds() -> Result<()> {
-        let opts = load_solutions("NK")?;
-        for eps in [0.1, 0.01] {
-            for file in list_input_files("NK", 0..5)? {
-                let file = file?;
-                let mut r = BufReader::new(File::open(file.path())?);
-                while let Some(sln) = parse_line(&mut r)?.as_ref().map(|x| x.fptas(eps)) {
-                    // make sure the solution from fptas is at least (1 - eps) * optimal cost
-                    let key = (sln.inst.items.len() as u32, sln.inst.id);
-                    println!("{} {} {}", sln.cost, opts[&key].cost, (1.0 - eps) * opts[&key].cost as f64);
-                    assert!(sln.cost as f64 >= opts[&key].cost as f64 * (1.0 - eps));
-                }
-            }
-        }
-        Ok(())
-    }
-
-    #[test]
-    fn small_bb_is_correct() {
-        let a = Instance {
-            id: -10,
-            m: 165,
-            items: vec![ (86,  744)
-                       , (214, 1373)
-                       , (236, 1571)
-                       , (239, 2388)
-                       ],
-        };
-        a.branch_and_bound().assert_valid();
-    }
-
-    #[ignore]
-    #[test]
-    fn bb_is_correct() -> Result<()> {
-        use std::fs::File;
-        use std::io::BufReader;
-        let inst = parse_line(
-            &mut BufReader::new(File::open("ds/NK15_inst.dat")?)
-        )?.unwrap();
-        println!("testing {:?}", inst);
-        inst.branch_and_bound().assert_valid();
-        Ok(())
-    }
-
-    #[quickcheck]
-    fn qc_bb_is_really_correct(inst: Instance) {
-        assert_eq!(inst.branch_and_bound().cost, inst.brute_force().cost);
-    }
-
-    #[quickcheck]
-    fn qc_dp_matches_bb(inst: Instance) {
-        assert!(inst.branch_and_bound().cost <= inst.dynamic_programming_w().cost);
-    }
-
-    #[quickcheck]
-    fn qc_dps_match(inst: Instance) {
-        assert_eq!(inst.dynamic_programming_w().cost, inst.dynamic_programming_c().cost);
-    }
-
-    #[quickcheck]
-    fn qc_greedy_is_valid(inst: Instance) {
-        inst.greedy().assert_valid();
-        inst.greedy_redux().assert_valid();
     }
 }
 

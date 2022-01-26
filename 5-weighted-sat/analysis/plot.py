@@ -1,3 +1,6 @@
+# ~\~ language=Python filename=analysis/plot.py
+# ~\~ begin <<lit/main.md|analysis/plot.py>>[0]
+
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -95,7 +98,6 @@ def boxplot(x_axis, y_axis, id, title, grouping_column, data = data, filename = 
     df = pd.DataFrame(ds)
 
     # do a grouped boxplot
-    # ~\~ begin <<lit/main.md|plot-boxplot>>[0]
     sns.boxplot(
         x = x_axis,
         y = y_axis,
@@ -104,10 +106,8 @@ def boxplot(x_axis, y_axis, id, title, grouping_column, data = data, filename = 
         ax = ax,
         linewidth = 0.8,
     )
-    # ~\~ end
 
     # render the datapoints as dots with horizontal jitter
-    # ~\~ begin <<lit/main.md|plot-stripplot>>[0]
     sns.stripplot(
         x = x_axis,
         y = y_axis,
@@ -121,13 +121,11 @@ def boxplot(x_axis, y_axis, id, title, grouping_column, data = data, filename = 
         alpha = 0.4,
         edgecolor = "white",
     )
-    # ~\~ end
 
     plt.title(title)
     plt.xlabel(plot_labels[x_axis])
     plt.ylabel(plot_labels[y_axis])
 
-    # ~\~ begin <<lit/main.md|plot-caption>>[0]
     constant_columns = [
         col for col in df.columns[df.nunique() <= 1]
             if (col not in ["id", "n_instances", "contents"])
@@ -145,7 +143,6 @@ def boxplot(x_axis, y_axis, id, title, grouping_column, data = data, filename = 
         fontfamily = "monospace",
         verticalalignment = "top",
     )
-    # ~\~ end
 
     handles, labels = ax.get_legend_handles_labels()
     # labels = [alg_labels[l] for l in labels]
@@ -284,3 +281,5 @@ schedule_heatmap(
 
 # do the plottery
 plottery()
+
+# ~\~ end
