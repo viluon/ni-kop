@@ -139,8 +139,6 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <main role="main" class="flex-fill"><div class="container my-5">
 <h1 id="kombinatorická-optimalizace-problém-vážené-splnitelnosti-booleovské-formule">Kombinatorická optimalizace: problém vážené splnitelnosti booleovské formule</h1>
-<p><strong>TODO</strong>: heatmap vývoje přiřazení proměnných, osa y je čas, osa x jsou proměnné, barva buňky znázorňuje průměr přiřazení přes všechny jedince</p>
-<p><strong>TODO</strong>: zdroje nedeterminismu: - <code>map_init()</code> používá RNG n-krát, neznáme n (závisí na počtu jader, odhadu práce, etc) - <code>par_sort_unstable_by_key()</code> nepředvídatelně přehazuje řešení stejné fitness</p>
 <h2 id="zadání">Zadání</h2>
 <h3 id="pokyny">Pokyny</h3>
 <p>Problém řešte některou z pokročilých heuristik:</p>
@@ -218,70 +216,70 @@ info: installing component 'rust-std'
 info: installing component 'rustc'
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">    Updating</span> crates.io index
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00"> Downloading</span> crates ...
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> aho-corasick v0.7.18
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> radium v0.6.2
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> num_cpus v1.13.0
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> funty v1.2.0
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> rayon v1.5.1
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> wyz v0.4.0
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> tap v1.0.1
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> scopeguard v1.1.0
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> either v1.6.1
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> env_logger v0.8.4
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> log v0.4.14
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> bitvec v0.22.3
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> serde_json v1.0.78
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> syn v1.0.80
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> crossbeam-utils v0.8.5
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> crossbeam-channel v0.5.1
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> quickcheck_macros v1.0.0
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> rand_xoshiro v0.6.0
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> quickcheck v1.0.3
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> proc-macro2 v1.0.29
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> libc v0.2.103
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> permutation v0.2.5
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> memoffset v0.6.4
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> arrayvec v0.7.2
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> anyhow v1.0.44
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> crossbeam-epoch v0.9.5
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> crossbeam-deque v0.8.1
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> rayon-core v1.9.1
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> crossbeam-channel v0.5.1
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> permutation v0.2.5
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> scopeguard v1.1.0
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> itoa v1.0.1
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> crossbeam-deque v0.8.1
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> wyz v0.4.0
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> proc-macro2 v1.0.29
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> memoffset v0.6.4
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> funty v1.2.0
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> rand_xoshiro v0.6.0
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> log v0.4.14
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> quickcheck v1.0.3
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> syn v1.0.80
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> tap v1.0.1
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> libc v0.2.103
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> radium v0.6.2
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> serde_json v1.0.78
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> bitvec v0.22.3
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> anyhow v1.0.44
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> either v1.6.1
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> quickcheck_macros v1.0.0
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> aho-corasick v0.7.18
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> rayon-core v1.9.1
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> num_cpus v1.13.0
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> crossbeam-utils v0.8.5
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> crossbeam-epoch v0.9.5
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> rayon v1.5.1
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">  Downloaded</span> env_logger v0.8.4
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> cfg-if v1.0.0
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> libc v0.2.103
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> autocfg v1.0.1
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> proc-macro2 v1.0.29
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> crossbeam-utils v0.8.5
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> unicode-xid v0.2.2
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> lazy_static v1.4.0
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> memchr v2.4.1
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> syn v1.0.80
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> memchr v2.4.1
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> lazy_static v1.4.0
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> crossbeam-epoch v0.9.5
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> serde_derive v1.0.130
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> scopeguard v1.1.0
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> rayon-core v1.9.1
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> scopeguard v1.1.0
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> serde_derive v1.0.130
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> log v0.4.14
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> serde v1.0.130
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> ryu v1.0.5
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> ppv-lite86 v0.2.15
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> regex-syntax v0.6.25
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> radium v0.6.2
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> ryu v1.0.5
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> serde v1.0.130
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> ppv-lite86 v0.2.15
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> tap v1.0.1
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> serde_json v1.0.78
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> anyhow v1.0.44
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> serde_json v1.0.78
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> tap v1.0.1
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> itoa v1.0.1
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> funty v1.2.0
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> either v1.6.1
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> arrayvec v0.7.2
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> permutation v0.2.5
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> arrayvec v0.7.2
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> memoffset v0.6.4
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> rayon v1.5.1
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> wyz v0.4.0
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> getrandom v0.2.3
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> num_cpus v1.13.0
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> quote v1.0.10
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> crossbeam-channel v0.5.1
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> aho-corasick v0.7.18
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> quote v1.0.10
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> bitvec v0.22.3
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> rand_core v0.6.3
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">   Compiling</span> regex v1.5.4
@@ -374,7 +372,7 @@ info: installing component 'rustc'
    <span style="font-weight: bold"></span><span style="font-weight: bold; color: #5c5cff">= </span><span style="font-weight: bold">note</span>: `#[warn(unused_variables)]` on by default
 
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #aa5500">warning</span><span style="font-weight: bold">:</span> `solver` (bin "main") generated 1 warning
-<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">    Finished</span> release [optimized + debuginfo] target(s) in 1m 51s
+<span style="font-weight: bold"></span><span style="font-weight: bold; color: #00aa00">    Finished</span> release [optimized + debuginfo] target(s) in 1m 53s
 </pre>
 </div>
 </div>
@@ -393,7 +391,7 @@ info: installing component 'rustc'
 </div>
 <div class="doctestResult">
 <div class="programOutput">
-<pre class="ansi2html-content">Linux 8d799f79ad8e 5.11.0-1027-azure #30~20.04.1-Ubuntu SMP Wed Jan 12 20:56:50 UTC 2022 x86_64 GNU/Linux
+<pre class="ansi2html-content">Linux 14da7e454749 5.11.0-1027-azure #30~20.04.1-Ubuntu SMP Wed Jan 12 20:56:50 UTC 2022 x86_64 GNU/Linux
 
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">                   .#################.          </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">Name:</span>       <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">Intel Xeon Platinum </span>
 <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">              .####                   ####.     </span><span style="font-weight: bold"></span><span style="font-weight: bold; color: #585858">Hypervisor:</span> <span style="font-weight: bold"></span><span style="font-weight: bold; color: #8700d7">Microsoft Hyper-V</span>
@@ -415,6 +413,7 @@ info: installing component 'rustc'
 </div>
 </div>
 <h3 id="white-box-průzkum-chování-algoritmu">White box: průzkum chování algoritmu</h3>
+<p>Následující soubor slouží k vyhodnocení algoritmu na různých datových sadách s různými parametry. Spouští implementaci v jazyce Rust a výsledky měření ukládá do binárního souboru pro následnou analýzu.</p>
 <div class="doctest" data-status="SUCCESS">
 <div class="doctestInput">
 <div class="sourceCode" id="cb1"><pre class="sourceCode python eval bootstrap-fold"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a></span>
@@ -488,40 +487,34 @@ info: installing component 'rustc'
 <span id="cb1-69"><a href="#cb1-69" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> k <span class="kw">in</span> dss[<span class="dv">0</span>]</span>
 <span id="cb1-70"><a href="#cb1-70" aria-hidden="true" tabindex="-1"></a>    }</span>
 <span id="cb1-71"><a href="#cb1-71" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a>configs <span class="op">=</span> merge_datasets(dataset(</span>
-<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;default&quot;</span>,</span>
-<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a>), dataset(</span>
-<span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;mutation_exploration&quot;</span>,</span>
-<span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a>    n_instances <span class="op">=</span> [<span class="dv">6</span>],</span>
-<span id="cb1-77"><a href="#cb1-77" aria-hidden="true" tabindex="-1"></a>    mutation_chance <span class="op">=</span> [<span class="fl">0.005</span>, <span class="fl">0.01</span>, <span class="fl">0.02</span>, <span class="fl">0.05</span>, <span class="fl">0.1</span>, <span class="fl">0.2</span>, <span class="fl">0.5</span>],</span>
-<span id="cb1-78"><a href="#cb1-78" aria-hidden="true" tabindex="-1"></a>))</span>
-<span id="cb1-79"><a href="#cb1-79" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-80"><a href="#cb1-80" aria-hidden="true" tabindex="-1"></a>data <span class="op">=</span> pd.DataFrame()</span>
-<span id="cb1-81"><a href="#cb1-81" aria-hidden="true" tabindex="-1"></a>cfgs <span class="op">=</span> [<span class="bu">dict</span>(<span class="bu">zip</span>(configs, v)) <span class="cf">for</span> v <span class="kw">in</span> <span class="bu">zip</span>(<span class="op">*</span>configs.values())]</span>
-<span id="cb1-82"><a href="#cb1-82" aria-hidden="true" tabindex="-1"></a>iteration <span class="op">=</span> <span class="dv">0</span></span>
-<span id="cb1-83"><a href="#cb1-83" aria-hidden="true" tabindex="-1"></a>total <span class="op">=</span> <span class="bu">sum</span>([cfg[<span class="st">&quot;n_instances&quot;</span>] <span class="cf">for</span> cfg <span class="kw">in</span> cfgs])</span>
+<span id="cb1-72"><a href="#cb1-72" aria-hidden="true" tabindex="-1"></a><span class="op">&lt;&lt;</span>datasets<span class="op">&gt;&gt;</span></span>
+<span id="cb1-73"><a href="#cb1-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-74"><a href="#cb1-74" aria-hidden="true" tabindex="-1"></a>data <span class="op">=</span> pd.DataFrame()</span>
+<span id="cb1-75"><a href="#cb1-75" aria-hidden="true" tabindex="-1"></a>cfgs <span class="op">=</span> [<span class="bu">dict</span>(<span class="bu">zip</span>(configs, v)) <span class="cf">for</span> v <span class="kw">in</span> <span class="bu">zip</span>(<span class="op">*</span>configs.values())]</span>
+<span id="cb1-76"><a href="#cb1-76" aria-hidden="true" tabindex="-1"></a>iteration <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb1-77"><a href="#cb1-77" aria-hidden="true" tabindex="-1"></a>total <span class="op">=</span> <span class="bu">sum</span>([cfg[<span class="st">&quot;n_instances&quot;</span>] <span class="cf">for</span> cfg <span class="kw">in</span> cfgs])</span>
+<span id="cb1-78"><a href="#cb1-78" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-79"><a href="#cb1-79" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> config <span class="kw">in</span> cfgs:</span>
+<span id="cb1-80"><a href="#cb1-80" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> show_progress:</span>
+<span id="cb1-81"><a href="#cb1-81" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(end <span class="op">=</span> <span class="st">&quot;</span><span class="ch">\033</span><span class="st">[2K&quot;</span>)</span>
+<span id="cb1-82"><a href="#cb1-82" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(config)</span>
+<span id="cb1-83"><a href="#cb1-83" aria-hidden="true" tabindex="-1"></a>    progress_bar(iteration, total)</span>
 <span id="cb1-84"><a href="#cb1-84" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-85"><a href="#cb1-85" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> config <span class="kw">in</span> cfgs:</span>
-<span id="cb1-86"><a href="#cb1-86" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> show_progress:</span>
-<span id="cb1-87"><a href="#cb1-87" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(end <span class="op">=</span> <span class="st">&quot;</span><span class="ch">\033</span><span class="st">[2K&quot;</span>)</span>
-<span id="cb1-88"><a href="#cb1-88" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(config)</span>
-<span id="cb1-89"><a href="#cb1-89" aria-hidden="true" tabindex="-1"></a>    progress_bar(iteration, total)</span>
-<span id="cb1-90"><a href="#cb1-90" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-91"><a href="#cb1-91" aria-hidden="true" tabindex="-1"></a>    params <span class="op">=</span> <span class="st">&quot;-&quot;</span>.join([<span class="bu">str</span>(v) <span class="cf">for</span> _, v <span class="kw">in</span> config.items()])</span>
-<span id="cb1-92"><a href="#cb1-92" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (t, inst_id, satisfied, valid, weight, err, stats) <span class="kw">in</span> invoke_solver(config):</span>
-<span id="cb1-93"><a href="#cb1-93" aria-hidden="true" tabindex="-1"></a>        data <span class="op">=</span> data.append(<span class="bu">dict</span>(config,</span>
-<span id="cb1-94"><a href="#cb1-94" aria-hidden="true" tabindex="-1"></a>            error   <span class="op">=</span> err,</span>
-<span id="cb1-95"><a href="#cb1-95" aria-hidden="true" tabindex="-1"></a>            inst_id <span class="op">=</span> inst_id,</span>
-<span id="cb1-96"><a href="#cb1-96" aria-hidden="true" tabindex="-1"></a>            stats   <span class="op">=</span> stats,</span>
-<span id="cb1-97"><a href="#cb1-97" aria-hidden="true" tabindex="-1"></a>            time    <span class="op">=</span> t,</span>
-<span id="cb1-98"><a href="#cb1-98" aria-hidden="true" tabindex="-1"></a>            valid   <span class="op">=</span> valid,</span>
-<span id="cb1-99"><a href="#cb1-99" aria-hidden="true" tabindex="-1"></a>            weight  <span class="op">=</span> weight,</span>
-<span id="cb1-100"><a href="#cb1-100" aria-hidden="true" tabindex="-1"></a>        ), ignore_index <span class="op">=</span> <span class="va">True</span>)</span>
-<span id="cb1-101"><a href="#cb1-101" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-102"><a href="#cb1-102" aria-hidden="true" tabindex="-1"></a>        iteration <span class="op">=</span> iteration <span class="op">+</span> <span class="dv">1</span></span>
-<span id="cb1-103"><a href="#cb1-103" aria-hidden="true" tabindex="-1"></a>        progress_bar(iteration, total)</span>
-<span id="cb1-104"><a href="#cb1-104" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb1-105"><a href="#cb1-105" aria-hidden="true" tabindex="-1"></a>data.to_pickle(<span class="st">&quot;docs/assets/measurements.pkl&quot;</span>)</span></code></pre></div>
+<span id="cb1-85"><a href="#cb1-85" aria-hidden="true" tabindex="-1"></a>    params <span class="op">=</span> <span class="st">&quot;-&quot;</span>.join([<span class="bu">str</span>(v) <span class="cf">for</span> _, v <span class="kw">in</span> config.items()])</span>
+<span id="cb1-86"><a href="#cb1-86" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> (t, inst_id, satisfied, valid, weight, err, stats) <span class="kw">in</span> invoke_solver(config):</span>
+<span id="cb1-87"><a href="#cb1-87" aria-hidden="true" tabindex="-1"></a>        data <span class="op">=</span> data.append(<span class="bu">dict</span>(config,</span>
+<span id="cb1-88"><a href="#cb1-88" aria-hidden="true" tabindex="-1"></a>            error   <span class="op">=</span> err,</span>
+<span id="cb1-89"><a href="#cb1-89" aria-hidden="true" tabindex="-1"></a>            inst_id <span class="op">=</span> inst_id,</span>
+<span id="cb1-90"><a href="#cb1-90" aria-hidden="true" tabindex="-1"></a>            stats   <span class="op">=</span> stats,</span>
+<span id="cb1-91"><a href="#cb1-91" aria-hidden="true" tabindex="-1"></a>            time    <span class="op">=</span> t,</span>
+<span id="cb1-92"><a href="#cb1-92" aria-hidden="true" tabindex="-1"></a>            valid   <span class="op">=</span> valid,</span>
+<span id="cb1-93"><a href="#cb1-93" aria-hidden="true" tabindex="-1"></a>            weight  <span class="op">=</span> weight,</span>
+<span id="cb1-94"><a href="#cb1-94" aria-hidden="true" tabindex="-1"></a>        ), ignore_index <span class="op">=</span> <span class="va">True</span>)</span>
+<span id="cb1-95"><a href="#cb1-95" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-96"><a href="#cb1-96" aria-hidden="true" tabindex="-1"></a>        iteration <span class="op">=</span> iteration <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb1-97"><a href="#cb1-97" aria-hidden="true" tabindex="-1"></a>        progress_bar(iteration, total)</span>
+<span id="cb1-98"><a href="#cb1-98" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-99"><a href="#cb1-99" aria-hidden="true" tabindex="-1"></a>data.to_pickle(<span class="st">&quot;docs/assets/measurements.pkl&quot;</span>)</span></code></pre></div>
 </div>
 <div class="doctestResult">
 <div class="programOutput">
@@ -537,6 +530,18 @@ info: installing component 'rustc'
 </div>
 </div>
 </div>
+<p>V tuto chvíli ještě nevíme, ve kterých oblastech prostoru všech konfigurací parametrů evolučního algoritmu se skrývají efektivní řešiče problému. Protože vyhodnocení kartézského součinu všech množin parametrů by zabralo moc dlouho, zaměříme se pouze na zajímavé podprostory. Ty jsou generovány funkcí <code>dataset</code>, která vytvoří pojmenovaný podprostor konfigurací kartézského součinu zadaných hodnot všech parametrů. Sjednocením těchto podprostorů dostaneme podprostor všech konfigurací, pro které je třeba algoritmus vyhodnotit.</p>
+<div class="annotated-code">
+<p><span><em>«datasets»=</em></span></p>
+<div class="sourceCode" id="datasets"><pre class="sourceCode python"><code class="sourceCode python"><span id="datasets-1"><a href="#datasets-1" aria-hidden="true" tabindex="-1"></a>configs <span class="op">=</span> merge_datasets(dataset(</span>
+<span id="datasets-2"><a href="#datasets-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;default&quot;</span>,</span>
+<span id="datasets-3"><a href="#datasets-3" aria-hidden="true" tabindex="-1"></a>), dataset(</span>
+<span id="datasets-4"><a href="#datasets-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">&quot;mutation_exploration&quot;</span>,</span>
+<span id="datasets-5"><a href="#datasets-5" aria-hidden="true" tabindex="-1"></a>    n_instances <span class="op">=</span> [<span class="dv">6</span>],</span>
+<span id="datasets-6"><a href="#datasets-6" aria-hidden="true" tabindex="-1"></a>    mutation_chance <span class="op">=</span> [<span class="fl">0.005</span>, <span class="fl">0.01</span>, <span class="fl">0.02</span>, <span class="fl">0.05</span>, <span class="fl">0.1</span>, <span class="fl">0.2</span>, <span class="fl">0.5</span>],</span>
+<span id="datasets-7"><a href="#datasets-7" aria-hidden="true" tabindex="-1"></a>))</span></code></pre></div>
+</div>
+<p>Po vyhodnocení algoritmu pro různé parametry je čas na vizualizaci a analýzu výsledků. O tu se stará další program, který využívá vizualizací vyvinutých v předchozích úkolech, a přidává vlastní. Rozdělení na dvě fáze (měření a vizualizace zvlášť) se serializací do binárního souboru uprostřed vede ke zkrácení iteračního cyklu během whitebox fáze vývoje algoritmu. Je-li třeba poupravit detaily grafu, měření se nemusí provádět znovu, a naopak.</p>
 <div class="doctest" data-status="ERROR">
 <div class="doctestInput">
 <div class="sourceCode" id="cb2"><pre class="sourceCode python eval bootstrap-fold"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a></span>
@@ -825,19 +830,19 @@ info: installing component 'rustc'
 <div class="programOutput">
 <pre class="ansi2html-content"><span style="color: #aa0000">---------------------------------------------------------------------------</span>
 <span style="color: #aa0000">TypeError</span>                                 Traceback (most recent call last)
-<span style="color: #00aa00">/tmp/ipykernel_2223/355929646.py</span> in <span style="color: #00aaaa">&lt;module&gt;</span><span style="color: #0000aa"></span>
+<span style="color: #00aa00">/tmp/ipykernel_2228/355929646.py</span> in <span style="color: #00aaaa">&lt;module&gt;</span><span style="color: #0000aa"></span>
 <span style="font-weight: bold; color: #00aa00">    278</span> <span style="color: #0000aa"></span>
 <span style="font-weight: bold; color: #00aa00">    279</span> <span style="color: #aa0000"># do the plottery</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
 <span style="color: #00aa00">--&gt; 280</span><span style="color: #aa0000"> </span>plottery<span style="color: #0000aa">(</span><span style="color: #0000aa">)</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
 
-<span style="color: #00aa00">/tmp/ipykernel_2223/355929646.py</span> in <span style="color: #00aaaa">plottery</span><span style="color: #0000aa">()</span>
+<span style="color: #00aa00">/tmp/ipykernel_2228/355929646.py</span> in <span style="color: #00aaaa">plottery</span><span style="color: #0000aa">()</span>
 <span style="font-weight: bold; color: #00aa00">    253</span>             boxplot<span style="color: #0000aa">(</span><span style="color: #0000aa">*</span>plot<span style="color: #0000aa">[</span><span style="color: #0000aa">"args"</span><span style="color: #0000aa">]</span><span style="color: #0000aa">,</span> progress <span style="color: #0000aa">=</span> progress<span style="color: #0000aa">,</span> <span style="color: #0000aa">**</span>plot<span style="color: #0000aa">[</span><span style="color: #0000aa">"kwargs"</span><span style="color: #0000aa">]</span><span style="color: #0000aa">)</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
 <span style="font-weight: bold; color: #00aa00">    254</span>         <span style="color: #00aa00">elif</span> plot<span style="color: #0000aa">[</span><span style="color: #0000aa">"type"</span><span style="color: #0000aa">]</span> <span style="color: #0000aa">==</span> <span style="color: #0000aa">"heatmap"</span><span style="color: #0000aa">:</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
 <span style="color: #00aa00">--&gt; 255</span><span style="color: #aa0000">             </span>heatmap<span style="color: #0000aa">(</span><span style="color: #0000aa">*</span>plot<span style="color: #0000aa">[</span><span style="color: #0000aa">"args"</span><span style="color: #0000aa">]</span><span style="color: #0000aa">,</span> progress <span style="color: #0000aa">=</span> progress<span style="color: #0000aa">,</span> <span style="color: #0000aa">**</span>plot<span style="color: #0000aa">[</span><span style="color: #0000aa">"kwargs"</span><span style="color: #0000aa">]</span><span style="color: #0000aa">)</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
 <span style="font-weight: bold; color: #00aa00">    256</span> <span style="color: #0000aa"></span>
 <span style="font-weight: bold; color: #00aa00">    257</span> schedule_ridgeline(
 
-<span style="color: #00aa00">/tmp/ipykernel_2223/355929646.py</span> in <span style="color: #00aaaa">heatmap</span><span style="color: #0000aa">(id, title, filename, data, progress)</span>
+<span style="color: #00aa00">/tmp/ipykernel_2228/355929646.py</span> in <span style="color: #00aaaa">heatmap</span><span style="color: #0000aa">(id, title, filename, data, progress)</span>
 <span style="font-weight: bold; color: #00aa00">    208</span> <span style="color: #0000aa"></span>
 <span style="font-weight: bold; color: #00aa00">    209</span>         new_ticks <span style="color: #0000aa">=</span> <span style="color: #0000aa">[</span>i<span style="color: #0000aa">.</span>get_text<span style="color: #0000aa">(</span><span style="color: #0000aa">)</span> <span style="color: #00aa00">for</span> i <span style="color: #00aa00">in</span> ax<span style="color: #0000aa">.</span>get_yticklabels<span style="color: #0000aa">(</span><span style="color: #0000aa">)</span><span style="color: #0000aa">]</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
 <span style="color: #00aa00">--&gt; 210</span><span style="color: #aa0000">         </span>ax<span style="color: #0000aa">.</span>set_yticks<span style="color: #0000aa">(</span>range<span style="color: #0000aa">(</span><span style="color: #00aaaa">0</span><span style="color: #0000aa">,</span> len<span style="color: #0000aa">(</span>new_ticks<span style="color: #0000aa">)</span><span style="color: #0000aa">,</span> <span style="color: #00aaaa">10</span><span style="color: #0000aa">)</span><span style="color: #0000aa">,</span> new_ticks<span style="color: #0000aa">[</span><span style="color: #0000aa">:</span><span style="color: #0000aa">:</span><span style="color: #00aaaa">10</span><span style="color: #0000aa">]</span><span style="color: #0000aa">)</span><span style="color: #0000aa"></span><span style="color: #0000aa"></span>
@@ -855,8 +860,12 @@ info: installing component 'rustc'
 </div>
 </div>
 </div>
+<p>Vůbec první varianta algoritmu nevyužívá žádných metod nichingu, v každé ze dvou set generací z populace tisíce jedinců nekompromisně vyřadí slabší půlku a rodiče kombinuje do nových potomků uniformním křížením.</p>
 <figure>
-<img src="assets/whitebox-heatmap-default.svg" alt="Vývoj populace po 200 generací" /><figcaption aria-hidden="true">Vývoj populace po 200 generací</figcaption>
+<img src="whitebox-default-0.svg" alt="První nástřel evolučního algoritmu" /><figcaption aria-hidden="true">První nástřel evolučního algoritmu</figcaption>
+</figure>
+<figure>
+<img src="assets/whitebox-heatmap-default-mix.svg" alt="Vývoj populace po 200 generací" /><figcaption aria-hidden="true">Vývoj populace po 200 generací</figcaption>
 </figure>
 <figure>
 <img src="assets/whitebox-mutation-chance-error.svg" alt="Šance mutace vs. hustota chyb" /><figcaption aria-hidden="true">Šance mutace vs. hustota chyb</figcaption>
