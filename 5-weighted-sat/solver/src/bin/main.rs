@@ -42,6 +42,23 @@ fn main() -> Result<()> {
         p1.cmp(p2).then(i1.id.cmp(&i2.id))
     );
 
+    solutions.iter().for_each(|((params, _), opt)| {
+        // some instances (e.g. 33 in M1) have been removed,
+        // but their optimal solutions are still here
+        if let Ok(inst_index) = instances.binary_search_by(
+            |(p, inst)| p.cmp(params).then(inst.id.cmp(&opt.id))
+        ) {
+            let inst = &instances[inst_index].1;
+            let sln = Solution::new(opt.weight, opt.cfg, inst);
+            assert!(sln.valid(),
+                "optimal solution to instance {} is invalid (satisfied: {})\n{}",
+                inst.id,
+                sln.satisfied,
+                opt.dump(),
+            );
+        }
+    });
+
     instances.into_iter().take(evo_config.n_instances as usize).for_each(|(_params, inst)| {
         use std::time::Instant;
 
@@ -62,12 +79,18 @@ fn main() -> Result<()> {
             weight = sln.weight,
             err = error.map(|e| e.to_string()).unwrap_or_default()
         );
-        // assert!(sln.valid(),
-        //     "the following (satisfied = {}) isn't a valid solution to instance {}:\n{}",
-        //     sln.satisfied,
-        //     inst.id,
-        //     sln.dump()
-        // );
+        assert!(!sln.satisfied || sln.valid(),
+            "the following satisfied solution isn't valid! Instance {}:\n{}",
+            inst.id,
+            sln.dump()
+        );
+        assert!(!sln.satisfied || error.is_none() || error.unwrap() >= 0.0,
+            "the following satisfied solution has a negative error of {:?}!\n{}\nInstance {}:\n{}",
+            error,
+            sln.dump(),
+            inst.id,
+            inst.dump(),
+        );
 
         // println!("ours:    {}", sln.dump());
         // println!("optimal: {}\n", optimal.map(|opt| opt.dump()).unwrap_or_else(|| "None".into()));

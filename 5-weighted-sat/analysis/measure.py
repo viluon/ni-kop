@@ -27,7 +27,11 @@ def invoke_solver(cfg):
         ],
         stdout = PIPE,
         encoding = "ascii",
-        cwd = "solver/"
+        cwd = "solver/",
+        env = {
+            "RUST_BACKTRACE": "1",
+            **os.environ,
+        },
     )
     if solver.returncode != 0:
         print(solver)
@@ -73,7 +77,7 @@ def merge_datasets(*dss):
 # ~\~ begin <<lit/main.md|datasets>>[0]
 configs = merge_datasets(dataset(
     "default",
-    generations = [5000],
+    generations = [1000],
     mutation_chance = [0.03],
 ), dataset(
     "mutation_exploration",

@@ -3,6 +3,7 @@
 
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.patheffects as PathEffects
 import seaborn as sns
 import textwrap as tr
 import math
@@ -73,6 +74,9 @@ def ridgeline(id, title, col, filename, x_label = "Chyba oproti optimálnímu ř
             va = "baseline",
             fontsize = 15,
             color = ax.lines[-1].get_color(),
+            path_effects = [
+                PathEffects.withStroke(linewidth = 0.5, foreground = "w")
+            ],
         )
 
     # remove titles, y ticks, spines
@@ -159,8 +163,9 @@ def heatmap(id, title, filename, data = data, progress = lambda _: None):
     n_generations = int(dataset["generations"].max())
     n_variables = len(stats[0][0]) - 2
 
+    # math.sqrt(n_generations) * 0.5
     fig, axs = plt.subplots(1, 2 * n_instances,
-        figsize = (3 + n_instances * n_variables * 0.18, math.sqrt(n_generations) * 0.5),
+        figsize = (n_instances * n_variables * 0.15, 8),
         gridspec_kw = {"left": 0.015, "right": 0.975, "width_ratios": [n_variables, 1] * n_instances},
     )
     fig.suptitle(title)

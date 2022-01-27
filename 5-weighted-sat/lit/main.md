@@ -153,7 +153,11 @@ def invoke_solver(cfg):
         ],
         stdout = PIPE,
         encoding = "ascii",
-        cwd = "solver/"
+        cwd = "solver/",
+        env = {
+            "RUST_BACKTRACE": "1",
+            **os.environ,
+        },
     )
     if solver.returncode != 0:
         print(solver)
@@ -244,7 +248,7 @@ všech konfigurací, pro které je třeba algoritmus vyhodnotit.
 ``` {.python #datasets}
 configs = merge_datasets(dataset(
     "default",
-    generations = [5000],
+    generations = [1000],
     mutation_chance = [0.03],
 ), dataset(
     "mutation_exploration",
@@ -264,6 +268,7 @@ poupravit detaily grafu, měření se nemusí provádět znovu, a naopak.
 
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.patheffects as PathEffects
 import seaborn as sns
 import textwrap as tr
 import math
@@ -334,6 +339,9 @@ def ridgeline(id, title, col, filename, x_label = "Chyba oproti optimálnímu ř
             va = "baseline",
             fontsize = 15,
             color = ax.lines[-1].get_color(),
+            path_effects = [
+                PathEffects.withStroke(linewidth = 0.5, foreground = "w")
+            ],
         )
 
     # remove titles, y ticks, spines
@@ -420,8 +428,9 @@ def heatmap(id, title, filename, data = data, progress = lambda _: None):
     n_generations = int(dataset["generations"].max())
     n_variables = len(stats[0][0]) - 2
 
+    # math.sqrt(n_generations) * 0.5
     fig, axs = plt.subplots(1, 2 * n_instances,
-        figsize = (3 + n_instances * n_variables * 0.18, math.sqrt(n_generations) * 0.5),
+        figsize = (n_instances * n_variables * 0.15, 8),
         gridspec_kw = {"left": 0.015, "right": 0.975, "width_ratios": [n_variables, 1] * n_instances},
     )
     fig.suptitle(title)
@@ -574,7 +583,7 @@ batohu.
 ``` {.rust #problem-instance-definition .bootstrap-fold}
 pub type Id = NonZeroU16;
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct Literal(bool, Id);
+pub struct Literal(pub bool, pub Id);
 pub type Clause = [Literal; 3];
 
 const MAX_CLAUSES: usize = 512;
@@ -642,10 +651,11 @@ impl Instance {
     pub fn evolutionary<Rng: rand::Rng + Send + Sync + Clone>(
         &self,
         rng: &mut Rng,
-        ecfg: EvolutionaryConfig,
+        mut ecfg: EvolutionaryConfig,
         opt: Option<&OptimalSolution>
     ) -> Solution {
         use rayon::prelude::*;
+        use std::iter::repeat_with;
 
         impl<'a> Solution<'a> {
             fn fitness(&self, _evo_config: &EvolutionaryConfig) -> u64 {
@@ -673,27 +683,24 @@ impl Instance {
 
                 cfgs.into_iter()
                     .zip(weights.into_iter())
-                    .map(|(cfg, weight)| Solution::new(weight, cfg, self.inst))
-                    .map(|sln| sln.mutate(evo_config, rng))
+                    .map(|(cfg, weight)| Solution{weight, cfg, inst: self.inst, satisfied: false})
+                    .map(|sln| sln.mutate_unsafe(evo_config, rng))
+                    .map(|sln| Solution { satisfied: satisfied(&sln.inst.clauses, &sln.cfg), ..sln })
                     .collect::<ArrayVec<_, 2>>()
                     .into_inner()
                     .unwrap()
             }
 
-            pub fn mutate<Rng: rand::Rng>(
+            pub fn mutate_unsafe<Rng: rand::Rng>(
                 &self, evo_config: &EvolutionaryConfig, rng: &mut Rng
             ) -> Solution<'a> {
-                let mut cfg: Config = Config::zeroed();
-                for (i, b) in self
-                    .cfg.iter()
-                    .take(self.inst.weights.len())
-                    .enumerate() {
-                    let b = *b;
-                    let b = if rng.gen_bool(evo_config.mutation_chance) { !b } else { b };
-                    cfg.set(i, b);
+                let mut new = *self;
+                for i in 0..self.inst.weights.len() {
+                    let flip = rng.gen_bool(evo_config.mutation_chance);
+                    new.set_unsafe(i, if flip { !self.cfg[i] } else { self.cfg[i] });
                 }
 
-                Solution::new(self.weight, cfg, self.inst)
+                new
             }
         }
 
@@ -739,6 +746,7 @@ impl Instance {
         }
 
         const DISASTER_INTERVAL: u32 = 100;
+        const MUTATION_ADJUSTMENT_INTERVAL: u32 = 10;
 
         let mut population = (0..ecfg.population_size).map(|_| random(rng)).collect::<Vec<_>>();
         let mut buffer = Vec::with_capacity(population.len() / 2);
@@ -751,11 +759,11 @@ impl Instance {
                 population.shuffle(rng);
                 let n = (population.len() as f64 * 0.99) as usize;
                 population.drain(.. n);
-                population.extend(std::iter::repeat_with(|| random(rng)).take(n));
+                population.extend(repeat_with(|| random(rng)).take(n));
             }
 
             population.par_sort_by_key(|sln| -(sln.fitness(&ecfg) as i64));
-            if population[0].fitness(&ecfg) > best.fitness(&ecfg) {
+            if (population[0].satisfied && !best.satisfied) || population[0].fitness(&ecfg) > best.fitness(&ecfg) {
                 best = population[0];
             }
 
@@ -779,6 +787,20 @@ impl Instance {
                 println!("{} {}", i + 1, stats(&population[..], ecfg, opt))
             }
             assert_eq!(population.len(), ecfg.population_size);
+
+            // adjust the mutation modifier adaptively
+            if i % MUTATION_ADJUSTMENT_INTERVAL == 0 {
+                let n = population.iter()
+                    .map(|sln| sln.fitness(&ecfg))
+                    .filter(|f| *f == 0)
+                    .count();
+                let n = n as f64 / population.len() as f64;
+                ecfg.mutation_chance = match () {
+                    _ if n > 0.5 => (ecfg.mutation_chance * 1.05).min(0.5),
+                    _ if n < 0.2 => (ecfg.mutation_chance / 1.05).max(0.0001),
+                    _            => ecfg.mutation_chance
+                };
+            }
         });
 
         best
@@ -821,7 +843,7 @@ pub type Config = BitArr!(for MAX_VARIABLES);
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub struct Solution<'a> {
     pub weight: u32,
-    cfg: Config,
+    pub cfg: Config,
     pub inst: &'a Instance,
     pub satisfied: bool,
 }
@@ -897,12 +919,19 @@ impl <'a> Solution<'a> {
 
     fn invert(mut self) -> Solution<'a> {
         for i in 0..self.inst.weights.len() {
-            self.set(i, !self.cfg[i]);
+            self.set_unsafe(i, !self.cfg[i]);
         }
+        self.satisfied = satisfied(&self.inst.clauses, &self.cfg);
         self
     }
 
     fn set(&mut self, i: usize, set: bool) -> Solution<'a> {
+        self.set_unsafe(i, set);
+        self.satisfied = satisfied(&self.inst.clauses, &self.cfg);
+        *self
+    }
+
+    fn set_unsafe(&mut self, i: usize, set: bool) -> Solution<'a> {
         let w = self.inst.weights[i];
         let k = if set { 1 } else { -1 };
         if self.cfg[i] != set {
@@ -952,8 +981,8 @@ fn dump_solution(id: i32, weight: u32, cfg: &Config, params: &InstanceParams) ->
     use core::iter::once;
     once(format!("uf{}-0{}", params.variables, id))
     .chain(once(weight.to_string()))
-    .chain((0..params.variables as usize)
-        .map(|i| if cfg[i] { 1 } else { -1 } * i as i16)
+    .chain((1..=params.variables as usize)
+        .map(|i| if cfg[i - 1] { 1 } else { -1 } * i as i16)
         .chain(once(0))
         .map(|id| id.to_string())
     )
@@ -964,7 +993,7 @@ fn dump_solution(id: i32, weight: u32, cfg: &Config, params: &InstanceParams) ->
 pub fn satisfied(clauses: &ArrayVec<Clause, MAX_CLAUSES>, cfg: &Config) -> bool {
     clauses.iter().all(|clause| clause
         .iter()
-        .any(|&Literal(pos, id)| pos == cfg[id.get() as usize])
+        .any(|&Literal(pos, id)| pos == cfg[id.get() as usize - 1])
     )
 }
 
@@ -1314,6 +1343,23 @@ fn main() -> Result<()> {
         p1.cmp(p2).then(i1.id.cmp(&i2.id))
     );
 
+    solutions.iter().for_each(|((params, _), opt)| {
+        // some instances (e.g. 33 in M1) have been removed,
+        // but their optimal solutions are still here
+        if let Ok(inst_index) = instances.binary_search_by(
+            |(p, inst)| p.cmp(params).then(inst.id.cmp(&opt.id))
+        ) {
+            let inst = &instances[inst_index].1;
+            let sln = Solution::new(opt.weight, opt.cfg, inst);
+            assert!(sln.valid(),
+                "optimal solution to instance {} is invalid (satisfied: {})\n{}",
+                inst.id,
+                sln.satisfied,
+                opt.dump(),
+            );
+        }
+    });
+
     instances.into_iter().take(evo_config.n_instances as usize).for_each(|(_params, inst)| {
         use std::time::Instant;
 
@@ -1334,12 +1380,18 @@ fn main() -> Result<()> {
             weight = sln.weight,
             err = error.map(|e| e.to_string()).unwrap_or_default()
         );
-        // assert!(sln.valid(),
-        //     "the following (satisfied = {}) isn't a valid solution to instance {}:\n{}",
-        //     sln.satisfied,
-        //     inst.id,
-        //     sln.dump()
-        // );
+        assert!(!sln.satisfied || sln.valid(),
+            "the following satisfied solution isn't valid! Instance {}:\n{}",
+            inst.id,
+            sln.dump()
+        );
+        assert!(!sln.satisfied || error.is_none() || error.unwrap() >= 0.0,
+            "the following satisfied solution has a negative error of {:?}!\n{}\nInstance {}:\n{}",
+            error,
+            sln.dump(),
+            inst.id,
+            inst.dump(),
+        );
 
         // println!("ours:    {}", sln.dump());
         // println!("optimal: {}\n", optimal.map(|opt| opt.dump()).unwrap_or_else(|| "None".into()));

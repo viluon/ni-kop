@@ -43,7 +43,7 @@ pub fn list_input_files(set: &str, r: Range<u32>) -> Result<Vec<IOResult<DirEntr
 // ~\~ begin <<lit/main.md|problem-instance-definition>>[0]
 pub type Id = NonZeroU16;
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct Literal(bool, Id);
+pub struct Literal(pub bool, pub Id);
 pub type Clause = [Literal; 3];
 
 const MAX_CLAUSES: usize = 512;
@@ -63,7 +63,7 @@ pub type Config = BitArr!(for MAX_VARIABLES);
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub struct Solution<'a> {
     pub weight: u32,
-    cfg: Config,
+    pub cfg: Config,
     pub inst: &'a Instance,
     pub satisfied: bool,
 }
@@ -132,12 +132,19 @@ impl <'a> Solution<'a> {
 
     fn invert(mut self) -> Solution<'a> {
         for i in 0..self.inst.weights.len() {
-            self.set(i, !self.cfg[i]);
+            self.set_unsafe(i, !self.cfg[i]);
         }
+        self.satisfied = satisfied(&self.inst.clauses, &self.cfg);
         self
     }
 
     fn set(&mut self, i: usize, set: bool) -> Solution<'a> {
+        self.set_unsafe(i, set);
+        self.satisfied = satisfied(&self.inst.clauses, &self.cfg);
+        *self
+    }
+
+    fn set_unsafe(&mut self, i: usize, set: bool) -> Solution<'a> {
         let w = self.inst.weights[i];
         let k = if set { 1 } else { -1 };
         if self.cfg[i] != set {
@@ -187,8 +194,8 @@ fn dump_solution(id: i32, weight: u32, cfg: &Config, params: &InstanceParams) ->
     use core::iter::once;
     once(format!("uf{}-0{}", params.variables, id))
     .chain(once(weight.to_string()))
-    .chain((0..params.variables as usize)
-        .map(|i| if cfg[i] { 1 } else { -1 } * i as i16)
+    .chain((1..=params.variables as usize)
+        .map(|i| if cfg[i - 1] { 1 } else { -1 } * i as i16)
         .chain(once(0))
         .map(|id| id.to_string())
     )
@@ -199,7 +206,7 @@ fn dump_solution(id: i32, weight: u32, cfg: &Config, params: &InstanceParams) ->
 pub fn satisfied(clauses: &ArrayVec<Clause, MAX_CLAUSES>, cfg: &Config) -> bool {
     clauses.iter().all(|clause| clause
         .iter()
-        .any(|&Literal(pos, id)| pos == cfg[id.get() as usize])
+        .any(|&Literal(pos, id)| pos == cfg[id.get() as usize - 1])
     )
 }
 
@@ -354,10 +361,11 @@ impl Instance {
     pub fn evolutionary<Rng: rand::Rng + Send + Sync + Clone>(
         &self,
         rng: &mut Rng,
-        ecfg: EvolutionaryConfig,
+        mut ecfg: EvolutionaryConfig,
         opt: Option<&OptimalSolution>
     ) -> Solution {
         use rayon::prelude::*;
+        use std::iter::repeat_with;
 
         impl<'a> Solution<'a> {
             fn fitness(&self, _evo_config: &EvolutionaryConfig) -> u64 {
@@ -385,27 +393,24 @@ impl Instance {
 
                 cfgs.into_iter()
                     .zip(weights.into_iter())
-                    .map(|(cfg, weight)| Solution::new(weight, cfg, self.inst))
-                    .map(|sln| sln.mutate(evo_config, rng))
+                    .map(|(cfg, weight)| Solution{weight, cfg, inst: self.inst, satisfied: false})
+                    .map(|sln| sln.mutate_unsafe(evo_config, rng))
+                    .map(|sln| Solution { satisfied: satisfied(&sln.inst.clauses, &sln.cfg), ..sln })
                     .collect::<ArrayVec<_, 2>>()
                     .into_inner()
                     .unwrap()
             }
 
-            pub fn mutate<Rng: rand::Rng>(
+            pub fn mutate_unsafe<Rng: rand::Rng>(
                 &self, evo_config: &EvolutionaryConfig, rng: &mut Rng
             ) -> Solution<'a> {
-                let mut cfg: Config = Config::zeroed();
-                for (i, b) in self
-                    .cfg.iter()
-                    .take(self.inst.weights.len())
-                    .enumerate() {
-                    let b = *b;
-                    let b = if rng.gen_bool(evo_config.mutation_chance) { !b } else { b };
-                    cfg.set(i, b);
+                let mut new = *self;
+                for i in 0..self.inst.weights.len() {
+                    let flip = rng.gen_bool(evo_config.mutation_chance);
+                    new.set_unsafe(i, if flip { !self.cfg[i] } else { self.cfg[i] });
                 }
 
-                Solution::new(self.weight, cfg, self.inst)
+                new
             }
         }
 
@@ -451,6 +456,7 @@ impl Instance {
         }
 
         const DISASTER_INTERVAL: u32 = 100;
+        const MUTATION_ADJUSTMENT_INTERVAL: u32 = 10;
 
         let mut population = (0..ecfg.population_size).map(|_| random(rng)).collect::<Vec<_>>();
         let mut buffer = Vec::with_capacity(population.len() / 2);
@@ -463,11 +469,11 @@ impl Instance {
                 population.shuffle(rng);
                 let n = (population.len() as f64 * 0.99) as usize;
                 population.drain(.. n);
-                population.extend(std::iter::repeat_with(|| random(rng)).take(n));
+                population.extend(repeat_with(|| random(rng)).take(n));
             }
 
             population.par_sort_by_key(|sln| -(sln.fitness(&ecfg) as i64));
-            if population[0].fitness(&ecfg) > best.fitness(&ecfg) {
+            if (population[0].satisfied && !best.satisfied) || population[0].fitness(&ecfg) > best.fitness(&ecfg) {
                 best = population[0];
             }
 
@@ -491,6 +497,20 @@ impl Instance {
                 println!("{} {}", i + 1, stats(&population[..], ecfg, opt))
             }
             assert_eq!(population.len(), ecfg.population_size);
+
+            // adjust the mutation modifier adaptively
+            if i % MUTATION_ADJUSTMENT_INTERVAL == 0 {
+                let n = population.iter()
+                    .map(|sln| sln.fitness(&ecfg))
+                    .filter(|f| *f == 0)
+                    .count();
+                let n = n as f64 / population.len() as f64;
+                ecfg.mutation_chance = match () {
+                    _ if n > 0.5 => (ecfg.mutation_chance * 1.05).min(0.5),
+                    _ if n < 0.2 => (ecfg.mutation_chance / 1.05).max(0.0001),
+                    _            => ecfg.mutation_chance
+                };
+            }
         });
 
         best
