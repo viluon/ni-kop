@@ -125,8 +125,7 @@ Následující soubor slouží k vyhodnocení algoritmu na různých datových s
 různými parametry. Spouští implementaci v jazyce Rust a výsledky měření ukládá
 do binárního souboru pro následnou analýzu.
 
-``` {.python file=analysis/measure.py .eval .bootstrap-fold}
-
+``` {.python file=analysis/measure.py .bootstrap-fold}
 import os
 from itertools import product, chain
 from subprocess import run, PIPE
@@ -202,7 +201,7 @@ def merge_datasets(*dss):
 data = pd.DataFrame()
 cfgs = [dict(zip(configs, v)) for v in zip(*configs.values())]
 iteration = 0
-total = sum([cfg["n_instances"] for cfg in cfgs])
+total = sum([cfg["n_instances"] * cfg["generations"] for cfg in cfgs])
 
 for config in cfgs:
     if show_progress:
@@ -221,11 +220,17 @@ for config in cfgs:
             weight  = weight,
         ), ignore_index = True)
 
-        iteration = iteration + 1
+        iteration = iteration + config["generations"]
         progress_bar(iteration, total)
 
 data.to_pickle("docs/assets/measurements.pkl")
 
+```
+
+``` {.python .eval .bootstrap-fold #perform-measurement}
+# tento blok slouží pouze ke spuštění skriptu výše
+# (vynucen nedostatkem nástroje, který má tvorbu dokumentu na starosti)
+<<analysis/measure.py>>
 ```
 
 V tuto chvíli ještě nevíme, ve kterých oblastech prostoru všech konfigurací
@@ -239,6 +244,8 @@ všech konfigurací, pro které je třeba algoritmus vyhodnotit.
 ``` {.python #datasets}
 configs = merge_datasets(dataset(
     "default",
+    generations = [5000],
+    mutation_chance = [0.03],
 ), dataset(
     "mutation_exploration",
     n_instances = [6],
@@ -253,12 +260,13 @@ vizualizace zvlášť) se serializací do binárního souboru uprostřed vede ke
 zkrácení iteračního cyklu během whitebox fáze vývoje algoritmu. Je-li třeba
 poupravit detaily grafu, měření se nemusí provádět znovu, a naopak.
 
-``` {.python file=analysis/plot.py .eval .bootstrap-fold}
+``` {.python file=analysis/plot.py .bootstrap-fold}
 
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import textwrap as tr
+import math
 import os
 
 data = pd.read_pickle("docs/assets/measurements.pkl")
@@ -413,7 +421,7 @@ def heatmap(id, title, filename, data = data, progress = lambda _: None):
     n_variables = len(stats[0][0]) - 2
 
     fig, axs = plt.subplots(1, 2 * n_instances,
-        figsize = (1 + n_instances * n_variables * 0.12, n_generations / 25),
+        figsize = (3 + n_instances * n_variables * 0.18, math.sqrt(n_generations) * 0.5),
         gridspec_kw = {"left": 0.015, "right": 0.975, "width_ratios": [n_variables, 1] * n_instances},
     )
     fig.suptitle(title)
@@ -538,8 +546,14 @@ plottery()
 
 ```
 
+``` {.python .eval .bootstrap-fold #generate-plots}
+# tento blok slouží pouze ke spuštění skriptu výše
+# (vynucen nedostatkem nástroje, který má tvorbu dokumentu na starosti)
+<<analysis/plot.py>>
+```
+
 Vůbec první varianta algoritmu nevyužívá žádných metod nichingu, v každé ze dvou
-set generací z populace tisíce jedinců nekompromisně vyřadí slabší půlku a
+set generací nekompromisně vyřadí slabší půlku z populace tisíce jedinců a
 rodiče kombinuje do nových potomků uniformním křížením.
 
 ![První nástřel evolučního algoritmu](whitebox-default-0.svg)
@@ -581,8 +595,6 @@ samotné algoritmy řešiče a v neposlední řadě sada automatických testů.
 
 ``` {.rust file=solver/src/lib.rs .bootstrap-fold}
 <<imports>>
-
-<<algorithm-map>>
 
 use std::result::Result as IOResult;
 pub fn list_input_files(set: &str, r: Range<u32>) -> Result<Vec<IOResult<DirEntry, std::io::Error>>> {
@@ -627,55 +639,65 @@ trait IteratorRandomWeighted: Iterator + Sized + Clone {
 impl<I> IteratorRandomWeighted for I where I: Iterator + Sized + Clone {}
 
 impl Instance {
-    <<solver-dpw>>
-
-    <<solver-dpc>>
-
-    <<solver-fptas>>
-
-    <<solver-greedy>>
-
-    <<solver-greedy-redux>>
-
-    <<solver-bb>>
-
-    <<solver-bf>>
-
-    <<solver-sa>>
-
     pub fn evolutionary<Rng: rand::Rng + Send + Sync + Clone>(
         &self,
         rng: &mut Rng,
-        evo_config: EvolutionaryConfig,
+        ecfg: EvolutionaryConfig,
         opt: Option<&OptimalSolution>
     ) -> Solution {
         use rayon::prelude::*;
 
         impl<'a> Solution<'a> {
-            fn fitness(&self, evo_config: &EvolutionaryConfig) -> u64 {
+            fn fitness(&self, _evo_config: &EvolutionaryConfig) -> u64 {
                 if !self.satisfied { 0 }
                 else { self.weight as u64 }
             }
 
-            fn breed<Rng: rand::Rng>(&self, other: &Self, evo_config: &EvolutionaryConfig, rng: &mut Rng) -> Solution<'a> {
-                let mut cfg = Config::zeroed();
-                let mut weight = 0;
+            fn crossover<Rng: rand::Rng>(
+                self, other: Self, evo_config: &EvolutionaryConfig, rng: &mut Rng
+            ) -> [Solution<'a>; 2] {
+                let mut cfgs = [Config::zeroed(), Config::zeroed()];
+                let mut weights = [0, 0];
                 for (i, (l, r)) in self
                     .cfg.iter()
                     .zip(other.cfg.iter())
                     .take(self.inst.weights.len())
                     .enumerate() {
-                    let b = *(if rng.gen_bool(0.5 ) {  l } else { r });
-                    let b = if rng.gen_bool(evo_config.mutation_chance) { !b } else { b };
-                    cfg.set(i, b);
-                    weight += self.inst.weights[i].get() as u32 * b as u32;
+                    let bits = if rng.gen_bool(0.5) { (*l, *r) } else { (*r, *l) };
+                    cfgs[0].set(i, bits.0);
+                    cfgs[1].set(i, bits.1);
+                    let w = self.inst.weights[i].get() as u32;
+                    weights[0] += w * bits.0 as u32;
+                    weights[1] += w * bits.1 as u32;
                 }
 
-                Solution::new(weight, cfg, self.inst)
+                cfgs.into_iter()
+                    .zip(weights.into_iter())
+                    .map(|(cfg, weight)| Solution::new(weight, cfg, self.inst))
+                    .map(|sln| sln.mutate(evo_config, rng))
+                    .collect::<ArrayVec<_, 2>>()
+                    .into_inner()
+                    .unwrap()
+            }
+
+            pub fn mutate<Rng: rand::Rng>(
+                &self, evo_config: &EvolutionaryConfig, rng: &mut Rng
+            ) -> Solution<'a> {
+                let mut cfg: Config = Config::zeroed();
+                for (i, b) in self
+                    .cfg.iter()
+                    .take(self.inst.weights.len())
+                    .enumerate() {
+                    let b = *b;
+                    let b = if rng.gen_bool(evo_config.mutation_chance) { !b } else { b };
+                    cfg.set(i, b);
+                }
+
+                Solution::new(self.weight, cfg, self.inst)
             }
         }
 
-        let mut random = || {
+        let random = |rng: &mut Rng| {
             let mut cfg = Config::zeroed();
             let mut weight = 0;
             for i in 0..self.weights.len() {
@@ -687,7 +709,7 @@ impl Instance {
             Solution::new(weight, cfg, self)
         };
 
-        fn stats(pop: &[Solution], evo_config: EvolutionaryConfig, opt: Option<&OptimalSolution>) -> String {
+        fn stats(pop: &[Solution], _evo_config: EvolutionaryConfig, opt: Option<&OptimalSolution>) -> String {
             let identity = core::iter::repeat(0u16).take(MAX_VARIABLES)
                 .collect::<ArrayVec<_, MAX_VARIABLES>>().into_inner().unwrap();
             let counts = pop.par_iter()
@@ -716,45 +738,50 @@ impl Instance {
                 .collect::<String>()
         }
 
-        let mut population = (0..evo_config.population_size).map(|_| random()).collect::<Vec<_>>();
+        const DISASTER_INTERVAL: u32 = 100;
+
+        let mut population = (0..ecfg.population_size).map(|_| random(rng)).collect::<Vec<_>>();
         let mut buffer = Vec::with_capacity(population.len() / 2);
         let mut shuffler: Vec<Solution> = buffer.clone();
-        println!("0 {}", stats(&population[..], evo_config, opt));
-        let ex_rng = Mutex::new(rng.clone());
+        let mut best = population[0];
+        println!("0 {}", stats(&population[..], ecfg, opt));
 
-        (0..evo_config.generations).for_each(|i| {
-            population.par_sort_by_key(|sln| -(sln.fitness(&evo_config) as i64));
-            population.drain(evo_config.population_size / 2 ..);
+        (0..ecfg.generations).for_each(|i| {
+            if i % DISASTER_INTERVAL == 0 {
+                population.shuffle(rng);
+                let n = (population.len() as f64 * 0.99) as usize;
+                population.drain(.. n);
+                population.extend(std::iter::repeat_with(|| random(rng)).take(n));
+            }
+
+            population.par_sort_by_key(|sln| -(sln.fitness(&ecfg) as i64));
+            if population[0].fitness(&ecfg) > best.fitness(&ecfg) {
+                best = population[0];
+            }
 
             shuffler.par_extend(population.par_iter());
-            shuffler.shuffle(&mut *ex_rng.lock().unwrap());
+            shuffler.shuffle(rng);
+            // move unsatisfying solutions to the end
+            shuffler.par_sort_by_key(|sln| sln.fitness(&ecfg) == 0);
 
+            // how many individuals to cross over
+            let n = population.len() / 5;
             buffer.extend(shuffler.drain(..)
-                .zip(population.iter())
-                // // for the parallel (nondet!) version, just take par_extend,
-                // // par_drain, par_iter, and this:
-                // .map_init(|| {
-                //     use rand::SeedableRng;
-                //     let mut lock = ex_rng.lock().unwrap();
-                //     rand_xoshiro::Xoshiro256PlusPlus::from_rng(&mut *lock).unwrap()
-                // }, |prng, (a, b)| {
-                //     a.breed(b, &evo_config, prng)
-                // })
-                .map(|(a, b)| {
-                    a.breed(b, &evo_config, &mut *ex_rng.lock().unwrap())
+                .zip(population.drain(.. n * 2).take(n))
+                .flat_map(|(a, b)| {
+                    a.crossover(b, &ecfg, rng).into_iter()
                 })
             );
 
             population.append(&mut buffer);
             #[allow(clippy::modulo_one)]
-            if (i + 1) % (evo_config.generations / 100) == 0 {
-                println!("{} {}", i + 1, stats(&population[..], evo_config, opt))
+            if (i + 1) % (ecfg.generations / 100) == 0 {
+                println!("{} {}", i + 1, stats(&population[..], ecfg, opt))
             }
-            assert_eq!(population.len(), evo_config.population_size);
+            assert_eq!(population.len(), ecfg.population_size);
         });
 
-        *rng = ex_rng.into_inner().unwrap();
-        population.into_iter().max_by_key(|sln| sln.fitness(&evo_config)).unwrap()
+        best
     }
 
     pub fn dump(&self) -> String {
@@ -858,6 +885,7 @@ impl <'a> Ord for Solution<'a> {
     }
 }
 
+#[allow(unused)]
 impl <'a> Solution<'a> {
     fn with(mut self, i: usize) -> Solution<'a> {
         self.set(i, true)
@@ -942,115 +970,6 @@ pub fn satisfied(clauses: &ArrayVec<Clause, MAX_CLAUSES>, cfg: &Config) -> bool 
 
 ```
 
-### Algoritmy
-
-Aby bylo k jednotlivým implementacím jednoduché přistupovat, všechny
-implementované algoritmy jsou uloženy pod svými názvy v `BTreeMap`ě. Tu
-používáme při vybírání algoritmu pomocí argumentu předaného na příkazové řádce,
-v testovacím kódu na testy všech implementací atp.
-
-``` {.rust #algorithm-map .bootstrap-fold}
-
-```
-
-#### Hladový přístup
-
-Implementace hladové strategie využívá knihovny
-[`permutation`](https://crates.io/crates/permutation). Problém ve skutečnosti
-řešíme na isomorfní instanci, která má předměty uspořádané. Jediné, co se změní,
-je pořadí, ve kterém předměty navštěvujeme. Proto stačí aplikovat řadicí
-permutaci předmětů na posloupnost indexů, které procházíme. Přesně to dělá výraz
-`(0..items.len()).map(ord)`.
-
-``` {.rust #solver-greedy .bootstrap-fold}
-
-```
-
-#### Hladový přístup -- redux
-
-Redux verze hladové strategie je více méně deklarativní. Výsledek redux
-algoritmu je maximum z hladového řešení a řešení sestávajícího pouze z
-nejdražšího předmětu. K indexu nejdražšího předmětu dojdeme tak, že sepneme
-posloupnosti indexů a předmětů, vyřadíme prvky, jejichž váha přesahuje kapacitu
-batohu a vybereme maximální prvek podle ceny.
-
-``` {.rust #solver-greedy-redux .bootstrap-fold}
-
-```
-
-#### Hrubá síla
-
-``` {.rust .bootstrap-fold #solver-bf}
-
-```
-
-#### Branch & bound
-
-``` {.rust #solver-bb .bootstrap-fold}
-
-```
-
-#### Dynamické programování
-
-Dynamické programování s rozkladem podle váhy jsem implementoval už v prvním
-úkolu.
-
-``` {.rust #solver-dpw .bootstrap-fold}
-
-```
-
-V úkolu 2 přibyla implementace dynamického programování s rozkladem podle ceny,
-které je adaptací algoritmu výše. Narozdíl od předchozího algoritmu je tady
-výchozí hodnotou v tabulce efektivně nekonečná váha, kterou se snažíme
-minimalizovat. K reprezentaci řešení s nekonečnou vahou používám přidruženou
-funkci `Solution::overweight`, která vrátí neplatné řešení s váhou $2^{32} - 1$.
-Pokud na něj v průběhu výpočtu algoritmus narazí, předá jej dál jako
-`Solution::default` (vždy v nejlevějším sloupci DP tabulky, tedy `last[0]`), aby
-při přičtení váhy uvažovaného předmětu nedošlo k přetečení.
-
-O výběr řešení minimální váhy se stará funkce `max`, neboť implementace
-uspořádání pro typ `Solution` řadí nejprve vzestupně podle ceny a následně
-sestupně podle váhy. V tomto případě porovnáváme vždy dvě řešení stejných cen
-(a nebo je `last[cap]` neplatné řešení s nadváhou, které má cenu $0$).
-
-``` {.rust #solver-dpc .bootstrap-fold}
-
-```
-
-#### FPTAS
-
-FPTAS algoritmus přeškáluje ceny předmětů a následně spustí dynamické
-programování s rozkladem podle ceny na upravenou instanci problému. V řešení
-stačí opravit referenci výchozí instance (`inst: self`) a přepočíst cenu podle
-vypočítané konfigurace, samotné indexy předmětů se škálováním nemění.
-
-``` {.rust #solver-fptas .bootstrap-fold}
-
-```
-
-#### Simulované žíhání
-
-Iterativní metoda simulovaného žíhání se od ostatních algoritmů v několika
-ohledech liší.
-
-Prvně vyžaduje generátor náhodných čísel a konfiguraci jako
-vstupní parametry a její typ proto neodpovídá ostatním metodám -- v souboru
-`main.rs` je toto třeba ošetřit, připravit generátor a konfiguraci načíst z
-příkazové řádky.
-
-Navíc je její přístup k prohledávání stavového prostoru založen na přidávání a
-odebírání předmětů z batohu narozdíl od klasických algoritmů, kde se batoh jen
-plní. Z tohoto důvodu bylo třeba zobecnit metodu `Solution::with` na
-`Solution::set`, která libovolné změny v inkluzi předmětů ergonomicky umožňuje.
-Má implementace využívá relaxaci -- vybraný kandidát pro nový stav může dočasně
-překročit maximální kapacitu batohu. Před jeho zvážením a randomizovaným
-přijetím je ovšem kandidát opraven pomocí metody `Solution::trim`, která odebírá
-náhodné předměty dokud váha řešení neklesne pod danou mez.
-
-``` {.rust #solver-sa .bootstrap-fold}
-
-```
-
 ## Závěr
 
 **TODO**
@@ -1064,21 +983,20 @@ knihoven.
 #![feature(iter_intersperse)]
 
 use serde::{Deserialize, Serialize};
-use std::{cmp, cmp::max,
+use std::{cmp,
     ops::Range,
     str::FromStr,
-    io::{BufRead, BufReader, self},
-    collections::{BTreeMap, HashMap},
+    io::{BufRead, BufReader},
+    collections::{HashMap},
     fs::{read_dir, File, DirEntry},
-    num::NonZeroU16, sync::Mutex,
+    num::NonZeroU16,
 };
 use anyhow::{Context, Result, anyhow};
-use bitvec::prelude::{BitArr, BitVec};
+use bitvec::prelude::BitArr;
 use arrayvec::ArrayVec;
 use rand::prelude::SliceRandom;
 
 #[cfg(test)]
-#[macro_use(quickcheck)]
 extern crate quickcheck_macros;
 ```
 
@@ -1396,7 +1314,7 @@ fn main() -> Result<()> {
         p1.cmp(p2).then(i1.id.cmp(&i2.id))
     );
 
-    instances.into_iter().take(evo_config.n_instances as usize).for_each(|(params, inst)| {
+    instances.into_iter().take(evo_config.n_instances as usize).for_each(|(_params, inst)| {
         use std::time::Instant;
 
         // println!("solving {} ({:?} from set {})", inst.id, params, evo_config.set);

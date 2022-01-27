@@ -4,26 +4,21 @@
 #![feature(iter_intersperse)]
 
 use serde::{Deserialize, Serialize};
-use std::{cmp, cmp::max,
+use std::{cmp,
     ops::Range,
     str::FromStr,
-    io::{BufRead, BufReader, self},
-    collections::{BTreeMap, HashMap},
+    io::{BufRead, BufReader},
+    collections::{HashMap},
     fs::{read_dir, File, DirEntry},
-    num::NonZeroU16, sync::Mutex,
+    num::NonZeroU16,
 };
 use anyhow::{Context, Result, anyhow};
-use bitvec::prelude::{BitArr, BitVec};
+use bitvec::prelude::BitArr;
 use arrayvec::ArrayVec;
 use rand::prelude::SliceRandom;
 
 #[cfg(test)]
-#[macro_use(quickcheck)]
 extern crate quickcheck_macros;
-// ~\~ end
-
-// ~\~ begin <<lit/main.md|algorithm-map>>[0]
-
 // ~\~ end
 
 use std::result::Result as IOResult;
@@ -125,6 +120,7 @@ impl <'a> Ord for Solution<'a> {
     }
 }
 
+#[allow(unused)]
 impl <'a> Solution<'a> {
     fn with(mut self, i: usize) -> Solution<'a> {
         self.set(i, true)
@@ -355,71 +351,65 @@ trait IteratorRandomWeighted: Iterator + Sized + Clone {
 impl<I> IteratorRandomWeighted for I where I: Iterator + Sized + Clone {}
 
 impl Instance {
-    // ~\~ begin <<lit/main.md|solver-dpw>>[0]
-
-    // ~\~ end
-
-    // ~\~ begin <<lit/main.md|solver-dpc>>[0]
-
-    // ~\~ end
-
-    // ~\~ begin <<lit/main.md|solver-fptas>>[0]
-
-    // ~\~ end
-
-    // ~\~ begin <<lit/main.md|solver-greedy>>[0]
-
-    // ~\~ end
-
-    // ~\~ begin <<lit/main.md|solver-greedy-redux>>[0]
-
-    // ~\~ end
-
-    // ~\~ begin <<lit/main.md|solver-bb>>[0]
-
-    // ~\~ end
-
-    // ~\~ begin <<lit/main.md|solver-bf>>[0]
-
-    // ~\~ end
-
-    // ~\~ begin <<lit/main.md|solver-sa>>[0]
-
-    // ~\~ end
-
     pub fn evolutionary<Rng: rand::Rng + Send + Sync + Clone>(
         &self,
         rng: &mut Rng,
-        evo_config: EvolutionaryConfig,
+        ecfg: EvolutionaryConfig,
         opt: Option<&OptimalSolution>
     ) -> Solution {
         use rayon::prelude::*;
 
         impl<'a> Solution<'a> {
-            fn fitness(&self, evo_config: &EvolutionaryConfig) -> u64 {
+            fn fitness(&self, _evo_config: &EvolutionaryConfig) -> u64 {
                 if !self.satisfied { 0 }
                 else { self.weight as u64 }
             }
 
-            fn breed<Rng: rand::Rng>(&self, other: &Self, evo_config: &EvolutionaryConfig, rng: &mut Rng) -> Solution<'a> {
-                let mut cfg = Config::zeroed();
-                let mut weight = 0;
+            fn crossover<Rng: rand::Rng>(
+                self, other: Self, evo_config: &EvolutionaryConfig, rng: &mut Rng
+            ) -> [Solution<'a>; 2] {
+                let mut cfgs = [Config::zeroed(), Config::zeroed()];
+                let mut weights = [0, 0];
                 for (i, (l, r)) in self
                     .cfg.iter()
                     .zip(other.cfg.iter())
                     .take(self.inst.weights.len())
                     .enumerate() {
-                    let b = *(if rng.gen_bool(0.5 ) {  l } else { r });
-                    let b = if rng.gen_bool(evo_config.mutation_chance) { !b } else { b };
-                    cfg.set(i, b);
-                    weight += self.inst.weights[i].get() as u32 * b as u32;
+                    let bits = if rng.gen_bool(0.5) { (*l, *r) } else { (*r, *l) };
+                    cfgs[0].set(i, bits.0);
+                    cfgs[1].set(i, bits.1);
+                    let w = self.inst.weights[i].get() as u32;
+                    weights[0] += w * bits.0 as u32;
+                    weights[1] += w * bits.1 as u32;
                 }
 
-                Solution::new(weight, cfg, self.inst)
+                cfgs.into_iter()
+                    .zip(weights.into_iter())
+                    .map(|(cfg, weight)| Solution::new(weight, cfg, self.inst))
+                    .map(|sln| sln.mutate(evo_config, rng))
+                    .collect::<ArrayVec<_, 2>>()
+                    .into_inner()
+                    .unwrap()
+            }
+
+            pub fn mutate<Rng: rand::Rng>(
+                &self, evo_config: &EvolutionaryConfig, rng: &mut Rng
+            ) -> Solution<'a> {
+                let mut cfg: Config = Config::zeroed();
+                for (i, b) in self
+                    .cfg.iter()
+                    .take(self.inst.weights.len())
+                    .enumerate() {
+                    let b = *b;
+                    let b = if rng.gen_bool(evo_config.mutation_chance) { !b } else { b };
+                    cfg.set(i, b);
+                }
+
+                Solution::new(self.weight, cfg, self.inst)
             }
         }
 
-        let mut random = || {
+        let random = |rng: &mut Rng| {
             let mut cfg = Config::zeroed();
             let mut weight = 0;
             for i in 0..self.weights.len() {
@@ -431,7 +421,7 @@ impl Instance {
             Solution::new(weight, cfg, self)
         };
 
-        fn stats(pop: &[Solution], evo_config: EvolutionaryConfig, opt: Option<&OptimalSolution>) -> String {
+        fn stats(pop: &[Solution], _evo_config: EvolutionaryConfig, opt: Option<&OptimalSolution>) -> String {
             let identity = core::iter::repeat(0u16).take(MAX_VARIABLES)
                 .collect::<ArrayVec<_, MAX_VARIABLES>>().into_inner().unwrap();
             let counts = pop.par_iter()
@@ -460,45 +450,50 @@ impl Instance {
                 .collect::<String>()
         }
 
-        let mut population = (0..evo_config.population_size).map(|_| random()).collect::<Vec<_>>();
+        const DISASTER_INTERVAL: u32 = 100;
+
+        let mut population = (0..ecfg.population_size).map(|_| random(rng)).collect::<Vec<_>>();
         let mut buffer = Vec::with_capacity(population.len() / 2);
         let mut shuffler: Vec<Solution> = buffer.clone();
-        println!("0 {}", stats(&population[..], evo_config, opt));
-        let ex_rng = Mutex::new(rng.clone());
+        let mut best = population[0];
+        println!("0 {}", stats(&population[..], ecfg, opt));
 
-        (0..evo_config.generations).for_each(|i| {
-            population.par_sort_by_key(|sln| -(sln.fitness(&evo_config) as i64));
-            population.drain(evo_config.population_size / 2 ..);
+        (0..ecfg.generations).for_each(|i| {
+            if i % DISASTER_INTERVAL == 0 {
+                population.shuffle(rng);
+                let n = (population.len() as f64 * 0.99) as usize;
+                population.drain(.. n);
+                population.extend(std::iter::repeat_with(|| random(rng)).take(n));
+            }
+
+            population.par_sort_by_key(|sln| -(sln.fitness(&ecfg) as i64));
+            if population[0].fitness(&ecfg) > best.fitness(&ecfg) {
+                best = population[0];
+            }
 
             shuffler.par_extend(population.par_iter());
-            shuffler.shuffle(&mut *ex_rng.lock().unwrap());
+            shuffler.shuffle(rng);
+            // move unsatisfying solutions to the end
+            shuffler.par_sort_by_key(|sln| sln.fitness(&ecfg) == 0);
 
+            // how many individuals to cross over
+            let n = population.len() / 5;
             buffer.extend(shuffler.drain(..)
-                .zip(population.iter())
-                // // for the parallel (nondet!) version, just take par_extend,
-                // // par_drain, par_iter, and this:
-                // .map_init(|| {
-                //     use rand::SeedableRng;
-                //     let mut lock = ex_rng.lock().unwrap();
-                //     rand_xoshiro::Xoshiro256PlusPlus::from_rng(&mut *lock).unwrap()
-                // }, |prng, (a, b)| {
-                //     a.breed(b, &evo_config, prng)
-                // })
-                .map(|(a, b)| {
-                    a.breed(b, &evo_config, &mut *ex_rng.lock().unwrap())
+                .zip(population.drain(.. n * 2).take(n))
+                .flat_map(|(a, b)| {
+                    a.crossover(b, &ecfg, rng).into_iter()
                 })
             );
 
             population.append(&mut buffer);
             #[allow(clippy::modulo_one)]
-            if (i + 1) % (evo_config.generations / 100) == 0 {
-                println!("{} {}", i + 1, stats(&population[..], evo_config, opt))
+            if (i + 1) % (ecfg.generations / 100) == 0 {
+                println!("{} {}", i + 1, stats(&population[..], ecfg, opt))
             }
-            assert_eq!(population.len(), evo_config.population_size);
+            assert_eq!(population.len(), ecfg.population_size);
         });
 
-        *rng = ex_rng.into_inner().unwrap();
-        population.into_iter().max_by_key(|sln| sln.fitness(&evo_config)).unwrap()
+        best
     }
 
     pub fn dump(&self) -> String {

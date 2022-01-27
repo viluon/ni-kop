@@ -1,6 +1,5 @@
 # ~\~ language=Python filename=analysis/measure.py
 # ~\~ begin <<lit/main.md|analysis/measure.py>>[0]
-
 import os
 from itertools import product, chain
 from subprocess import run, PIPE
@@ -74,6 +73,8 @@ def merge_datasets(*dss):
 # ~\~ begin <<lit/main.md|datasets>>[0]
 configs = merge_datasets(dataset(
     "default",
+    generations = [5000],
+    mutation_chance = [0.03],
 ), dataset(
     "mutation_exploration",
     n_instances = [6],
@@ -84,7 +85,7 @@ configs = merge_datasets(dataset(
 data = pd.DataFrame()
 cfgs = [dict(zip(configs, v)) for v in zip(*configs.values())]
 iteration = 0
-total = sum([cfg["n_instances"] for cfg in cfgs])
+total = sum([cfg["n_instances"] * cfg["generations"] for cfg in cfgs])
 
 for config in cfgs:
     if show_progress:
@@ -103,7 +104,7 @@ for config in cfgs:
             weight  = weight,
         ), ignore_index = True)
 
-        iteration = iteration + 1
+        iteration = iteration + config["generations"]
         progress_bar(iteration, total)
 
 data.to_pickle("docs/assets/measurements.pkl")

@@ -5,6 +5,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 import textwrap as tr
+import math
 import os
 
 data = pd.read_pickle("docs/assets/measurements.pkl")
@@ -159,7 +160,7 @@ def heatmap(id, title, filename, data = data, progress = lambda _: None):
     n_variables = len(stats[0][0]) - 2
 
     fig, axs = plt.subplots(1, 2 * n_instances,
-        figsize = (1 + n_instances * n_variables * 0.12, n_generations / 25),
+        figsize = (3 + n_instances * n_variables * 0.18, math.sqrt(n_generations) * 0.5),
         gridspec_kw = {"left": 0.015, "right": 0.975, "width_ratios": [n_variables, 1] * n_instances},
     )
     fig.suptitle(title)

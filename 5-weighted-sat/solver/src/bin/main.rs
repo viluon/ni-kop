@@ -42,7 +42,7 @@ fn main() -> Result<()> {
         p1.cmp(p2).then(i1.id.cmp(&i2.id))
     );
 
-    instances.into_iter().take(evo_config.n_instances as usize).for_each(|(params, inst)| {
+    instances.into_iter().take(evo_config.n_instances as usize).for_each(|(_params, inst)| {
         use std::time::Instant;
 
         // println!("solving {} ({:?} from set {})", inst.id, params, evo_config.set);
