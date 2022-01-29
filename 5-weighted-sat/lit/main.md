@@ -178,10 +178,11 @@ def invoke_solver(cfg):
     return results
 
 def dataset(id, **kwargs):
+    # defaults
     params = dict({
-        # defaults
         "id": [id],
         "set": ["M"],
+        "instance_params": [{"variables": 20, "clauses": 78}],
         "n_instances": [15],
         "generations": [200],
         "mutation_chance": [0.02],
@@ -247,16 +248,35 @@ která vytvoří pojmenovaný podprostor konfigurací kartézského součinu zad
 hodnot všech parametrů. Sjednocením těchto podprostorů dostaneme podprostor
 všech konfigurací, pro které je třeba algoritmus vyhodnotit.
 
-``` {.python #datasets}
+``` {.python #datasets .bootstrap-fold}
 configs = merge_datasets(dataset(
     "default",
     generations = [1000],
     mutation_chance = [0.03],
-), dataset(
-#     "mutation_exploration",
-#     n_instances = [6],
-#     mutation_chance = [0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5],
+    n_instances = [400],
 # ), dataset(
+#     "dataset_N",
+#     set = "N",
+#     generations = [1000],
+#     mutation_chance = [0.03],
+#     n_instances = [1_000],
+# ), dataset(
+#     "dataset_Q",
+#     set = "Q",
+#     generations = [1000],
+#     mutation_chance = [0.03],
+#     n_instances = [1_000],
+# ), dataset(
+#     "dataset_R",
+#     set = "R",
+#     generations = [1000],
+#     mutation_chance = [0.03],
+#     n_instances = [1_000],
+), dataset(
+    "mutation_exploration",
+    n_instances = [50],
+    mutation_chance = [0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5],
+), dataset(
 #     "dataset_N",
 #     set = ["N"],
 #     generations = [500],
@@ -271,8 +291,9 @@ configs = merge_datasets(dataset(
 # ), dataset(
     "dataset_A",
     set = ["A"],
+    instance_params = [{"variables": 20, "clauses": 88}],
     generations = [500],
-    n_instances = [1_000],
+    n_instances = [400],
 # ), dataset(
 #     "dataset_Q_exploration",
 #     set = ["Q"],
@@ -462,10 +483,10 @@ def heatmap(id, title, filename, data = data, progress = lambda _: None):
     dataset = data[data["id"] == id]
     stats = list(dataset["stats"])
     n_instances = int(dataset["inst_id"].count())
-    print()
-    print(dataset.describe())
-    print(dataset.head())
-    print()
+    # print()
+    # print(dataset.describe())
+    # print(dataset.head())
+    # print()
     n_generations = int(dataset["generations"].max())
     n_variables = len(stats[0][0]) - 2
 
@@ -476,11 +497,12 @@ def heatmap(id, title, filename, data = data, progress = lambda _: None):
     )
     fig.suptitle(title)
 
-    for i, (_, inst_id), stats, (_, err) in zip(
+    for i, (_, inst_id), stats, (_, err), (_, sat) in zip(
         range(1, 10000),
         dataset["inst_id"].iteritems(),
         stats,
-        dataset["error"].iteritems()
+        dataset["error"].iteritems(),
+        dataset["valid"].iteritems(),
     ):
         inst_id = int(inst_id)
         df = pd.DataFrame(stats)
@@ -524,7 +546,8 @@ def heatmap(id, title, filename, data = data, progress = lambda _: None):
         new_ticks = [i.get_text() for i in ax.get_yticklabels()]
         ax.set_yticks(range(0, len(new_ticks), 10), new_ticks[::10])
         ax.annotate(
-            f"{100 * err:.2f}%" if err < 2 else "Neznámé optimum",
+            (f"{100 * err:.2f}%" if err < 2 else "Neznámé optimum, splněno") if sat
+            else "Splňující řešení nenalezeno",
             (0, 0),
             (4, -10),
             xycoords = "axes fraction",
@@ -569,6 +592,16 @@ def plottery():
         elif plot["type"] == "heatmap":
             heatmap(*plot["args"], progress = progress, **plot["kwargs"])
 
+# describe errors
+for id in data["id"].unique():
+    dataset = data[data["id"] == id]
+    df = pd.DataFrame(dataset[dataset["error"] < 2]["error"].describe())
+    df[df.columns[0]] = df[df.columns[0]].apply(lambda x: 100 * x)
+    df = df.T
+    df["count"] = df["count"] / 100
+    df["dataset"] = id
+    df.to_csv(f"docs/assets/{id}_errors.csv")
+
 # schedule_ridgeline(
 #     "mutation_exploration",
 #     "Vliv šance mutace na hustotu chyb",
@@ -606,9 +639,6 @@ schedule_heatmap(
 #         f"whitebox-error-density-evaluation-dataset-{dataset}.svg",
 #     )
 
-print(data.describe())
-print(data.head())
-
 # schedule_heatmap(
 #     "dataset_A",
 #     "Vývoj populace pro dataset A",
@@ -617,20 +647,18 @@ print(data.head())
 #     # data = data[:8],
 # )
 
-# schedule_ridgeline(
-#     "dataset_A",
-#     "Hustota chyb pro dataset A",
-#     "mutation_chance",
-#     "whitebox-error-density-evaluation-dataset-A.svg",
-# )
-
-print(data[data["set"] == "A"][data["error"] < 2.0]["error"].describe())
+schedule_ridgeline(
+    "dataset_A",
+    "Hustota chyb pro dataset A",
+    "mutation_chance",
+    "whitebox-error-density-evaluation-dataset-A.svg",
+)
 
 schedule_heatmap(
     "dataset_A",
-    "Studie instancí 2 & 17 v datasetu A",
-    "whitebox-heatmap-dataset-A-inst-2-closeup",
-    data = data[data["inst_id"].isin([2, 17])],
+    "Studie vývoje instancí v datasetu A 20-88",
+    "whitebox-heatmap-dataset-A-20-88-closeup",
+    data = data[data["id"] == "dataset_A"][:8],
 )
 
 # do the plottery
@@ -643,6 +671,46 @@ plottery()
 # (vynucen nedostatkem nástroje, který má tvorbu dokumentu na starosti)
 <<analysis/plot.py>>
 ```
+
+#### Design vizualizací
+
+Pro srovnávání hustot jednoho parametru v několika diskrétních bodech jiného
+jsem využil vizualizace vyvinuté ve čtvrtém úkolu. Svou názorností je vhodná k
+získání přehledu o korelaci především ve white box fázi vývoje, je příliš
+nepřesná pro čtení konkrétních dat.
+
+![Vizualizace závislosti dvou parametrů s přehledem
+hustoty.](https://raw.githubusercontent.com/viluon/ni-kop/main/density-chart.png?token=GHSAT0AAAAAABHMNXH4AQ5VQE5H7OVHV3TUYP6UHHQ)
+
+Novinkou je vizuální přehled průběhu simulace ve stylu heatmapy. Názorně jsou
+vidět zastoupení různých proměnných napříč celou populací a jejich vývoj přes
+všechny generace. Každý jedinec přispívá jedničkou za pravdivou proměnnou a
+nulou za nepravdivou proměnnou. Tyto sumy za každou vyobrazenou generaci se pro
+každou proměnnou zprůměrují a výsledná hodnota v intervalu $[0, 1]$ určuje
+jasnost dané buňky. Napravo od přehledu pro konkrétní instanci je sloupec jiné
+barvy určující průměrnou chybu splňujících řešení v populaci. Pokud v dané
+generaci žádná splňující řešení nejsou, je daná buňka prázdná. Pod každým
+přehledem je navíc procentuální chyba vůči optimálnímu řešení, je-li optimum
+známo.
+
+![Znázornění vývoje populace přes několik
+instancí.](whitebox-3-A-20-88-new-fitness-function.svg)
+
+Tato vizualizace se ukázala být výborným pomocníkem při vyhodnocování vlivu
+různých parametrů na běh simulace.
+
+#### Robustnost implementace
+
+Při implementaci jsem si dal záležet na reprodukovatelnosti výsledků. Řešič je
+deterministický -- jeho výstup závisí jen na vstupních parametrech. Bohužel tak
+implementace nedosahuje maximálního možného výkonu. Sdílení měnitelného stavu
+napříč vlákny bez zámků není jednoduché, je ovšem potřeba na robustní a výkonné,
+ale deterministické paralelní křížení. Protože jsem neměl čas tento problém
+spolehlivě vyřešit při zachování determinismu, algoritmus provádí křížení
+sekvenčně. To jeho průběh dost zpomaluje. Jiné části programu pokud možno dělí
+práci mezi několik vláken využitím paralelních iterátorů knihovny
+[Rayon](https://docs.rs/rayon/latest/rayon/). Při vyhodnocování experimentů pro
+parametry popsané níže řešič nevyužije více než dvě jádra.
 
 #### Hledání kvalitního algoritmu
 
@@ -688,7 +756,51 @@ crowding jsem zkoušel i ve zmíněné semestrální práci do BI-ZUM, taktéž
 bezúspěšně. Další pokusy o tuto niching metodu jsem proto odložil na později,
 vrátím se k ní v případě, že jiné postupy nepovedou k lepším výsledkům.
 
-![Adaptivní mutace a katastrofické události](whitebox-2-default-adaptive-mutation.svg)
+Prvních několik měření odhalilo nesrovnalosti na různých místech implementace --
+řešič buďto spadl, nebo se v měření objevily záporné chyby. Po opravě
+implementačních problémů jsem do řešiče přidal několik kontrolních výpočtů,
+které další podobné chyby v experimentu odhalí dříve a spolehlivěji.
+
+Adaptivní mutaci jsem nastavil následovně: nejprve najde algoritmus poměr počtu
+jedinců s nulovou fitness v populaci. Je-li takových jedinců více než polovina,
+přičte k šanci mutace 5% její hodnoty (tj. `mutation_chance *= 1.05`). Je-li
+jedinců s nulovou fitness méně než 20%, 5% naopak odebere. Tuto úpravu provádí
+každých 10 generací.
+
+![Adaptivní mutace a katastrofické
+události](whitebox-2-default-adaptive-mutation.svg)
+
+V grafu jsou znatelné horizontální předěly při první a druhé katastrofě, šance
+mutace ale roste příliš rychle na to, aby byl efekt následujících katastrof
+výrazně znát. Kromě 990 instancí z datové sady `20-78-M1` jsem algoritmus
+vyhodnotil i na 215 instancích sady `20-88-A1`.
+
+![Datová sada `20-88-A1` a aplikované metody
+nichingu](whitebox-2-A-20-88-adaptive-mutation.svg)
+
+Získané grafy svědčí o mém zaměření na ověřitelné výsledky -- do zprávy jsem je
+přidal až o několik experimentů později. Abych vizualizace ověřil a rozšířil,
+musel jsem vrátit změny ve fitness funkci a mechanismu aktualizace koeficientu
+mutace. Díky deterministickému řešiči nebyl problém původní měření reprodukovat.
+Pro srovnání je zde k dispozici původní graf, až na drobné změny ve vizualizaci
+se jedná o stejná data.
+
+![Původní měření adaptivní
+mutace](whitebox-2-default-adaptive-mutation-original.svg)
+
+Dále jsem vyhodnotil hustotu chyb na různých datových sadách, abych získal
+přehled nejen o průběhu simulace, ale i o vzdálenosti od globálního optima.
+
+![Vliv adaptivní mutace s katastrofami na chyby v různých datových sadách.
+y](adaptive-mutation-comparison.csv)
+
+Tento algoritmus má překvapivě dobré výsledky. Možnost ke zlepšení ovšem vidím v
+poměrně naivní fitness funkci, která nijak nenapomáhá hledat validní řešení.
+Tím se prakticky spoléhá na čirou náhodu při hledání nějakých splňujících
+konfigurací, které pak heuristicky zlepšuje křížením a mutací.
+
+Jako další krok jsem tedy navrhl novou fitness funkci, která závisí i na počtu
+splněných klauzulí.
 
 ![Začátky nové fitness funkce](whitebox-3-default-new-fitness-function.svg)
 
@@ -986,7 +1098,7 @@ pub struct OptimalSolution {
     pub params: InstanceParams,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct InstanceParams {
     variables: u8,
     clauses: u16,
@@ -999,6 +1111,7 @@ pub struct EvolutionaryConfig {
     pub n_instances: u16,
     pub generations: u32,
     pub population_size: usize,
+    pub instance_params: InstanceParams,
 }
 
 impl From<Instance> for InstanceParams {
@@ -1131,9 +1244,11 @@ pub fn compute_fitness(sln: &Solution, _evo_config: &EvolutionaryConfig) -> u64 
         .map(|sat| sat as u32)
         .sum();
 
-    let sat_component = (1u32 << 12) as f64;
+    let sat_component = (1u32 << 22) as f64;
+    let clause_component = (1u32 << 8) as f64;
     let weight_component = (1u32 << 8) as f64;
-    let score = sat_component * sat_clauses as f64 / sln.inst.clauses.len() as f64
+    let score = sat_component * sln.satisfied as u32 as f64
+        + clause_component * (sat_clauses as f64 / sln.inst.clauses.len() as f64).powf(2.0)
         + weight_component * sln.weight as f64 / sln.inst.total_weight as f64;
     score as u64
 }
@@ -1269,14 +1384,14 @@ fn params_from_filename(filename: &str) -> Result<InstanceParams> {
     Ok(InstanceParams { variables, clauses })
 }
 
-pub fn load_solutions(set: char) -> Result<HashMap<(InstanceParams, i32), OptimalSolution>> {
+pub fn load_solutions(evo_config: EvolutionaryConfig) -> Result<HashMap<(InstanceParams, i32), OptimalSolution>> {
     let mut solutions = HashMap::new();
 
     let files = read_dir("../data/")?
         .filter(|res| res.as_ref().ok().filter(|f| {
             let name = f.file_name().into_string().unwrap();
             f.file_type().unwrap().is_file() &&
-            name.ends_with(&(set.to_string() + "-opt.dat"))
+            name.ends_with(&(evo_config.set.to_string() + "-opt.dat"))
         }).is_some());
 
     for file in files {
@@ -1284,16 +1399,18 @@ pub fn load_solutions(set: char) -> Result<HashMap<(InstanceParams, i32), Optima
         let filename = file.file_name().into_string().expect("FS error");
         let params = params_from_filename(&filename)?;
 
-        let mut stream = BufReader::new(File::open(file.path())?);
-        while let Some(opt) = parse_solution_line(&mut stream, params)? {
-            let prev = solutions.insert((params, opt.id), opt.clone());
-            if prev.is_some() {
-                eprintln!(
-                    "WARN: solution to ({:?}, {}), full ID: {}, is not unique",
-                    params,
-                    opt.id,
-                    opt.full_id,
-                );
+        if params == evo_config.instance_params {
+            let mut stream = BufReader::new(File::open(file.path())?);
+            while let Some(opt) = parse_solution_line(&mut stream, params)? {
+                let prev = solutions.insert((params, opt.id), opt.clone());
+                if prev.is_some() {
+                    eprintln!(
+                        "WARN: solution to ({:?}, {}), full ID: {}, is not unique",
+                        params,
+                        opt.id,
+                        opt.full_id,
+                    );
+                }
             }
         }
     }
@@ -1467,14 +1584,6 @@ use solver::*;
 use anyhow::{Result, anyhow};
 
 fn main() -> Result<()> {
-    let evo_config: EvolutionaryConfig = serde_json::from_str(std::env::args()
-        .collect::<Vec<_>>()
-        .get(1)
-        .ok_or_else(|| anyhow!("Expected the evolutionary configuration in JSON format as the first argument"))?)?;
-
-    let solutions = load_solutions(evo_config.set)?;
-    let rng: rand_chacha::ChaCha8Rng = rand::SeedableRng::seed_from_u64(42);
-
     println!(
         "info:\n\
         |   Id size: {}\n\
@@ -1492,9 +1601,18 @@ fn main() -> Result<()> {
         size_of::<Instance>(),
     );
 
+    let evo_config: EvolutionaryConfig = serde_json::from_str(std::env::args()
+        .collect::<Vec<_>>()
+        .get(1)
+        .ok_or_else(|| anyhow!("Expected the evolutionary configuration in JSON format as the first argument"))?)?;
+
+    let solutions = load_solutions(evo_config)?;
+    let rng: rand_chacha::ChaCha8Rng = rand::SeedableRng::seed_from_u64(42);
+
     let mut instances = load_instances(evo_config.set)?
         .into_par_iter()
         .map(|inst| (inst.clone().into(), inst))
+        .filter(|(params, _)| params == &evo_config.instance_params)
         .collect::<Vec<(InstanceParams, _)>>();
     instances.par_sort_unstable_by(|(p1, i1), (p2, i2)|
         p1.cmp(p2).then(i1.id.cmp(&i2.id))
@@ -1516,6 +1634,9 @@ fn main() -> Result<()> {
             );
         }
     });
+
+    if instances.is_empty() { eprintln!("WARN: No instances match the given parameters"); }
+    if solutions.is_empty() { eprintln!("WARN: No solutions match the given parameters"); }
 
     instances.into_iter().take(evo_config.n_instances as usize).for_each(|(_params, inst)| {
         use std::time::Instant;

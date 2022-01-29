@@ -269,6 +269,16 @@ def plottery():
         elif plot["type"] == "heatmap":
             heatmap(*plot["args"], progress = progress, **plot["kwargs"])
 
+# describe errors
+for id in data["id"].unique():
+    dataset = data[data["id"] == id]
+    df = pd.DataFrame(dataset[dataset["error"] < 2]["error"].describe())
+    df[df.columns[0]] = df[df.columns[0]].apply(lambda x: 100 * x)
+    df = df.T
+    df["count"] = df["count"] / 100
+    df["dataset"] = id
+    df.to_csv(f"docs/assets/{id}_errors.csv")
+
 # schedule_ridgeline(
 #     "mutation_exploration",
 #     "Vliv šance mutace na hustotu chyb",
@@ -306,9 +316,6 @@ schedule_heatmap(
 #         f"whitebox-error-density-evaluation-dataset-{dataset}.svg",
 #     )
 
-print(data.describe())
-print(data.head())
-
 # schedule_heatmap(
 #     "dataset_A",
 #     "Vývoj populace pro dataset A",
@@ -323,8 +330,6 @@ schedule_ridgeline(
     "mutation_chance",
     "whitebox-error-density-evaluation-dataset-A.svg",
 )
-
-print(data[data["set"] == "A"][data["error"] < 2.0]["error"].describe())
 
 schedule_heatmap(
     "dataset_A",
