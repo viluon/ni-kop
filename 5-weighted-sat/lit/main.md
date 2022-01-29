@@ -792,12 +792,14 @@ Dále jsem vyhodnotil hustotu chyb na různých datových sadách, abych získal
 přehled nejen o průběhu simulace, ale i o vzdálenosti od globálního optima.
 
 ![Vliv adaptivní mutace s katastrofami na chyby v různých datových sadách.
-y](adaptive-mutation-comparison.csv)
+y](lit/adaptive-mutation-comparison.csv)
 
-Tento algoritmus má překvapivě dobré výsledky. Možnost ke zlepšení ovšem vidím v
-poměrně naivní fitness funkci, která nijak nenapomáhá hledat validní řešení.
-Tím se prakticky spoléhá na čirou náhodu při hledání nějakých splňujících
-konfigurací, které pak heuristicky zlepšuje křížením a mutací.
+Tento algoritmus má překvapivě dobré výsledky. Dosahuje **TODO: popsat chyby** a
+většinou nalezne uspokojivé řešení během prvních dvou set generací. Možnost ke
+zlepšení ovšem vidím v poměrně naivní fitness funkci, která nijak nenapomáhá
+hledat validní řešení. Tím se prakticky spoléhá na čirou náhodu při hledání
+nějakých splňujících konfigurací, které pak heuristicky zlepšuje křížením a
+mutací.
 
 Jako další krok jsem tedy navrhl novou fitness funkci, která závisí i na počtu
 splněných klauzulí.
