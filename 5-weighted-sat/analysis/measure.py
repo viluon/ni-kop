@@ -80,9 +80,44 @@ configs = merge_datasets(dataset(
     generations = [1000],
     mutation_chance = [0.03],
 ), dataset(
-    "mutation_exploration",
-    n_instances = [6],
-    mutation_chance = [0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5],
+#     "mutation_exploration",
+#     n_instances = [6],
+#     mutation_chance = [0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5],
+# ), dataset(
+#     "dataset_N",
+#     set = ["N"],
+#     generations = [500],
+# ), dataset(
+#     "dataset_Q",
+#     set = ["Q"],
+#     generations = [500],
+# ), dataset(
+#     "dataset_R",
+#     set = ["R"],
+#     generations = [500],
+# ), dataset(
+    "dataset_A",
+    set = ["A"],
+    generations = [500],
+    n_instances = [1_000],
+# ), dataset(
+#     "dataset_Q_exploration",
+#     set = ["Q"],
+#     generations = [2000],
+#     population_size = [2000],
+#     mutation_chance = [0.001, 0.01, 0.03, 0.05, 0.1, 0.2]
+# ), dataset(
+#     "dataset_R_exploration",
+#     set = ["R"],
+#     generations = [2000],
+#     population_size = [2000],
+#     mutation_chance = [0.001, 0.01, 0.03, 0.05, 0.1, 0.2]
+# ), dataset(
+#     "dataset_A_exploration",
+#     set = ["A"],
+#     generations = [2000],
+#     population_size = [2000],
+#     mutation_chance = [0.001, 0.01, 0.03, 0.05, 0.1, 0.2]
 ))
 # ~\~ end
 
@@ -94,10 +129,9 @@ total = sum([cfg["n_instances"] * cfg["generations"] for cfg in cfgs])
 for config in cfgs:
     if show_progress:
         print(end = "\033[2K")
-    print(config)
+    print(json.dumps(config))
     progress_bar(iteration, total)
 
-    params = "-".join([str(v) for _, v in config.items()])
     for (t, inst_id, satisfied, valid, weight, err, stats) in invoke_solver(config):
         data = data.append(dict(config,
             error   = err,

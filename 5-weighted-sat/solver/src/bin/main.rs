@@ -49,8 +49,8 @@ fn main() -> Result<()> {
             |(p, inst)| p.cmp(params).then(inst.id.cmp(&opt.id))
         ) {
             let inst = &instances[inst_index].1;
-            let sln = Solution::new(opt.weight, opt.cfg, inst);
-            assert!(sln.valid(),
+            let sln = Solution::new(opt.weight, opt.cfg, inst, &evo_config);
+            assert!(sln.valid(&evo_config),
                 "optimal solution to instance {} is invalid (satisfied: {})\n{}",
                 inst.id,
                 sln.satisfied,
@@ -75,11 +75,11 @@ fn main() -> Result<()> {
             time = time,
             id = inst.id,
             satisfied = sln.satisfied,
-            valid = sln.valid(),
+            valid = sln.valid(&evo_config),
             weight = sln.weight,
-            err = error.map(|e| e.to_string()).unwrap_or_default()
+            err = error.unwrap_or(2.0)
         );
-        assert!(!sln.satisfied || sln.valid(),
+        assert!(!sln.satisfied || sln.valid(&evo_config),
             "the following satisfied solution isn't valid! Instance {}:\n{}",
             inst.id,
             sln.dump()

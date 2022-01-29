@@ -158,8 +158,12 @@ def boxplot(x_axis, y_axis, id, title, grouping_column, data = data, filename = 
 
 def heatmap(id, title, filename, data = data, progress = lambda _: None):
     dataset = data[data["id"] == id]
-    stats = dataset["stats"]
+    stats = list(dataset["stats"])
     n_instances = int(dataset["inst_id"].count())
+    print()
+    print(dataset.describe())
+    print(dataset.head())
+    print()
     n_generations = int(dataset["generations"].max())
     n_variables = len(stats[0][0]) - 2
 
@@ -170,14 +174,14 @@ def heatmap(id, title, filename, data = data, progress = lambda _: None):
     )
     fig.suptitle(title)
 
-    for i, (_, inst_id), (_, df), (_, err) in zip(
-        range(1, 100),
+    for i, (_, inst_id), stats, (_, err) in zip(
+        range(1, 10000),
         dataset["inst_id"].iteritems(),
-        stats.iteritems(),
+        stats,
         dataset["error"].iteritems()
     ):
         inst_id = int(inst_id)
-        df = pd.DataFrame(df)
+        df = pd.DataFrame(stats)
         ax = axs[2 * (i - 1)]
         err_ax = axs[2 * i - 1]
         ax.set_title(f"inst. {inst_id}")
@@ -218,7 +222,7 @@ def heatmap(id, title, filename, data = data, progress = lambda _: None):
         new_ticks = [i.get_text() for i in ax.get_yticklabels()]
         ax.set_yticks(range(0, len(new_ticks), 10), new_ticks[::10])
         ax.annotate(
-            f"{100 * err:.2f}%",
+            f"{100 * err:.2f}%" if err < 2 else "Neznámé optimum",
             (0, 0),
             (4, -10),
             xycoords = "axes fraction",
@@ -263,12 +267,12 @@ def plottery():
         elif plot["type"] == "heatmap":
             heatmap(*plot["args"], progress = progress, **plot["kwargs"])
 
-schedule_ridgeline(
-    "mutation_exploration",
-    "Vliv šance mutace na hustotu chyb",
-    "mutation_chance",
-    "whitebox-mutation-chance-error.svg",
-)
+# schedule_ridgeline(
+#     "mutation_exploration",
+#     "Vliv šance mutace na hustotu chyb",
+#     "mutation_chance",
+#     "whitebox-mutation-chance-error.svg",
+# )
 
 schedule_heatmap(
     "default",
@@ -284,6 +288,48 @@ schedule_heatmap(
 #         f"whitebox-heatmap-mut-explr-{mutation_chance}",
 #         data = data[data["mutation_chance"] == mutation_chance]
 #     )
+
+# for dataset in ["N", "Q", "R", "A"]:
+#     schedule_heatmap(
+#         f"dataset_{dataset}",
+#         f"Vývoj populace pro dataset {dataset}",
+#         f"whitebox-heatmap-dataset-{dataset}",
+#         data = data[data["inst_id"] <= 8],
+#     )
+
+#     schedule_ridgeline(
+#         f"dataset_{dataset}",
+#         f"Hustota chyb pro dataset {dataset}",
+#         f"mutation_chance",
+#         f"whitebox-error-density-evaluation-dataset-{dataset}.svg",
+#     )
+
+print(data.describe())
+print(data.head())
+
+# schedule_heatmap(
+#     "dataset_A",
+#     "Vývoj populace pro dataset A",
+#     "whitebox-heatmap-dataset-A",
+#     data = data[data["inst_id"] <= 20]
+#     # data = data[:8],
+# )
+
+# schedule_ridgeline(
+#     "dataset_A",
+#     "Hustota chyb pro dataset A",
+#     "mutation_chance",
+#     "whitebox-error-density-evaluation-dataset-A.svg",
+# )
+
+print(data[data["set"] == "A"][data["error"] < 2.0]["error"].describe())
+
+schedule_heatmap(
+    "dataset_A",
+    "Studie instancí 2 & 17 v datasetu A",
+    "whitebox-heatmap-dataset-A-inst-2-closeup",
+    data = data[data["inst_id"].isin([2, 17])],
+)
 
 # do the plottery
 plottery()

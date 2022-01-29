@@ -5,6 +5,9 @@ author: 'Ondřej Kvapil'
 
 # Kombinatorická optimalizace: problém vážené splnitelnosti booleovské formule
 
+**TODO**:
+- kontrola nad `InstanceParams` z Pythonu (především pro vizualizace)
+
 ## Zadání
 
 ### Pokyny
@@ -12,7 +15,7 @@ author: 'Ondřej Kvapil'
 Problém řešte některou z pokročilých heuristik:
 
 - simulované ochlazování
-- genetický algoritmus
+- **genetický algoritmus**
 - tabu prohledávání
 
 Po nasazení heuristiky ověřte její vlastnosti experimentálním vyhodnocením,
@@ -210,10 +213,9 @@ total = sum([cfg["n_instances"] * cfg["generations"] for cfg in cfgs])
 for config in cfgs:
     if show_progress:
         print(end = "\033[2K")
-    print(config)
+    print(json.dumps(config))
     progress_bar(iteration, total)
 
-    params = "-".join([str(v) for _, v in config.items()])
     for (t, inst_id, satisfied, valid, weight, err, stats) in invoke_solver(config):
         data = data.append(dict(config,
             error   = err,
@@ -251,9 +253,44 @@ configs = merge_datasets(dataset(
     generations = [1000],
     mutation_chance = [0.03],
 ), dataset(
-    "mutation_exploration",
-    n_instances = [6],
-    mutation_chance = [0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5],
+#     "mutation_exploration",
+#     n_instances = [6],
+#     mutation_chance = [0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5],
+# ), dataset(
+#     "dataset_N",
+#     set = ["N"],
+#     generations = [500],
+# ), dataset(
+#     "dataset_Q",
+#     set = ["Q"],
+#     generations = [500],
+# ), dataset(
+#     "dataset_R",
+#     set = ["R"],
+#     generations = [500],
+# ), dataset(
+    "dataset_A",
+    set = ["A"],
+    generations = [500],
+    n_instances = [1_000],
+# ), dataset(
+#     "dataset_Q_exploration",
+#     set = ["Q"],
+#     generations = [2000],
+#     population_size = [2000],
+#     mutation_chance = [0.001, 0.01, 0.03, 0.05, 0.1, 0.2]
+# ), dataset(
+#     "dataset_R_exploration",
+#     set = ["R"],
+#     generations = [2000],
+#     population_size = [2000],
+#     mutation_chance = [0.001, 0.01, 0.03, 0.05, 0.1, 0.2]
+# ), dataset(
+#     "dataset_A_exploration",
+#     set = ["A"],
+#     generations = [2000],
+#     population_size = [2000],
+#     mutation_chance = [0.001, 0.01, 0.03, 0.05, 0.1, 0.2]
 ))
 ```
 
@@ -423,8 +460,12 @@ def boxplot(x_axis, y_axis, id, title, grouping_column, data = data, filename = 
 
 def heatmap(id, title, filename, data = data, progress = lambda _: None):
     dataset = data[data["id"] == id]
-    stats = dataset["stats"]
+    stats = list(dataset["stats"])
     n_instances = int(dataset["inst_id"].count())
+    print()
+    print(dataset.describe())
+    print(dataset.head())
+    print()
     n_generations = int(dataset["generations"].max())
     n_variables = len(stats[0][0]) - 2
 
@@ -435,14 +476,14 @@ def heatmap(id, title, filename, data = data, progress = lambda _: None):
     )
     fig.suptitle(title)
 
-    for i, (_, inst_id), (_, df), (_, err) in zip(
-        range(1, 100),
+    for i, (_, inst_id), stats, (_, err) in zip(
+        range(1, 10000),
         dataset["inst_id"].iteritems(),
-        stats.iteritems(),
+        stats,
         dataset["error"].iteritems()
     ):
         inst_id = int(inst_id)
-        df = pd.DataFrame(df)
+        df = pd.DataFrame(stats)
         ax = axs[2 * (i - 1)]
         err_ax = axs[2 * i - 1]
         ax.set_title(f"inst. {inst_id}")
@@ -483,7 +524,7 @@ def heatmap(id, title, filename, data = data, progress = lambda _: None):
         new_ticks = [i.get_text() for i in ax.get_yticklabels()]
         ax.set_yticks(range(0, len(new_ticks), 10), new_ticks[::10])
         ax.annotate(
-            f"{100 * err:.2f}%",
+            f"{100 * err:.2f}%" if err < 2 else "Neznámé optimum",
             (0, 0),
             (4, -10),
             xycoords = "axes fraction",
@@ -528,12 +569,12 @@ def plottery():
         elif plot["type"] == "heatmap":
             heatmap(*plot["args"], progress = progress, **plot["kwargs"])
 
-schedule_ridgeline(
-    "mutation_exploration",
-    "Vliv šance mutace na hustotu chyb",
-    "mutation_chance",
-    "whitebox-mutation-chance-error.svg",
-)
+# schedule_ridgeline(
+#     "mutation_exploration",
+#     "Vliv šance mutace na hustotu chyb",
+#     "mutation_chance",
+#     "whitebox-mutation-chance-error.svg",
+# )
 
 schedule_heatmap(
     "default",
@@ -549,6 +590,48 @@ schedule_heatmap(
 #         f"whitebox-heatmap-mut-explr-{mutation_chance}",
 #         data = data[data["mutation_chance"] == mutation_chance]
 #     )
+
+# for dataset in ["N", "Q", "R", "A"]:
+#     schedule_heatmap(
+#         f"dataset_{dataset}",
+#         f"Vývoj populace pro dataset {dataset}",
+#         f"whitebox-heatmap-dataset-{dataset}",
+#         data = data[data["inst_id"] <= 8],
+#     )
+
+#     schedule_ridgeline(
+#         f"dataset_{dataset}",
+#         f"Hustota chyb pro dataset {dataset}",
+#         f"mutation_chance",
+#         f"whitebox-error-density-evaluation-dataset-{dataset}.svg",
+#     )
+
+print(data.describe())
+print(data.head())
+
+# schedule_heatmap(
+#     "dataset_A",
+#     "Vývoj populace pro dataset A",
+#     "whitebox-heatmap-dataset-A",
+#     data = data[data["inst_id"] <= 20]
+#     # data = data[:8],
+# )
+
+# schedule_ridgeline(
+#     "dataset_A",
+#     "Hustota chyb pro dataset A",
+#     "mutation_chance",
+#     "whitebox-error-density-evaluation-dataset-A.svg",
+# )
+
+print(data[data["set"] == "A"][data["error"] < 2.0]["error"].describe())
+
+schedule_heatmap(
+    "dataset_A",
+    "Studie instancí 2 & 17 v datasetu A",
+    "whitebox-heatmap-dataset-A-inst-2-closeup",
+    data = data[data["inst_id"].isin([2, 17])],
+)
 
 # do the plottery
 plottery()
@@ -567,7 +650,7 @@ rodiče kombinuje do nových potomků uniformním křížením.
 
 ![První nástřel evolučního algoritmu](whitebox-default-0.svg)
 
-![Vývoj populace po 200 generací](assets/whitebox-heatmap-default-mix.svg)
+![Vývoj populace po 1000 generací](assets/whitebox-heatmap-default-mix.svg)
 
 ![Šance mutace vs. hustota chyb](assets/whitebox-mutation-chance-error.svg)
 
@@ -592,6 +675,7 @@ const MAX_VARIABLES: usize = 256;
 pub struct Instance {
     pub id: i32,
     pub weights: ArrayVec<NonZeroU16, MAX_VARIABLES>,
+    pub total_weight: u32,
     pub clauses: ArrayVec<Clause, MAX_CLAUSES>,
 }
 
@@ -658,11 +742,6 @@ impl Instance {
         use std::iter::repeat_with;
 
         impl<'a> Solution<'a> {
-            fn fitness(&self, _evo_config: &EvolutionaryConfig) -> u64 {
-                if !self.satisfied { 0 }
-                else { self.weight as u64 }
-            }
-
             fn crossover<Rng: rand::Rng>(
                 self, other: Self, evo_config: &EvolutionaryConfig, rng: &mut Rng
             ) -> [Solution<'a>; 2] {
@@ -683,9 +762,12 @@ impl Instance {
 
                 cfgs.into_iter()
                     .zip(weights.into_iter())
-                    .map(|(cfg, weight)| Solution{weight, cfg, inst: self.inst, satisfied: false})
+                    .map(|(cfg, weight)|
+                        Solution { weight, cfg, inst: self.inst, satisfied: false, fitness: 0 }
+                    )
                     .map(|sln| sln.mutate_unsafe(evo_config, rng))
                     .map(|sln| Solution { satisfied: satisfied(&sln.inst.clauses, &sln.cfg), ..sln })
+                    .map(|sln| Solution { fitness: compute_fitness(&sln, evo_config), ..sln })
                     .collect::<ArrayVec<_, 2>>()
                     .into_inner()
                     .unwrap()
@@ -704,16 +786,19 @@ impl Instance {
             }
         }
 
-        let random = |rng: &mut Rng| {
-            let mut cfg = Config::zeroed();
-            let mut weight = 0;
-            for i in 0..self.weights.len() {
-                let b = rng.gen_bool(0.5);
-                cfg.set(i, b);
-                weight += self.weights[i].get() as u32 * b as u32;
-            }
+        let random = {
+            let ecfg = ecfg;
+            move |rng: &mut Rng| {
+                let mut cfg = Config::zeroed();
+                let mut weight = 0;
+                for i in 0..self.weights.len() {
+                    let b = rng.gen_bool(0.5);
+                    cfg.set(i, b);
+                    weight += self.weights[i].get() as u32 * b as u32;
+                }
 
-            Solution::new(weight, cfg, self)
+                Solution::new(weight, cfg, self, &ecfg)
+            }
         };
 
         fn stats(pop: &[Solution], _evo_config: EvolutionaryConfig, opt: Option<&OptimalSolution>) -> String {
@@ -747,6 +832,7 @@ impl Instance {
 
         const DISASTER_INTERVAL: u32 = 100;
         const MUTATION_ADJUSTMENT_INTERVAL: u32 = 10;
+        const MUTATION_ADJUSTMENT: f64 = 1.0001;
 
         let mut population = (0..ecfg.population_size).map(|_| random(rng)).collect::<Vec<_>>();
         let mut buffer = Vec::with_capacity(population.len() / 2);
@@ -762,15 +848,15 @@ impl Instance {
                 population.extend(repeat_with(|| random(rng)).take(n));
             }
 
-            population.par_sort_by_key(|sln| -(sln.fitness(&ecfg) as i64));
-            if (population[0].satisfied && !best.satisfied) || population[0].fitness(&ecfg) > best.fitness(&ecfg) {
+            population.par_sort_by_key(|sln| -(sln.fitness as i64));
+            if (population[0].satisfied && !best.satisfied) || population[0].fitness > best.fitness {
                 best = population[0];
             }
 
             shuffler.par_extend(population.par_iter());
             shuffler.shuffle(rng);
             // move unsatisfying solutions to the end
-            shuffler.par_sort_by_key(|sln| sln.fitness(&ecfg) == 0);
+            shuffler.par_sort_by_key(|sln| sln.fitness == 0);
 
             // how many individuals to cross over
             let n = population.len() / 5;
@@ -791,13 +877,13 @@ impl Instance {
             // adjust the mutation modifier adaptively
             if i % MUTATION_ADJUSTMENT_INTERVAL == 0 {
                 let n = population.iter()
-                    .map(|sln| sln.fitness(&ecfg))
+                    .map(|sln| sln.fitness)
                     .filter(|f| *f == 0)
                     .count();
                 let n = n as f64 / population.len() as f64;
                 ecfg.mutation_chance = match () {
-                    _ if n > 0.5 => (ecfg.mutation_chance * 1.05).min(0.5),
-                    _ if n < 0.2 => (ecfg.mutation_chance / 1.05).max(0.0001),
+                    _ if n > 0.5 => (ecfg.mutation_chance * MUTATION_ADJUSTMENT).min(0.5),
+                    _ if n < 0.2 => (ecfg.mutation_chance / MUTATION_ADJUSTMENT).max(0.0001),
                     _            => ecfg.mutation_chance
                 };
             }
@@ -843,6 +929,7 @@ pub type Config = BitArr!(for MAX_VARIABLES);
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub struct Solution<'a> {
     pub weight: u32,
+    pub fitness: u64,
     pub cfg: Config,
     pub inst: &'a Instance,
     pub satisfied: bool,
@@ -941,18 +1028,19 @@ impl <'a> Solution<'a> {
         *self
     }
 
-    fn default(inst: &'a Instance) -> Solution<'a> {
-        Solution::new(0, Config::default(), inst)
+    fn default(inst: &'a Instance, evo_config: &EvolutionaryConfig) -> Solution<'a> {
+        Solution::new(0, Config::default(), inst, evo_config)
     }
 
-    pub fn new(weight: u32, cfg: Config, inst: &'a Instance) -> Solution<'a> {
-        Solution {
-            weight, cfg, inst, satisfied: satisfied(&inst.clauses, &cfg)
-        }
+    pub fn new(weight: u32, cfg: Config, inst: &'a Instance, evo_config: &EvolutionaryConfig) -> Solution<'a> {
+        let sln = Solution {
+            weight, cfg, inst, satisfied: satisfied(&inst.clauses, &cfg), fitness: 0
+        };
+        Solution { fitness: compute_fitness(&sln, evo_config), ..sln }
     }
 
-    pub fn valid(&self) -> bool {
-        let Solution { weight, cfg, inst, satisfied } = *self;
+    pub fn valid(&self, evo_config: &EvolutionaryConfig) -> bool {
+        let Solution { weight, cfg, inst, satisfied, fitness } = *self;
         let Instance { weights, clauses, .. } = inst;
 
         let computed_weight = weights
@@ -963,7 +1051,8 @@ impl <'a> Solution<'a> {
             })
             .sum::<u32>();
 
-        computed_weight == weight && satisfied
+        let computed_fitness = compute_fitness(self, evo_config);
+        computed_fitness == fitness && computed_weight == weight && satisfied
     }
 
     pub fn dump(&self) -> String {
@@ -988,6 +1077,23 @@ fn dump_solution(id: i32, weight: u32, cfg: &Config, params: &InstanceParams) ->
     )
     .intersperse(" ".into())
     .collect()
+}
+
+pub fn compute_fitness(sln: &Solution, _evo_config: &EvolutionaryConfig) -> u64 {
+    let sat_clauses: u32 = sln.inst.clauses.iter()
+        .map(|clause|
+            clause.iter().all(|&Literal(pos, id)|
+                pos == sln.cfg[id.get() as usize - 1]
+            )
+        )
+        .map(|sat| sat as u32)
+        .sum();
+
+    let sat_component = (1u32 << 12) as f64;
+    let weight_component = (1u32 << 8) as f64;
+    let score = sat_component * sat_clauses as f64 / sln.inst.clauses.len() as f64
+        + weight_component * sln.weight as f64 / sln.inst.total_weight as f64;
+    score as u64
 }
 
 pub fn satisfied(clauses: &ArrayVec<Clause, MAX_CLAUSES>, cfg: &Config) -> bool {
@@ -1102,14 +1208,15 @@ pub fn load_instances(set: char) -> Result<Vec<Instance>> {
         let weights_row = lines.find(|s| s.starts_with('w'))
             .ok_or_else(|| anyhow!("could not find the weights row"))?;
 
-        let weights = weights_row
+        let weights: ArrayVec<NonZeroU16, MAX_VARIABLES> = weights_row
             .split_whitespace()
             .skip(1)
             .flat_map(|w| w /* will fail for w == 0 */.parse().into_iter()).collect();
 
         let mut lines = lines.filter(|l| !l.starts_with('c'));
         let clauses = parse_clauses(&mut lines)?;
-        Ok(Instance { id, weights, clauses })
+        let total_weight = weights.iter().map(|x| x.get() as u32).sum();
+        Ok(Instance { id, weights, clauses, total_weight })
     }).collect()
 }
 
@@ -1137,7 +1244,15 @@ pub fn load_solutions(set: char) -> Result<HashMap<(InstanceParams, i32), Optima
 
         let mut stream = BufReader::new(File::open(file.path())?);
         while let Some(opt) = parse_solution_line(&mut stream, params)? {
-            assert!(solutions.insert((params, opt.id), opt).is_none());
+            let prev = solutions.insert((params, opt.id), opt.clone());
+            if prev.is_some() {
+                eprintln!(
+                    "WARN: solution to ({:?}, {}), full ID: {}, is not unique",
+                    params,
+                    opt.id,
+                    opt.full_id,
+                );
+            }
         }
     }
 
@@ -1350,8 +1465,8 @@ fn main() -> Result<()> {
             |(p, inst)| p.cmp(params).then(inst.id.cmp(&opt.id))
         ) {
             let inst = &instances[inst_index].1;
-            let sln = Solution::new(opt.weight, opt.cfg, inst);
-            assert!(sln.valid(),
+            let sln = Solution::new(opt.weight, opt.cfg, inst, &evo_config);
+            assert!(sln.valid(&evo_config),
                 "optimal solution to instance {} is invalid (satisfied: {})\n{}",
                 inst.id,
                 sln.satisfied,
@@ -1376,11 +1491,11 @@ fn main() -> Result<()> {
             time = time,
             id = inst.id,
             satisfied = sln.satisfied,
-            valid = sln.valid(),
+            valid = sln.valid(&evo_config),
             weight = sln.weight,
-            err = error.map(|e| e.to_string()).unwrap_or_default()
+            err = error.unwrap_or(2.0)
         );
-        assert!(!sln.satisfied || sln.valid(),
+        assert!(!sln.satisfied || sln.valid(&evo_config),
             "the following satisfied solution isn't valid! Instance {}:\n{}",
             inst.id,
             sln.dump()
@@ -1492,9 +1607,12 @@ mod tests {
     impl Arbitrary for Instance {
         fn arbitrary(g: &mut Gen) -> Instance {
             let proxy: ArrayVec<LiteralProxy, MAX_CLAUSES> = (ArrayVecProxy::arbitrary(g) as ClauseProxy).into();
+            let weights: ArrayVec<NonZeroU16, MAX_VARIABLES> = ArrayVecProxy::arbitrary(g).into();
+            let total_weight = weights.iter().map(|x| x.get() as u32).sum();
             Instance {
-                id:      i32::arbitrary(g),
-                weights: ArrayVecProxy::arbitrary(g).into(),
+                id: i32::arbitrary(g),
+                weights,
+                total_weight,
                 clauses: proxy.into_iter().map(|clause| clause.0.into_inner().unwrap()).collect(),
             }
         }
