@@ -209,22 +209,24 @@ fn dump_solution(id: i32, weight: u32, cfg: &Config, params: &InstanceParams) ->
 }
 
 pub fn compute_fitness(sln: &Solution, _evo_config: &EvolutionaryConfig) -> u64 {
-    let sat_clauses: u32 = sln.inst.clauses.iter()
-        .map(|clause|
-            clause.iter().all(|&Literal(pos, id)|
-                pos == sln.cfg[id.get() as usize - 1]
-            )
-        )
-        .map(|sat| sat as u32)
-        .sum();
+    if !sln.satisfied { 0 }
+    else { sln.weight as u64 }
+    // let sat_clauses: u32 = sln.inst.clauses.iter()
+    //     .map(|clause|
+    //         clause.iter().all(|&Literal(pos, id)|
+    //             pos == sln.cfg[id.get() as usize - 1]
+    //         )
+    //     )
+    //     .map(|sat| sat as u32)
+    //     .sum();
 
-    let sat_component = (1u32 << 22) as f64;
-    let clause_component = (1u32 << 8) as f64;
-    let weight_component = (1u32 << 8) as f64;
-    let score = sat_component * sln.satisfied as u32 as f64
-        + clause_component * (sat_clauses as f64 / sln.inst.clauses.len() as f64).powf(2.0)
-        + weight_component * sln.weight as f64 / sln.inst.total_weight as f64;
-    score as u64
+    // let sat_component = (1u32 << 22) as f64;
+    // let clause_component = (1u32 << 8) as f64;
+    // let weight_component = (1u32 << 8) as f64;
+    // let score = sat_component * sln.satisfied as u32 as f64
+    //     + clause_component * (sat_clauses as f64 / sln.inst.clauses.len() as f64).powf(2.0)
+    //     + weight_component * sln.weight as f64 / sln.inst.total_weight as f64;
+    // score as u64
 }
 
 pub fn satisfied(clauses: &ArrayVec<Clause, MAX_CLAUSES>, cfg: &Config) -> bool {
@@ -493,7 +495,7 @@ impl Instance {
 
         const DISASTER_INTERVAL: u32 = 100;
         const MUTATION_ADJUSTMENT_INTERVAL: u32 = 10;
-        const MUTATION_ADJUSTMENT: f64 = 1.0001;
+        const MUTATION_ADJUSTMENT: f64 = 1.05;
 
         let mut population = (0..ecfg.population_size).map(|_| random(rng)).collect::<Vec<_>>();
         let mut buffer = Vec::with_capacity(population.len() / 2);
