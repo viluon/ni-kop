@@ -644,11 +644,53 @@ plottery()
 <<analysis/plot.py>>
 ```
 
-Vůbec první varianta algoritmu nevyužívá žádných metod nichingu, v každé ze dvou
-set generací nekompromisně vyřadí slabší půlku z populace tisíce jedinců a
-rodiče kombinuje do nových potomků uniformním křížením.
+#### Hledání kvalitního algoritmu
 
-![První nástřel evolučního algoritmu](whitebox-default-0.svg)
+Vůbec první varianta algoritmu nevyužívala žádných metod nichingu, v každé ze
+dvou set generací nekompromisně vyřadila slabší půlku z populace tisíce jedinců
+a rodiče kombinovala do nových potomků uniformním křížením.
+
+![První nástřel evolučního algoritmu](whitebox-0-default.svg)
+
+Tato jednoduchá varianta nacházela jen řešení daleko od optima. Jak je vidět ve
+vizualizaci, populace rychle ztratí veškerou diverzitu a průzkum stavového
+prostoru se zasekne v lokálním maximu. Je jasné, že ke zlepšení výsledků je
+třeba diverzitu zachovat.
+
+Jako první pokus o zlepšení jsem implementoval deterministic crowding. Namísto
+prosté náhrady horší půlky populace novými jedinci soupeří potomek o přežití s
+kvalitnějším z rodičů. Zároveň jsem snížil počet dvojic jedinců účastnících se
+křížení z poloviny populace na pětinu. (Pozn.: křížení poloviny populace
+neznamená, že mají všichni jedinci příležitost rozmnožit se. Dvojice rodičů jsou
+randomizované a asexuální rozmnožování je povoleno, zároveň mají kvalitnější
+jedinci vyšší šanci účastnit se procesu křížení.) Tento experiment ale skončil
+fiaskem, populace byla příliš rozmanitá a v průběhu simulace ji neovládl žádný
+výrazný genotyp.
+
+![Pokus o deterministic crowding](whitebox-1-default-deterministic-crowding.svg)
+
+Domníval jsem se, že důvod neúspěchu se skrývá ve způsobu křížení. V této fázi
+vývoje jsem se rozhodl dohledat semestrální práci do předmětu BI-ZUM, kterou
+jsem vypracoval v prvním ročníku bakalářského studia. Předmětem této práce byl
+evoluční algoritmus pro řešení problému vrcholového pokrytí. V té době měl
+předmět žebříček řešení jedné velké instance (s neznámým optimem) nalezených
+studenty za několik let. Mé řešení využívalo několika pokročilých metod a
+umístilo se poměrně vysoko na žebříčku, měl jsem proto naději, že bych mohl
+použité metody nichingu vyzkoušet i na problém vážené splnitelnosti.
+
+[Zprávu k semestrální práci](zum-report.pdf) i zdrojový kód se mi nakonec
+podařilo dohledat. Zalíbila se mi adaptivní šance mutace, protože evoluční
+algoritmus s ní přímo zobecňuje simulované žíhání (simulované žíhání má velikost
+populace $1$). Zároveň jsem se rozhodl implementovat katastrofu, tedy náhodnou
+re-inicializaci části populace za účelem zlepšení diverzity, se kterou jsem měl
+před pokusem o deterministic crowding problém. Zaujal mě fakt, že deterministic
+crowding jsem zkoušel i ve zmíněné semestrální práci do BI-ZUM, taktéž
+bezúspěšně. Další pokusy o tuto niching metodu jsem proto odložil na později,
+vrátím se k ní v případě, že jiné postupy nepovedou k lepším výsledkům.
+
+![Adaptivní mutace a katastrofické události](whitebox-2-default-adaptive-mutation.svg)
+
+![Začátky nové fitness funkce](whitebox-3-default-new-fitness-function.svg)
 
 ![Vývoj populace po 1000 generací](assets/whitebox-heatmap-default-mix.svg)
 

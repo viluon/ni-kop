@@ -49,10 +49,11 @@ def invoke_solver(cfg):
     return results
 
 def dataset(id, **kwargs):
+    # defaults
     params = dict({
-        # defaults
         "id": [id],
         "set": ["M"],
+        "instance_params": [{"variables": 20, "clauses": 78}],
         "n_instances": [15],
         "generations": [200],
         "mutation_chance": [0.02],
@@ -98,6 +99,7 @@ configs = merge_datasets(dataset(
 # ), dataset(
     "dataset_A",
     set = ["A"],
+    instance_params = [{"variables": 20, "clauses": 88}],
     generations = [500],
     n_instances = [1_000],
 # ), dataset(

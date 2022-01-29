@@ -160,10 +160,10 @@ def heatmap(id, title, filename, data = data, progress = lambda _: None):
     dataset = data[data["id"] == id]
     stats = list(dataset["stats"])
     n_instances = int(dataset["inst_id"].count())
-    print()
-    print(dataset.describe())
-    print(dataset.head())
-    print()
+    # print()
+    # print(dataset.describe())
+    # print(dataset.head())
+    # print()
     n_generations = int(dataset["generations"].max())
     n_variables = len(stats[0][0]) - 2
 
@@ -174,11 +174,12 @@ def heatmap(id, title, filename, data = data, progress = lambda _: None):
     )
     fig.suptitle(title)
 
-    for i, (_, inst_id), stats, (_, err) in zip(
+    for i, (_, inst_id), stats, (_, err), (_, sat) in zip(
         range(1, 10000),
         dataset["inst_id"].iteritems(),
         stats,
-        dataset["error"].iteritems()
+        dataset["error"].iteritems(),
+        dataset["valid"].iteritems(),
     ):
         inst_id = int(inst_id)
         df = pd.DataFrame(stats)
@@ -222,7 +223,8 @@ def heatmap(id, title, filename, data = data, progress = lambda _: None):
         new_ticks = [i.get_text() for i in ax.get_yticklabels()]
         ax.set_yticks(range(0, len(new_ticks), 10), new_ticks[::10])
         ax.annotate(
-            f"{100 * err:.2f}%" if err < 2 else "Neznámé optimum",
+            (f"{100 * err:.2f}%" if err < 2 else "Neznámé optimum, splněno") if sat
+            else "Splňující řešení nenalezeno",
             (0, 0),
             (4, -10),
             xycoords = "axes fraction",
@@ -315,20 +317,20 @@ print(data.head())
 #     # data = data[:8],
 # )
 
-# schedule_ridgeline(
-#     "dataset_A",
-#     "Hustota chyb pro dataset A",
-#     "mutation_chance",
-#     "whitebox-error-density-evaluation-dataset-A.svg",
-# )
+schedule_ridgeline(
+    "dataset_A",
+    "Hustota chyb pro dataset A",
+    "mutation_chance",
+    "whitebox-error-density-evaluation-dataset-A.svg",
+)
 
 print(data[data["set"] == "A"][data["error"] < 2.0]["error"].describe())
 
 schedule_heatmap(
     "dataset_A",
-    "Studie instancí 2 & 17 v datasetu A",
-    "whitebox-heatmap-dataset-A-inst-2-closeup",
-    data = data[data["inst_id"].isin([2, 17])],
+    "Studie vývoje instancí v datasetu A 20-88",
+    "whitebox-heatmap-dataset-A-20-88-closeup",
+    data = data[data["id"] == "dataset_A"][:8],
 )
 
 # do the plottery

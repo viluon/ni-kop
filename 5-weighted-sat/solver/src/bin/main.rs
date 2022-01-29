@@ -9,14 +9,6 @@ use solver::*;
 use anyhow::{Result, anyhow};
 
 fn main() -> Result<()> {
-    let evo_config: EvolutionaryConfig = serde_json::from_str(std::env::args()
-        .collect::<Vec<_>>()
-        .get(1)
-        .ok_or_else(|| anyhow!("Expected the evolutionary configuration in JSON format as the first argument"))?)?;
-
-    let solutions = load_solutions(evo_config.set)?;
-    let rng: rand_chacha::ChaCha8Rng = rand::SeedableRng::seed_from_u64(42);
-
     println!(
         "info:\n\
         |   Id size: {}\n\
@@ -34,9 +26,18 @@ fn main() -> Result<()> {
         size_of::<Instance>(),
     );
 
+    let evo_config: EvolutionaryConfig = serde_json::from_str(std::env::args()
+        .collect::<Vec<_>>()
+        .get(1)
+        .ok_or_else(|| anyhow!("Expected the evolutionary configuration in JSON format as the first argument"))?)?;
+
+    let solutions = load_solutions(evo_config)?;
+    let rng: rand_chacha::ChaCha8Rng = rand::SeedableRng::seed_from_u64(42);
+
     let mut instances = load_instances(evo_config.set)?
         .into_par_iter()
         .map(|inst| (inst.clone().into(), inst))
+        .filter(|(params, _)| params == &evo_config.instance_params)
         .collect::<Vec<(InstanceParams, _)>>();
     instances.par_sort_unstable_by(|(p1, i1), (p2, i2)|
         p1.cmp(p2).then(i1.id.cmp(&i2.id))
@@ -58,6 +59,9 @@ fn main() -> Result<()> {
             );
         }
     });
+
+    if instances.is_empty() { eprintln!("WARN: No instances match the given parameters"); }
+    if solutions.is_empty() { eprintln!("WARN: No solutions match the given parameters"); }
 
     instances.into_iter().take(evo_config.n_instances as usize).for_each(|(_params, inst)| {
         use std::time::Instant;

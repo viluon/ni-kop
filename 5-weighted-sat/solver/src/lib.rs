@@ -79,7 +79,7 @@ pub struct OptimalSolution {
     pub params: InstanceParams,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct InstanceParams {
     variables: u8,
     clauses: u16,
@@ -92,6 +92,7 @@ pub struct EvolutionaryConfig {
     pub n_instances: u16,
     pub generations: u32,
     pub population_size: usize,
+    pub instance_params: InstanceParams,
 }
 
 impl From<Instance> for InstanceParams {
@@ -217,9 +218,11 @@ pub fn compute_fitness(sln: &Solution, _evo_config: &EvolutionaryConfig) -> u64 
         .map(|sat| sat as u32)
         .sum();
 
-    let sat_component = (1u32 << 12) as f64;
+    let sat_component = (1u32 << 22) as f64;
+    let clause_component = (1u32 << 8) as f64;
     let weight_component = (1u32 << 8) as f64;
-    let score = sat_component * sat_clauses as f64 / sln.inst.clauses.len() as f64
+    let score = sat_component * sln.satisfied as u32 as f64
+        + clause_component * (sat_clauses as f64 / sln.inst.clauses.len() as f64).powf(2.0)
         + weight_component * sln.weight as f64 / sln.inst.total_weight as f64;
     score as u64
 }
@@ -337,14 +340,14 @@ fn params_from_filename(filename: &str) -> Result<InstanceParams> {
     Ok(InstanceParams { variables, clauses })
 }
 
-pub fn load_solutions(set: char) -> Result<HashMap<(InstanceParams, i32), OptimalSolution>> {
+pub fn load_solutions(evo_config: EvolutionaryConfig) -> Result<HashMap<(InstanceParams, i32), OptimalSolution>> {
     let mut solutions = HashMap::new();
 
     let files = read_dir("../data/")?
         .filter(|res| res.as_ref().ok().filter(|f| {
             let name = f.file_name().into_string().unwrap();
             f.file_type().unwrap().is_file() &&
-            name.ends_with(&(set.to_string() + "-opt.dat"))
+            name.ends_with(&(evo_config.set.to_string() + "-opt.dat"))
         }).is_some());
 
     for file in files {
@@ -352,16 +355,18 @@ pub fn load_solutions(set: char) -> Result<HashMap<(InstanceParams, i32), Optima
         let filename = file.file_name().into_string().expect("FS error");
         let params = params_from_filename(&filename)?;
 
-        let mut stream = BufReader::new(File::open(file.path())?);
-        while let Some(opt) = parse_solution_line(&mut stream, params)? {
-            let prev = solutions.insert((params, opt.id), opt.clone());
-            if prev.is_some() {
-                eprintln!(
-                    "WARN: solution to ({:?}, {}), full ID: {}, is not unique",
-                    params,
-                    opt.id,
-                    opt.full_id,
-                );
+        if params == evo_config.instance_params {
+            let mut stream = BufReader::new(File::open(file.path())?);
+            while let Some(opt) = parse_solution_line(&mut stream, params)? {
+                let prev = solutions.insert((params, opt.id), opt.clone());
+                if prev.is_some() {
+                    eprintln!(
+                        "WARN: solution to ({:?}, {}), full ID: {}, is not unique",
+                        params,
+                        opt.id,
+                        opt.full_id,
+                    );
+                }
             }
         }
     }
