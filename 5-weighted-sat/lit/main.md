@@ -112,17 +112,15 @@ cd solver
 cargo build --release --color always
 ```
 
-## Benchmarking
+## White box: průzkum chování algoritmu
 
-Stejně jako v předchozí úloze jsem se ani tentokrát s měřením výkonu nespoléhal
-na existující Rust knihovny a namísto toho provedl měření v Pythonu.
+Stejně jako v předchozích dvou úlohách jsem se ani tentokrát s měřením
+nespoléhal na existující Rust knihovny a namísto toho provedl měření v Pythonu.
 
 ``` {.zsh .eval #machine-info .bootstrap-fold}
 uname -a
 ./cpufetch --logo-short --color ibm
 ```
-
-### White box: průzkum chování algoritmu
 
 Následující soubor slouží k vyhodnocení algoritmu na různých datových sadách s
 různými parametry. Spouští implementaci v jazyce Rust a výsledky měření ukládá
@@ -250,50 +248,115 @@ všech konfigurací, pro které je třeba algoritmus vyhodnotit.
 
 ``` {.python #datasets .bootstrap-fold}
 configs = merge_datasets(dataset(
+#     "all",
+#     generations = [6_000],
+#     mutation_chance = [0.25],
+#     disaster_interval = [900],
+#     set = ["M", "N", "Q", "R", "A"],
+#     instance_params = [{"variables": 20, "clauses": 78}, {"variables": 50, "clauses": 201}, {"variables": 75, "clauses": 310}, {"variables": 100, "clauses": 430}],
+#     n_instances = [150],
+#     population_size = [200],
+# ), dataset(
+#     "huge_A",
+#     generations = [10_000],
+#     mutation_chance = [0.25],
+#     disaster_interval = [900],
+#     set = ["A"],
+#     instance_params = [{"variables": 100, "clauses": 430}],
+#     n_instances = [150],
+#     population_size = [200],
+# ), dataset(
     "default",
-    generations = [1000],
-    mutation_chance = [0.03],
-    n_instances = [400],
+    generations = [2_500],
+    mutation_chance = [0.2],
+    n_instances = [50],
+    population_size = [200],
 # ), dataset(
-#     "dataset_N",
+#     "exploration",
+#     generations = [500, 1_000, 2_500, 5_000],
+#     mutation_chance = [0.2, 0.1, 0.05, 0.01],
+#     disaster_interval = [50, 100, 200, 400, 1000],
+#     n_instances = [50],
+#     population_size = [50, 100, 200, 400],
+# ), dataset(
+#     "dataset_N_large",
 #     set = "N",
-#     generations = [1000],
-#     mutation_chance = [0.03],
-#     n_instances = [1_000],
+#     instance_params = [{"variables": 50, "clauses": 201}],
+#     generations = [5_500],
+#     mutation_chance = [0.2],
+#     n_instances = [50],
+#     population_size = [200],
 # ), dataset(
-#     "dataset_Q",
+#     "dataset_Q_large",
 #     set = "Q",
+#     instance_params = [{"variables": 50, "clauses": 201}],
 #     generations = [1000],
 #     mutation_chance = [0.03],
-#     n_instances = [1_000],
+#     n_instances = [100],
 # ), dataset(
-#     "dataset_R",
+#     "dataset_R_large",
 #     set = "R",
+#     instance_params = [{"variables": 50, "clauses": 201}],
 #     generations = [1000],
 #     mutation_chance = [0.03],
-#     n_instances = [1_000],
+#     n_instances = [100],
+# ), dataset(
+#     "dataset_N_largest",
+#     set = "N",
+#     instance_params = [{"variables": 75, "clauses": 310}],
+#     generations = [1000],
+#     mutation_chance = [0.03],
+#     n_instances = [200],
+# ), dataset(
+#     "dataset_Q_largest",
+#     set = "Q",
+#     instance_params = [{"variables": 75, "clauses": 310}],
+#     generations = [1000],
+#     mutation_chance = [0.03],
+#     n_instances = [200],
+# ), dataset(
+#     "dataset_R_largest",
+#     set = "R",
+#     instance_params = [{"variables": 75, "clauses": 310}],
+#     generations = [1000],
+#     mutation_chance = [0.03],
+#     n_instances = [200],
+# ), dataset(
+#     "dataset_A_huge",
+#     set = "A",
+#     instance_params = [{"variables": 100, "clauses": 430}],
+#     generations = [1000],
+#     mutation_chance = [0.03],
+#     n_instances = [200],
 ), dataset(
     "mutation_exploration",
     n_instances = [50],
     mutation_chance = [0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5],
-), dataset(
+# ), dataset(
 #     "dataset_N",
 #     set = ["N"],
-#     generations = [500],
+#     generations = [2_500],
+#     n_instances = [40],
+#     population_size = [200],
 # ), dataset(
 #     "dataset_Q",
 #     set = ["Q"],
-#     generations = [500],
+#     generations = [2_500],
+#     n_instances = [40],
+#     population_size = [200],
 # ), dataset(
 #     "dataset_R",
 #     set = ["R"],
-#     generations = [500],
+#     generations = [2_500],
+#     n_instances = [40],
+#     population_size = [200],
 # ), dataset(
-    "dataset_A",
-    set = ["A"],
-    instance_params = [{"variables": 20, "clauses": 88}],
-    generations = [500],
-    n_instances = [400],
+#     "dataset_A",
+#     set = ["A"],
+#     instance_params = [{"variables": 20, "clauses": 88}],
+#     generations = [2_500],
+#     n_instances = [40],
+#     population_size = [200],
 # ), dataset(
 #     "dataset_Q_exploration",
 #     set = ["Q"],
@@ -358,7 +421,7 @@ def progress_bar(iteration, total, length = 60):
     if iteration == total:
         print()
 
-def ridgeline(id, title, col, filename, x_label = "Chyba oproti optimálnímu řešení [%]", progress = lambda _: None):
+def ridgeline(id, title, col, filename, x_label = "Chyba oproti optimálnímu řešení [%]", data = data, progress = lambda _: None):
     df = data[data["id"] == id]
     series = df.groupby(col)["error"].mean()
     df["mean error"] = df[col].map(series)
@@ -560,8 +623,28 @@ def heatmap(id, title, filename, data = data, progress = lambda _: None):
     plt.close()
     progress(1)
 
+def scatter(id, title, filename, data = data, progress = lambda _: None):
+    dataset = data[data["id"] == id]
+    fig = plt.plot()
+    sns.set_style("darkgrid")
+    sns.regplot(
+        x = 100 * dataset["error"],
+        y = dataset["inst_id"],
+        fit_reg = False,
+        scatter_kws = {"color": "navy", "alpha": 0.7,"s": 10}
+    )
+    plt.title(title)
+    plt.xlabel("Chyba [%]")
+    plt.ylabel("ID instance")
+    plt.savefig(f"docs/assets/{filename}.svg")
+    plt.close()
+    progress(1)
+
 def schedule_ridgeline(*args, **kwargs):
     scheduled_plots.append({"type": "ridgeline", "total": 1, "args": args, "kwargs": kwargs})
+
+def schedule_scatter(*args, **kwargs):
+    scheduled_plots.append({"type": "scatter", "total": 1, "args": args, "kwargs": kwargs})
 
 def schedule_boxplot(*args, **kwargs):
     scheduled_plots.append({"type": "boxplot",   "total": 1, "args": args, "kwargs": kwargs})
@@ -585,29 +668,40 @@ def plottery():
             nonlocal iteration
             iteration += i
             progress_bar(iteration, total)
-        if plot["type"] == "ridgeline":
-            ridgeline(*plot["args"], progress = progress, **plot["kwargs"])
-        elif plot["type"] == "boxplot":
-            boxplot(*plot["args"], progress = progress, **plot["kwargs"])
-        elif plot["type"] == "heatmap":
-            heatmap(*plot["args"], progress = progress, **plot["kwargs"])
+        try:
+            if plot["type"] == "ridgeline":
+                ridgeline(*plot["args"], progress = progress, **plot["kwargs"])
+            elif plot["type"] == "boxplot":
+                boxplot(*plot["args"], progress = progress, **plot["kwargs"])
+            elif plot["type"] == "heatmap":
+                heatmap(*plot["args"], progress = progress, **plot["kwargs"])
+            elif plot["type"] == "scatter":
+                scatter(*plot["args"], progress = progress, **plot["kwargs"])
+        except Exception as e:
+            print(e)
+            print("Failed to plot", plot)
 
 # describe errors
 for id in data["id"].unique():
     dataset = data[data["id"] == id]
-    df = pd.DataFrame(dataset[dataset["error"] < 2]["error"].describe())
+    df = pd.DataFrame(dataset[dataset["error"] < 2][dataset["valid"] == True]["error"].describe())
     df[df.columns[0]] = df[df.columns[0]].apply(lambda x: 100 * x)
     df = df.T
     df["count"] = df["count"] / 100
     df["dataset"] = id
     df.to_csv(f"docs/assets/{id}_errors.csv")
+    # describe satisfiability
+    _sum = dataset["valid"].sum()
+    _count = dataset["valid"].count()
+    sat = 100 * (_sum / _count)
+    print(f"{id}: {sat:.2f}% ({_sum} / {_count})")
 
-# schedule_ridgeline(
-#     "mutation_exploration",
-#     "Vliv šance mutace na hustotu chyb",
-#     "mutation_chance",
-#     "whitebox-mutation-chance-error.svg",
-# )
+schedule_ridgeline(
+    "mutation_exploration",
+    "Vliv šance mutace na hustotu chyb",
+    "mutation_chance",
+    "whitebox-mutation-chance-error.svg",
+)
 
 schedule_heatmap(
     "default",
@@ -624,20 +718,43 @@ schedule_heatmap(
 #         data = data[data["mutation_chance"] == mutation_chance]
 #     )
 
-# for dataset in ["N", "Q", "R", "A"]:
-#     schedule_heatmap(
-#         f"dataset_{dataset}",
-#         f"Vývoj populace pro dataset {dataset}",
-#         f"whitebox-heatmap-dataset-{dataset}",
-#         data = data[data["inst_id"] <= 8],
-#     )
+for dataset in ["M", "M", "N", "Q", "R", "A"]:
+    _id = f"dataset_{dataset}"
+    # schedule_heatmap(
+    #     _id,
+    #     f"Vývoj populace pro dataset {dataset}",
+    #     f"whitebox-heatmap-dataset-{dataset}",
+    #     data = data[data["id"] == _id][:8],
+    # )
 
-#     schedule_ridgeline(
-#         f"dataset_{dataset}",
-#         f"Hustota chyb pro dataset {dataset}",
-#         f"mutation_chance",
-#         f"whitebox-error-density-evaluation-dataset-{dataset}.svg",
-#     )
+    # schedule_ridgeline(
+    #     _id,
+    #     f"Hustota chyb pro dataset {dataset}",
+    #     f"mutation_chance",
+    #     f"whitebox-error-density-evaluation-dataset-{dataset}.svg",
+    # )
+
+    # schedule_scatter(
+    #     "all",
+    #     f"Chyby v sadě {dataset}",
+    #     f"whitebox-error-scatter-dataset-{dataset}",
+    #     data = data[data["set"] == dataset][data["valid"] == True][data["error"] < 2],
+    # )
+
+# schedule_ridgeline(
+#     "all",
+#     "Hustota chyb podle datové sady",
+#     "set",
+#     f"whitebox-error-density-evaluation-all.svg",
+#     data = data[data["valid"] == True],
+# )
+
+# schedule_heatmap(
+#     "all",
+#     f"Studie vývoje instancí v datasetu 100-430-A1",
+#     f"whitebox-heatmap-dataset-100-430-A1-closeup",
+#     data = data[data["set"] == "A"][data["instance_params"] == {"variables": 100, "clauses": 430}][:3],
+# )
 
 # schedule_heatmap(
 #     "dataset_A",
@@ -647,19 +764,28 @@ schedule_heatmap(
 #     # data = data[:8],
 # )
 
-schedule_ridgeline(
-    "dataset_A",
-    "Hustota chyb pro dataset A",
-    "mutation_chance",
-    "whitebox-error-density-evaluation-dataset-A.svg",
-)
+# schedule_ridgeline(
+#     "dataset_A",
+#     "Hustota chyb pro dataset A",
+#     "mutation_chance",
+#     "whitebox-error-density-evaluation-dataset-A.svg",
+# )
 
-schedule_heatmap(
-    "dataset_A",
-    "Studie vývoje instancí v datasetu A 20-88",
-    "whitebox-heatmap-dataset-A-20-88-closeup",
-    data = data[data["id"] == "dataset_A"][:8],
-)
+for ds in [
+    # "dataset_N_large",
+    # "dataset_Q_large",
+    # "dataset_R_large",
+    # "dataset_N_largest",
+    # "dataset_Q_largest",
+    # "dataset_R_largest",
+    # "dataset_A_huge",
+]:
+    schedule_heatmap(
+        ds,
+        f"Studie vývoje instancí v datasetu {ds[8:]}",
+        f"whitebox-heatmap-dataset-{ds}-closeup",
+        data = data[data["id"] == ds][:4],
+    )
 
 # do the plottery
 plottery()
@@ -672,7 +798,7 @@ plottery()
 <<analysis/plot.py>>
 ```
 
-#### Design vizualizací
+### Design vizualizací
 
 Pro srovnávání hustot jednoho parametru v několika diskrétních bodech jiného
 jsem využil vizualizace vyvinuté ve čtvrtém úkolu. Svou názorností je vhodná k
@@ -699,7 +825,7 @@ instancí.](whitebox-3-A-20-88-new-fitness-function.svg)
 Tato vizualizace se ukázala být výborným pomocníkem při vyhodnocování vlivu
 různých parametrů na běh simulace.
 
-#### Robustnost implementace
+### Robustnost implementace
 
 Při implementaci jsem si dal záležet na reprodukovatelnosti výsledků. Řešič je
 deterministický -- jeho výstup závisí jen na vstupních parametrech. Bohužel tak
@@ -712,7 +838,7 @@ práci mezi několik vláken využitím paralelních iterátorů knihovny
 [Rayon](https://docs.rs/rayon/latest/rayon/). Při vyhodnocování experimentů pro
 parametry popsané níže řešič nevyužije více než dvě jádra.
 
-#### Hledání kvalitního algoritmu
+### Hledání kvalitního algoritmu
 
 Vůbec první varianta algoritmu nevyužívala žádných metod nichingu, v každé ze
 dvou set generací nekompromisně vyřadila slabší půlku z populace tisíce jedinců
@@ -794,25 +920,96 @@ přehled nejen o průběhu simulace, ale i o vzdálenosti od globálního optima
 ![Vliv adaptivní mutace s katastrofami na chyby v různých datových sadách.
 y](lit/adaptive-mutation-comparison.csv)
 
-Tento algoritmus má překvapivě dobré výsledky. Dosahuje **TODO: popsat chyby** a
-většinou nalezne uspokojivé řešení během prvních dvou set generací. Možnost ke
-zlepšení ovšem vidím v poměrně naivní fitness funkci, která nijak nenapomáhá
-hledat validní řešení. Tím se prakticky spoléhá na čirou náhodu při hledání
-nějakých splňujících konfigurací, které pak heuristicky zlepšuje křížením a
-mutací.
+Tento algoritmus vykazuje na malých instancích (20 proměnných) překvapivě dobré
+výsledky. V datových sadách `M`, `N`, `Q` i `R` řeší většinu instancí optimálně
+a v datové sadě `A` zvládne $75\%$ instancí s chybou do $22.5\%$. Navíc nalezne
+uspokojivé řešení během prvních dvou set generací. Problémy tohoto algoritmu
+jsou ovšem zjevné. Adaptivní úprava mutace za daných podmínek šanci mutace pouze
+zvyšuje. Jakákoliv evoluce je ztracena ve změti náhodných úprav. Výsledek je
+tragický, jak je vidět ve vizualizaci níže. U více než $95\%$ instancí o 50
+proměnných nedokáže tento algoritmus najít řešení.
 
-Jako další krok jsem tedy navrhl novou fitness funkci, která závisí i na počtu
-splněných klauzulí.
+![Neúspěch škálování adaptivní mutace s
+katastrofami.](whitebox-2-dataset_N_large-adaptive-mutation-doesnt-scale.svg)
 
-![Začátky nové fitness funkce](whitebox-3-default-new-fitness-function.svg)
+Zdá se, že by pomohlo, kdyby měl algoritmus více času najít nějakou splňující
+instanci a následně dostal příležitost takové instance křížit, aniž by rychlá
+mutace tyto snahy přerušila. Vyhodnotil jsem tedy podobný algoritmus znovu, ale
+snížil změnu v šanci mutace z $5\%$ na $0.5\%$ a podmínku na zvýšení šance
+mutace zvedl z $50\%$ jedinců ohodnocených nulou na $70\%$. Tyto změny ale nijak
+nepomohly s řešením větších instancí.
 
-![Vývoj populace po 1000 generací](assets/whitebox-heatmap-default-mix.svg)
+Možné zlepšení ovšem vidím v poměrně naivní fitness funkci, která nijak
+nenapomáhá hledat validní řešení. Tím se prakticky spoléhá na čirou náhodu při
+hledání nějakých splňujících konfigurací, které pak heuristicky zlepšuje
+křížením a mutací. Jako další krok jsem tedy navrhl novou fitness funkci, která
+závisí i na počtu splněných klauzulí.
+
+Aby hodnota fitness nezávisela přímo na zvolených vahách a počtu klauzulí, nová
+fitness funkce přiřazuje skóre podle relativního počtu splněných klauzulí a
+relativní váhy. Navíc přidává velký bonus za splnění formule.
+
+![Pokus o změnu fitness funkce byl nejprve
+neúspěšný.](whitebox-3-default-new-fitness-function.svg)
+
+Snaha o vylepšení fitness funkce nenesla ovoce ihned. První výsledky zhoršily
+schopnosti na jednoduchých instancích aniž by větším nějak pomohly. Postupnou
+změnou konstant ve fitness funkci se mi podařilo získat něco z původní síly
+heuristiky zpět. Klíčovým krokem bylo zohlednění váhy řešení jen v případě, že
+zadanou formuli splňuje.
+
+![Kvalitní fitness funkce nechává mutacím trochu
+svobody.](whitebox-4-default-new-fitness-tweaked.svg)
+
+Pro podporu diverzifikace (obzvlášť ve velkých instancích) jsem začal simulace
+spouštět s vysokou šancí mutace, nejprve $20\%$. Upravil jsem simulované žíhání
+aby snižovalo šanci mutace o $0.5\%$ každých $10$ generací nezávisle na stavu
+populace. Tak začal algoritmus přecházet od diverzifikace k intenzifikaci (na
+větším počtu generací).
+
+![Od diverzifikace k
+intenzifikaci.](whitebox-5-default-new-fitness-progress.svg)
+
+S těmito úpravami začal algoritmus nacházet řešení v sadě `50-201-N1`. Finální
+verze fitness funkce vypadá takto:
+
+```rust
+let clause_component = (1u32 << 12) as f64;
+    let weight_component = ((sln.satisfied as u32) << 12) as f64;
+    let score = clause_component * (sat_clauses as f64 / sln.inst.clauses.len() as f64).powf(4.0)
+        + weight_component * sln.weight as f64 / sln.inst.total_weight as f64;
+    score as i64
+```
+
+$\text{fitness} = 2^12 * \left(\frac{\text{# splněných klauzulí}}{\text{# klauzulí
+celkem}}\right)^4 + \text{splňující řešení?}^12 * \frac{\text{váha}}{\sum_i
+w_i}$
+
+Poměr splněných klauzulí přispívá k fitness nelineárním vztahem. Tímto způsobem
+preferuje funkce řešení výrazně blíže splňujícímu. Snaží se tak předejít
+uváznutí v lokálním optimu vzhledem k poměru splněných klauzulí, do kterého by
+lineární vztah mohl nedopatřením svést, pokud je menší počet klauzulí v nějaké
+instanci jednoduché splnit, ale takové ohodnocení zabrání splnění jiných.
 
 ![Šance mutace vs. hustota chyb](assets/whitebox-mutation-chance-error.svg)
 
-### Black box: vyhodnocení hustoty chyb
+![Výchozí nastavení algoritmu -- $2 500$ generací, počáteční mutace $0.2$, $200$
+jedinců, sada `20-78-M1`](assets/whitebox-heatmap-default-mix.svg)
 
-**TODO**
+## Black box: vyhodnocení hustoty chyb
+
+Algoritmus jsem vyhodnotil po 6000 generací s periodou katastrof 900 a populací
+200 jedinců přes 1750 instancí ze všech datových sad M, N, Q, R a z datové sady
+`100-430-A1`. Pro instance, kde algoritmus najde řešení, je kvalita řešení
+obstojná -- maximální chyba činí $20.1\%$, průměrná $1.01\%$. Bohužel ale v
+mnoha případěch řešení nenajde, a to především u velkých instancí.
+
+![Instance sady `100-430-A1` se bohužel uspokojit nedaří.](blackbox-7-dataset-100-430-A1-closeup.svg)
+
+![Rozložení chyb v datové sadě M](whitebox-error-scatter-dataset-M.svg)
+![Rozložení chyb v datové sadě N](whitebox-error-scatter-dataset-N.svg)
+![Rozložení chyb v datové sadě Q](whitebox-error-scatter-dataset-Q.svg)
+![Rozložení chyb v datové sadě R](whitebox-error-scatter-dataset-R.svg)
 
 ## Implementace
 
@@ -922,8 +1119,6 @@ impl Instance {
                         Solution { weight, cfg, inst: self.inst, satisfied: false, fitness: 0 }
                     )
                     .map(|sln| sln.mutate_unsafe(evo_config, rng))
-                    .map(|sln| Solution { satisfied: satisfied(&sln.inst.clauses, &sln.cfg), ..sln })
-                    .map(|sln| Solution { fitness: compute_fitness(&sln, evo_config), ..sln })
                     .collect::<ArrayVec<_, 2>>()
                     .into_inner()
                     .unwrap()
@@ -986,9 +1181,8 @@ impl Instance {
                 .collect::<String>()
         }
 
-        const DISASTER_INTERVAL: u32 = 100;
         const MUTATION_ADJUSTMENT_INTERVAL: u32 = 10;
-        const MUTATION_ADJUSTMENT: f64 = 1.0001;
+        const MUTATION_ADJUSTMENT: f64 = 1.005;
 
         let mut population = (0..ecfg.population_size).map(|_| random(rng)).collect::<Vec<_>>();
         let mut buffer = Vec::with_capacity(population.len() / 2);
@@ -997,7 +1191,7 @@ impl Instance {
         println!("0 {}", stats(&population[..], ecfg, opt));
 
         (0..ecfg.generations).for_each(|i| {
-            if i % DISASTER_INTERVAL == 0 {
+            if i % ecfg.disaster_interval == 0 {
                 population.shuffle(rng);
                 let n = (population.len() as f64 * 0.99) as usize;
                 population.drain(.. n);
@@ -1011,16 +1205,17 @@ impl Instance {
 
             shuffler.par_extend(population.par_iter());
             shuffler.shuffle(rng);
-            // move unsatisfying solutions to the end
-            shuffler.par_sort_by_key(|sln| sln.fitness == 0);
 
             // how many individuals to cross over
-            let n = population.len() / 5;
-            buffer.extend(shuffler.drain(..)
+            let n = population.len() / 2;
+            buffer.par_extend(shuffler.drain(..)
                 .zip(population.drain(.. n * 2).take(n))
                 .flat_map(|(a, b)| {
                     a.crossover(b, &ecfg, rng).into_iter()
                 })
+                .par_bridge()
+                .map(|sln| Solution { satisfied: satisfied(&sln.inst.clauses, &sln.cfg), ..sln })
+                .map(|sln| Solution { fitness: compute_fitness(&sln, &ecfg), ..sln })
             );
 
             population.append(&mut buffer);
@@ -1038,9 +1233,9 @@ impl Instance {
                     .count();
                 let n = n as f64 / population.len() as f64;
                 ecfg.mutation_chance = match () {
-                    _ if n > 0.5 => (ecfg.mutation_chance * MUTATION_ADJUSTMENT).min(0.5),
-                    _ if n < 0.2 => (ecfg.mutation_chance / MUTATION_ADJUSTMENT).max(0.0001),
-                    _            => ecfg.mutation_chance
+                    // _ if n > 0.5 => (ecfg.mutation_chance * MUTATION_ADJUSTMENT).min(0.5),
+                    _ /*if n < 0.2*/ => (ecfg.mutation_chance / MUTATION_ADJUSTMENT).max(0.01),
+                    // _            => ecfg.mutation_chance
                 };
             }
         });
@@ -1085,7 +1280,7 @@ pub type Config = BitArr!(for MAX_VARIABLES);
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub struct Solution<'a> {
     pub weight: u32,
-    pub fitness: u64,
+    pub fitness: i64,
     pub cfg: Config,
     pub inst: &'a Instance,
     pub satisfied: bool,
@@ -1114,6 +1309,7 @@ pub struct EvolutionaryConfig {
     pub generations: u32,
     pub population_size: usize,
     pub instance_params: InstanceParams,
+    pub disaster_interval: u32,
 }
 
 impl From<Instance> for InstanceParams {
@@ -1236,7 +1432,7 @@ fn dump_solution(id: i32, weight: u32, cfg: &Config, params: &InstanceParams) ->
     .collect()
 }
 
-pub fn compute_fitness(sln: &Solution, _evo_config: &EvolutionaryConfig) -> u64 {
+pub fn compute_fitness(sln: &Solution, _evo_config: &EvolutionaryConfig) -> i64 {
     let sat_clauses: u32 = sln.inst.clauses.iter()
         .map(|clause|
             clause.iter().all(|&Literal(pos, id)|
@@ -1246,13 +1442,14 @@ pub fn compute_fitness(sln: &Solution, _evo_config: &EvolutionaryConfig) -> u64 
         .map(|sat| sat as u32)
         .sum();
 
-    let sat_component = (1u32 << 22) as f64;
-    let clause_component = (1u32 << 8) as f64;
-    let weight_component = (1u32 << 8) as f64;
-    let score = sat_component * sln.satisfied as u32 as f64
-        + clause_component * (sat_clauses as f64 / sln.inst.clauses.len() as f64).powf(2.0)
+    let clause_component = (1u32 << 12) as f64;
+    let weight_component = ((sln.satisfied as u32) << 12) as f64;
+    let score = clause_component * (sat_clauses as f64 / sln.inst.clauses.len() as f64).powf(4.0)
         + weight_component * sln.weight as f64 / sln.inst.total_weight as f64;
-    score as u64
+    score as i64
+
+    // if sln.satisfied { sln.weight as i64 }
+    // else { sln.weight as i64 - sln.inst.total_weight as i64 }
 }
 
 pub fn satisfied(clauses: &ArrayVec<Clause, MAX_CLAUSES>, cfg: &Config) -> bool {
@@ -1266,7 +1463,63 @@ pub fn satisfied(clauses: &ArrayVec<Clause, MAX_CLAUSES>, cfg: &Config) -> bool 
 
 ## Závěr
 
-**TODO**
+Implementoval jsem genetický algoritmus pro optimalizační problém vážené
+splnitelnosti booleovské formule. Čerpaje ze zkušeností nabytých při realizaci
+[evolučního algoritmu na vrcholové pokrytí před několika lety](zum-report.pdf),
+implementoval jsem metody nichingu, konkrétně simulovaného žíhání v podobě
+pozvolné změny šance mutace a simulace katastrof. Implementace je plně
+deterministická, přestože využívá více vláken ke zrychlení simulace.
+
+Pro parametry počtu generací, velikosti populace, počáteční šance mutace a
+četnosti katastrof jsem provedl ladění. K prezentaci výsledků jsem navrhl a
+implementoval originální vizualizace, které znázorňují vývoj celé populace
+řešení v průběhu algoritmu.
+
+První varianta algoritmu funguje perfektně na menších instancích (20 proměnných)
+všech datových sad. Druhá varianta zobecňuje na větší instance a je částečně
+úspěšná.
+
+**Byly použity techniky (algoritmy, datové struktury) adekvátní problému?**
+
+Algoritmus využívá několika standardních technik v evolučních algoritmech, jako
+jsou uniformní křížení a náhodné mutace. Implementace si navíc dává záležet na
+determinismu a paralelismu -- několik významných kroků simulace je
+paralelizováno (ověření splnitelnosti řešení, výpočet hodnoty fitness, řazení
+jedinců, náhodný výběr druhého rodiče). Taktéž načítání instancí a optimálních
+řešení je prováděno paralelně, vektor optimálních řešení je prohledáván binárním
+půlením.
+
+**Byly použity pokročilé techniky? (např. adaptační mechanismy)**
+
+Experimentoval jsem s adaptačním mechanismem pro úpravu šance mutace. Nakonec
+jsem využil simulovaného žíhání pro druhou variantu algoritmu. Další využitá
+metoda nichingu je simulace katastrofálních událostí. Experimentoval jsem i s
+metodou _deterministic crowding_, která se neosvědčila.
+
+**Jsou některé postupy originálním přínosem autora?**
+
+Vyzkoušené adaptivní úpravy šance mutace jsem si vymyslel sám. Jejich efektivní
+použití ale příliš záviselo na vlastnostech fitness funkce, která pro druhou
+variantu algoritmu nešla využít.
+
+**Na jak velkých instancích je heuristika schopna pracovat?**
+
+To záleží na mnoha faktorech (především na konkrétních vahách a počtu řešení),
+druhá varianta algoritmu je ovšem schopna řešit i některé instance sady
+`50-201-M1`, se složitějšími si ale neporadí.
+
+**Jestliže práce heuristiky není uspokojivá, jak systematické byly snahy autora zjednat nápravu?**
+
+White box fáze popisuje proces hledání nejen paramterů algoritmu, ale i metod
+nichingu, fitness funkce, způsobu křížení atp. Ačkoliv druhá varianta algoritmu
+pokulhává u instancí, kde původní adaptivní heuristika nalezla optimum do dvou
+set generací, snažil jsem se systematicky určit podprostor parametrů, který by
+její výsledky optimalizoval.
+
+**Pokud je algoritmus randomizovaný, byla tato skutečnost vzata v úvahu při plánování experimentů?**
+
+Během implementace byl na determinismus kladen velký důraz.
+
 
 ## Appendix
 

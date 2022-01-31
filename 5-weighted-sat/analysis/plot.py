@@ -35,7 +35,7 @@ def progress_bar(iteration, total, length = 60):
     if iteration == total:
         print()
 
-def ridgeline(id, title, col, filename, x_label = "Chyba oproti optimálnímu řešení [%]", progress = lambda _: None):
+def ridgeline(id, title, col, filename, x_label = "Chyba oproti optimálnímu řešení [%]", data = data, progress = lambda _: None):
     df = data[data["id"] == id]
     series = df.groupby(col)["error"].mean()
     df["mean error"] = df[col].map(series)
@@ -237,8 +237,28 @@ def heatmap(id, title, filename, data = data, progress = lambda _: None):
     plt.close()
     progress(1)
 
+def scatter(id, title, filename, data = data, progress = lambda _: None):
+    dataset = data[data["id"] == id]
+    fig = plt.plot()
+    sns.set_style("darkgrid")
+    sns.regplot(
+        x = 100 * dataset["error"],
+        y = dataset["inst_id"],
+        fit_reg = False,
+        scatter_kws = {"color": "navy", "alpha": 0.7,"s": 10}
+    )
+    plt.title(title)
+    plt.xlabel("Chyba [%]")
+    plt.ylabel("ID instance")
+    plt.savefig(f"docs/assets/{filename}.svg")
+    plt.close()
+    progress(1)
+
 def schedule_ridgeline(*args, **kwargs):
     scheduled_plots.append({"type": "ridgeline", "total": 1, "args": args, "kwargs": kwargs})
+
+def schedule_scatter(*args, **kwargs):
+    scheduled_plots.append({"type": "scatter", "total": 1, "args": args, "kwargs": kwargs})
 
 def schedule_boxplot(*args, **kwargs):
     scheduled_plots.append({"type": "boxplot",   "total": 1, "args": args, "kwargs": kwargs})
@@ -262,29 +282,40 @@ def plottery():
             nonlocal iteration
             iteration += i
             progress_bar(iteration, total)
-        if plot["type"] == "ridgeline":
-            ridgeline(*plot["args"], progress = progress, **plot["kwargs"])
-        elif plot["type"] == "boxplot":
-            boxplot(*plot["args"], progress = progress, **plot["kwargs"])
-        elif plot["type"] == "heatmap":
-            heatmap(*plot["args"], progress = progress, **plot["kwargs"])
+        try:
+            if plot["type"] == "ridgeline":
+                ridgeline(*plot["args"], progress = progress, **plot["kwargs"])
+            elif plot["type"] == "boxplot":
+                boxplot(*plot["args"], progress = progress, **plot["kwargs"])
+            elif plot["type"] == "heatmap":
+                heatmap(*plot["args"], progress = progress, **plot["kwargs"])
+            elif plot["type"] == "scatter":
+                scatter(*plot["args"], progress = progress, **plot["kwargs"])
+        except Exception as e:
+            print(e)
+            print("Failed to plot", plot)
 
 # describe errors
 for id in data["id"].unique():
     dataset = data[data["id"] == id]
-    df = pd.DataFrame(dataset[dataset["error"] < 2]["error"].describe())
+    df = pd.DataFrame(dataset[dataset["error"] < 2][dataset["valid"] == True]["error"].describe())
     df[df.columns[0]] = df[df.columns[0]].apply(lambda x: 100 * x)
     df = df.T
     df["count"] = df["count"] / 100
     df["dataset"] = id
     df.to_csv(f"docs/assets/{id}_errors.csv")
+    # describe satisfiability
+    _sum = dataset["valid"].sum()
+    _count = dataset["valid"].count()
+    sat = 100 * (_sum / _count)
+    print(f"{id}: {sat:.2f}% ({_sum} / {_count})")
 
-# schedule_ridgeline(
-#     "mutation_exploration",
-#     "Vliv šance mutace na hustotu chyb",
-#     "mutation_chance",
-#     "whitebox-mutation-chance-error.svg",
-# )
+schedule_ridgeline(
+    "mutation_exploration",
+    "Vliv šance mutace na hustotu chyb",
+    "mutation_chance",
+    "whitebox-mutation-chance-error.svg",
+)
 
 schedule_heatmap(
     "default",
@@ -301,20 +332,43 @@ schedule_heatmap(
 #         data = data[data["mutation_chance"] == mutation_chance]
 #     )
 
-# for dataset in ["N", "Q", "R", "A"]:
-#     schedule_heatmap(
-#         f"dataset_{dataset}",
-#         f"Vývoj populace pro dataset {dataset}",
-#         f"whitebox-heatmap-dataset-{dataset}",
-#         data = data[data["inst_id"] <= 8],
-#     )
+for dataset in ["M", "M", "N", "Q", "R", "A"]:
+    _id = f"dataset_{dataset}"
+    # schedule_heatmap(
+    #     _id,
+    #     f"Vývoj populace pro dataset {dataset}",
+    #     f"whitebox-heatmap-dataset-{dataset}",
+    #     data = data[data["id"] == _id][:8],
+    # )
 
-#     schedule_ridgeline(
-#         f"dataset_{dataset}",
-#         f"Hustota chyb pro dataset {dataset}",
-#         f"mutation_chance",
-#         f"whitebox-error-density-evaluation-dataset-{dataset}.svg",
-#     )
+    # schedule_ridgeline(
+    #     _id,
+    #     f"Hustota chyb pro dataset {dataset}",
+    #     f"mutation_chance",
+    #     f"whitebox-error-density-evaluation-dataset-{dataset}.svg",
+    # )
+
+    # schedule_scatter(
+    #     "all",
+    #     f"Chyby v sadě {dataset}",
+    #     f"whitebox-error-scatter-dataset-{dataset}",
+    #     data = data[data["set"] == dataset][data["valid"] == True][data["error"] < 2],
+    # )
+
+# schedule_ridgeline(
+#     "all",
+#     "Hustota chyb podle datové sady",
+#     "set",
+#     f"whitebox-error-density-evaluation-all.svg",
+#     data = data[data["valid"] == True],
+# )
+
+# schedule_heatmap(
+#     "all",
+#     f"Studie vývoje instancí v datasetu 100-430-A1",
+#     f"whitebox-heatmap-dataset-100-430-A1-closeup",
+#     data = data[data["set"] == "A"][data["instance_params"] == {"variables": 100, "clauses": 430}][:3],
+# )
 
 # schedule_heatmap(
 #     "dataset_A",
@@ -324,19 +378,28 @@ schedule_heatmap(
 #     # data = data[:8],
 # )
 
-schedule_ridgeline(
-    "dataset_A",
-    "Hustota chyb pro dataset A",
-    "mutation_chance",
-    "whitebox-error-density-evaluation-dataset-A.svg",
-)
+# schedule_ridgeline(
+#     "dataset_A",
+#     "Hustota chyb pro dataset A",
+#     "mutation_chance",
+#     "whitebox-error-density-evaluation-dataset-A.svg",
+# )
 
-schedule_heatmap(
-    "dataset_A",
-    "Studie vývoje instancí v datasetu A 20-88",
-    "whitebox-heatmap-dataset-A-20-88-closeup",
-    data = data[data["id"] == "dataset_A"][:8],
-)
+for ds in [
+    # "dataset_N_large",
+    # "dataset_Q_large",
+    # "dataset_R_large",
+    # "dataset_N_largest",
+    # "dataset_Q_largest",
+    # "dataset_R_largest",
+    # "dataset_A_huge",
+]:
+    schedule_heatmap(
+        ds,
+        f"Studie vývoje instancí v datasetu {ds[8:]}",
+        f"whitebox-heatmap-dataset-{ds}-closeup",
+        data = data[data["id"] == ds][:4],
+    )
 
 # do the plottery
 plottery()

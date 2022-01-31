@@ -64,7 +64,7 @@ pub type Config = BitArr!(for MAX_VARIABLES);
 #[derive(PartialEq, Eq, Clone, Copy, Debug)]
 pub struct Solution<'a> {
     pub weight: u32,
-    pub fitness: u64,
+    pub fitness: i64,
     pub cfg: Config,
     pub inst: &'a Instance,
     pub satisfied: bool,
@@ -93,6 +93,7 @@ pub struct EvolutionaryConfig {
     pub generations: u32,
     pub population_size: usize,
     pub instance_params: InstanceParams,
+    pub disaster_interval: u32,
 }
 
 impl From<Instance> for InstanceParams {
@@ -208,7 +209,7 @@ fn dump_solution(id: i32, weight: u32, cfg: &Config, params: &InstanceParams) ->
     .collect()
 }
 
-pub fn compute_fitness(sln: &Solution, _evo_config: &EvolutionaryConfig) -> u64 {
+pub fn compute_fitness(sln: &Solution, _evo_config: &EvolutionaryConfig) -> i64 {
     let sat_clauses: u32 = sln.inst.clauses.iter()
         .map(|clause|
             clause.iter().all(|&Literal(pos, id)|
@@ -218,13 +219,14 @@ pub fn compute_fitness(sln: &Solution, _evo_config: &EvolutionaryConfig) -> u64 
         .map(|sat| sat as u32)
         .sum();
 
-    let sat_component = (1u32 << 22) as f64;
-    let clause_component = (1u32 << 8) as f64;
-    let weight_component = (1u32 << 8) as f64;
-    let score = sat_component * sln.satisfied as u32 as f64
-        + clause_component * (sat_clauses as f64 / sln.inst.clauses.len() as f64).powf(2.0)
+    let clause_component = (1u32 << 12) as f64;
+    let weight_component = ((sln.satisfied as u32) << 12) as f64;
+    let score = clause_component * (sat_clauses as f64 / sln.inst.clauses.len() as f64).powf(4.0)
         + weight_component * sln.weight as f64 / sln.inst.total_weight as f64;
-    score as u64
+    score as i64
+
+    // if sln.satisfied { sln.weight as i64 }
+    // else { sln.weight as i64 - sln.inst.total_weight as i64 }
 }
 
 pub fn satisfied(clauses: &ArrayVec<Clause, MAX_CLAUSES>, cfg: &Config) -> bool {
@@ -427,8 +429,6 @@ impl Instance {
                         Solution { weight, cfg, inst: self.inst, satisfied: false, fitness: 0 }
                     )
                     .map(|sln| sln.mutate_unsafe(evo_config, rng))
-                    .map(|sln| Solution { satisfied: satisfied(&sln.inst.clauses, &sln.cfg), ..sln })
-                    .map(|sln| Solution { fitness: compute_fitness(&sln, evo_config), ..sln })
                     .collect::<ArrayVec<_, 2>>()
                     .into_inner()
                     .unwrap()
@@ -491,9 +491,8 @@ impl Instance {
                 .collect::<String>()
         }
 
-        const DISASTER_INTERVAL: u32 = 100;
         const MUTATION_ADJUSTMENT_INTERVAL: u32 = 10;
-        const MUTATION_ADJUSTMENT: f64 = 1.0001;
+        const MUTATION_ADJUSTMENT: f64 = 1.005;
 
         let mut population = (0..ecfg.population_size).map(|_| random(rng)).collect::<Vec<_>>();
         let mut buffer = Vec::with_capacity(population.len() / 2);
@@ -502,7 +501,7 @@ impl Instance {
         println!("0 {}", stats(&population[..], ecfg, opt));
 
         (0..ecfg.generations).for_each(|i| {
-            if i % DISASTER_INTERVAL == 0 {
+            if i % ecfg.disaster_interval == 0 {
                 population.shuffle(rng);
                 let n = (population.len() as f64 * 0.99) as usize;
                 population.drain(.. n);
@@ -516,16 +515,17 @@ impl Instance {
 
             shuffler.par_extend(population.par_iter());
             shuffler.shuffle(rng);
-            // move unsatisfying solutions to the end
-            shuffler.par_sort_by_key(|sln| sln.fitness == 0);
 
             // how many individuals to cross over
-            let n = population.len() / 5;
-            buffer.extend(shuffler.drain(..)
+            let n = population.len() / 2;
+            buffer.par_extend(shuffler.drain(..)
                 .zip(population.drain(.. n * 2).take(n))
                 .flat_map(|(a, b)| {
                     a.crossover(b, &ecfg, rng).into_iter()
                 })
+                .par_bridge()
+                .map(|sln| Solution { satisfied: satisfied(&sln.inst.clauses, &sln.cfg), ..sln })
+                .map(|sln| Solution { fitness: compute_fitness(&sln, &ecfg), ..sln })
             );
 
             population.append(&mut buffer);
@@ -543,9 +543,9 @@ impl Instance {
                     .count();
                 let n = n as f64 / population.len() as f64;
                 ecfg.mutation_chance = match () {
-                    _ if n > 0.5 => (ecfg.mutation_chance * MUTATION_ADJUSTMENT).min(0.5),
-                    _ if n < 0.2 => (ecfg.mutation_chance / MUTATION_ADJUSTMENT).max(0.0001),
-                    _            => ecfg.mutation_chance
+                    // _ if n > 0.5 => (ecfg.mutation_chance * MUTATION_ADJUSTMENT).min(0.5),
+                    _ /*if n < 0.2*/ => (ecfg.mutation_chance / MUTATION_ADJUSTMENT).max(0.01),
+                    // _            => ecfg.mutation_chance
                 };
             }
         });
