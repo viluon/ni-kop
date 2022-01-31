@@ -5,9 +5,6 @@ author: 'Ondřej Kvapil'
 
 # Kombinatorická optimalizace: problém vážené splnitelnosti booleovské formule
 
-**TODO**:
-- kontrola nad `InstanceParams` z Pythonu (především pro vizualizace)
-
 ## Zadání
 
 ### Pokyny
@@ -982,9 +979,9 @@ let clause_component = (1u32 << 12) as f64;
     score as i64
 ```
 
-$\text{fitness} = 2^12 * \left(\frac{\text{\# splněných klauzulí}}{\text{\#
-klauzulí celkem}}\right)^4 + \text{splňující řešení?}^12 *
-\frac{\text{váha}}{\sum_i w_i}$
+$\text{fitness} = 2^{12} * \left(\frac{\text{\# splněných klauzulí}}{\text{\#
+klauzulí celkem}}\right)^4 + \text{splňující řešení?}^{12} *
+\frac{\text{váha řešení}}{\sum_i w_i}$
 
 Poměr splněných klauzulí přispívá k fitness nelineárním vztahem. Tímto způsobem
 preferuje funkce řešení výrazně blíže splňujícímu. Snaží se tak předejít
