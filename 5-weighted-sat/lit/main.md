@@ -185,6 +185,7 @@ def dataset(id, **kwargs):
         "generations": [200],
         "mutation_chance": [0.02],
         "population_size": [1000],
+        "disaster_interval": [800],
     }, **kwargs)
 
     key_order = [k for k in params]
@@ -993,8 +994,9 @@ instanci jednoduché splnit, ale takové ohodnocení zabrání splnění jiných
 
 ![Šance mutace vs. hustota chyb](assets/whitebox-mutation-chance-error.svg)
 
-![Výchozí nastavení algoritmu -- $2 500$ generací, počáteční mutace $0.2$, $200$
-jedinců, sada `20-78-M1`](assets/whitebox-heatmap-default-mix.svg)
+![Výchozí nastavení algoritmu -- $2 500$ generací, počáteční mutace $0.2$,
+interval katastrofy $800$ generací, populace $200$ jedinců, sada
+`20-78-M1`](assets/whitebox-heatmap-default-mix.svg)
 
 ## Black box: vyhodnocení hustoty chyb
 

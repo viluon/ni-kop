@@ -58,6 +58,7 @@ def dataset(id, **kwargs):
         "generations": [200],
         "mutation_chance": [0.02],
         "population_size": [1000],
+        "disaster_interval": [800],
     }, **kwargs)
 
     key_order = [k for k in params]
